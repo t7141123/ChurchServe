@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "church-serve",
+  "account_id": "2a33489fabfdde7dbde620858343ae91",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "churchserve-db",
+      "database_id": "60448e30-aeb3-40cc-8684-90c86e7778e4"
+    }
+  ],
+  "vars": {}
+}
