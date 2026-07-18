@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, startTransition } from "react";
+import Link from "next/link";
 
 function SidebarLink({ href, active, children, onClick }: { href: string; active: boolean; children: React.ReactNode; onClick?: () => void }) {
   return (
@@ -20,29 +20,38 @@ function SidebarLink({ href, active, children, onClick }: { href: string; active
   );
 }
 
+function getToken(): string | null {
+  try { return localStorage.getItem("admin_token"); } catch { return null; }
+}
+
+function getPath(): string {
+  try { return window.location.pathname; } catch { return "/"; }
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [pathname, setPathname] = useState("/");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
-      if (pathname !== "/admin/login") {
-        router.replace("/admin/login");
+    startTransition(() => {
+      setMounted(true);
+    });
+    const p = getPath();
+    startTransition(() => {
+      setPathname(p);
+    });
+    const t = getToken();
+    if (!t) {
+      if (p !== "/admin/login") {
+        window.location.replace("/admin/login");
       }
-      setLoading(false);
-      return;
     }
-    setIsAuthenticated(true);
-    setLoading(false);
-  }, [router, pathname]);
+  }, []);
 
   const closeSidebar = () => setSidebarOpen(false);
 
-  if (loading) {
+  if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-screen" style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}>
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--color-primary)] border-t-transparent" />
@@ -50,12 +59,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuthenticated) {
+  const token = getToken();
+  if (!token) {
     return <>{children}</>;
   }
 
   const isGroups = pathname.startsWith("/admin/groups");
   const isSchedule = pathname.startsWith("/admin/schedule");
+  const isIcebreakers = pathname.startsWith("/admin/icebreakers");
 
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}>
@@ -120,11 +131,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarLink href="/admin/schedule" active={isSchedule} onClick={closeSidebar}>
               排班管理
             </SidebarLink>
+            <SidebarLink href="/admin/icebreakers" active={isIcebreakers} onClick={closeSidebar}>
+              破冰遊戲
+            </SidebarLink>
           </nav>
 
           {/* Bottom actions */}
           <div className="flex flex-col gap-1 pt-4 border-t border-[var(--color-border)]">
-            <a
+            <Link
               href="/"
               onClick={closeSidebar}
               aria-label="返回首頁"
@@ -135,11 +149,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <path d="M9 22V12h6v10" />
               </svg>
               返回首頁
-            </a>
+            </Link>
             <button
               onClick={() => {
                 localStorage.removeItem("admin_token");
-                router.push("/admin/login");
+                window.location.href = "/admin/login";
               }}
               aria-label="登出"
               className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/5 transition-all text-left"

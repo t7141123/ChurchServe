@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, startTransition } from "react";
 
 interface Group {
   id: number;
@@ -33,7 +33,7 @@ export default function GroupsPage() {
       const res = await fetch("/api/groups");
       if (!res.ok) throw new Error("載入失敗");
       const d = await res.json();
-      if (d.success) setGroups(d.data);
+      setGroups(d);
     } catch {
       setErrorMsg("載入小組列表失敗");
     } finally {
@@ -41,7 +41,7 @@ export default function GroupsPage() {
     }
   };
 
-  useEffect(() => { fetchGroups(); }, []);
+  useEffect(() => { startTransition(() => { fetchGroups(); }); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

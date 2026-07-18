@@ -1,0 +1,16 @@
+name = "church-serve"
+pages_build_output_dir = "./out"
+
+compatibility_date = "2025-07-18"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "church-serve-db"
+database_id = ""
+
+[[env.production]]
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "church-serve-db"
+database_id = ""

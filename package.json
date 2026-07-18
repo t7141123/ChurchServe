@@ -5,11 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npx wrangler pages dev ./out",
     "lint": "eslint",
-    "pages:build": "npx @opennextjs/cloudflare build",
-    "pages:deploy": "npx wrangler pages deploy",
-    "pages:dev": "npx wrangler pages dev .worker-next --compatibility-flag nodejs_compat"
+    "pages:deploy": "next build && npx wrangler pages deploy ./out"
   },
   "dependencies": {
     "dompurify": "^3.4.12",
@@ -20,7 +18,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.20.1",
+
     "@tailwindcss/postcss": "^4",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^20",
@@ -28,6 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "playwright": "^1.61.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.112.0"

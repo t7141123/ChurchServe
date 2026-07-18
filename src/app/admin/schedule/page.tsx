@@ -25,7 +25,7 @@ export default function ScheduleListPage() {
         const res = await fetch("/api/groups");
         if (!res.ok) throw new Error("載入失敗");
         const d = await res.json();
-        if (d.success) setGroups(d.data);
+        setGroups(d);
       } catch {
         setErrorMsg("載入小組列表失敗");
       } finally {
@@ -72,7 +72,7 @@ export default function ScheduleListPage() {
           {groups.map((g, idx) => (
             <a
               key={g.id}
-              href={`/admin/schedule/${g.id}`}
+              href={`/admin/schedule/detail?groupId=${g.id}`}
               className="glass rounded-2xl p-5 flex items-center justify-between transition-all duration-200 hover:shadow-elevated hover:translate-y-[-2px] animate-slideUp"
               style={{ animationDelay: `${idx * 80}ms` }}
             >

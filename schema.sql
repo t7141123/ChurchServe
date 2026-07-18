@@ -59,3 +59,16 @@ CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON LoginAttempts(ip_address, at
 CREATE INDEX IF NOT EXISTS idx_duty_schedules_group_date ON DutySchedules(group_id, date);
 CREATE INDEX IF NOT EXISTS idx_duty_assignments_schedule ON DutyAssignments(schedule_id);
 CREATE INDEX IF NOT EXISTS idx_members_group ON Members(group_id, is_active);
+
+CREATE TABLE IF NOT EXISTS Icebreakers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT '',
+  duration TEXT NOT NULL DEFAULT '',
+  people_min INTEGER DEFAULT 0,
+  people_max INTEGER DEFAULT 0,
+  materials TEXT NOT NULL DEFAULT '',
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);

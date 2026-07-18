@@ -26,7 +26,7 @@ export default function AdminDashboard() {
         const res = await fetch("/api/groups");
         if (!res.ok) throw new Error("載入失敗");
         const d = await res.json();
-        if (d.success) setGroups(d.data);
+        setGroups(d);
       } catch {
         setErrorMsg("載入小組失敗");
       } finally {
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
                 </h2>
                 <div className="space-y-2">
                   <a
-                    href={`/admin/groups/${group.id}/members`}
+                    href={`/admin/groups/members?id=${group.id}`}
                     className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-secondary-dark)] bg-[var(--color-secondary)]/8 hover:bg-[var(--color-secondary)]/15 transition-all"
                   >
                     <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                     成員管理
                   </a>
                   <a
-                    href={`/admin/groups/${group.id}/service-items`}
+                    href={`/admin/groups/service-items?id=${group.id}`}
                     className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-accent-dark)] bg-[var(--color-accent)]/8 hover:bg-[var(--color-accent)]/15 transition-all"
                   >
                     <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                     服事項目管理
                   </a>
                   <a
-                    href={`/admin/schedule/${group.id}`}
+                    href={`/admin/schedule/detail?groupId=${group.id}`}
                     className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-primary-dark)] bg-[var(--color-primary)]/8 hover:bg-[var(--color-primary)]/15 transition-all"
                   >
                     <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

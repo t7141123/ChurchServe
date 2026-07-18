@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { Card } from "@/lib/components/ui/Card";
 import { Button } from "@/lib/components/ui/Button";
 
@@ -116,14 +116,17 @@ export default function HomePage() {
   const [customName, setCustomName] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [icebreakerOpen, setIcebreakerOpen] = useState(false);
+  const [icebreakers, setIcebreakers] = useState<{ id: number; name: string; description: string; category: string; duration: string; people_min: number; people_max: number; materials: string }[]>([]);
+  const [icebreakerLoading, setIcebreakerLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/groups")
       .then((r) => r.json())
       .then((d) => {
-        if (d.success && d.data.length > 0) {
-          setGroups(d.data);
-          setSelectedGroup(d.data[0].id);
+        if (Array.isArray(d) && d.length > 0) {
+          setGroups(d);
+          setSelectedGroup(d[0].id);
         }
         setLoading(false);
       })
@@ -179,7 +182,7 @@ export default function HomePage() {
   }, [selectedGroup, currentYear, currentMonth]);
 
   useEffect(() => {
-    fetchSchedules();
+    startTransition(() => { fetchSchedules(); });
   }, [fetchSchedules]);
 
   const openModal = (scheduleId: number, itemId: number, currentValue: { member_id: number | null; custom_name: string | null } | null) => {
@@ -294,6 +297,24 @@ export default function HomePage() {
                 </svg>
               </button>
             </div>
+
+            <button
+              onClick={() => {
+                setIcebreakerOpen(true);
+                setIcebreakerLoading(true);
+                fetch("/api/icebreakers")
+                  .then((r) => r.json())
+                  .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
+                  .finally(() => setIcebreakerLoading(false));
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--color-accent)] bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/10 transition-all flex-shrink-0"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+              </svg>
+              破冰遊戲建議
+            </button>
           </div>
         </div>
       </header>
@@ -615,6 +636,71 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Icebreaker Modal */}
+      {icebreakerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={() => setIcebreakerOpen(false)} />
+          <div className="relative w-full max-h-[85vh] sm:max-w-2xl bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-10 flex-shrink-0">
+              <div className="flex items-center justify-between px-6 pt-5 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">破冰遊戲建議</h3>
+                  <p className="text-sm text-[var(--color-muted)] mt-0.5">點子庫 &middot; 共 {icebreakers.length} 個遊戲</p>
+                </div>
+                <button onClick={() => setIcebreakerOpen(false)} aria-label="關閉" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {icebreakerLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-primary)] border-t-transparent" />
+                </div>
+              ) : icebreakers.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-sm text-[var(--color-muted)]">尚無破冰遊戲建議</p>
+                </div>
+              ) : (
+                (() => {
+                  const grouped: Record<string, typeof icebreakers> = {};
+                  for (const g of icebreakers) {
+                    const cat = g.category || "其他";
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(g);
+                  }
+                  return Object.entries(grouped).map(([cat, games]) => (
+                    <div key={cat} className="mb-6 last:mb-0">
+                      <h4 className="text-sm font-bold text-[var(--color-primary-dark)] mb-3 px-1">{cat}</h4>
+                      <div className="space-y-3">
+                        {games.map((g) => (
+                          <div key={g.id} className="bg-[var(--color-border-light)]/50 rounded-2xl p-4 border border-[var(--color-border)]/50">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h5 className="font-semibold text-[var(--color-text)]">{g.name}</h5>
+                            </div>
+                            {g.description && <p className="text-sm text-[var(--color-text-light)] mb-2">{g.description}</p>}
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-muted)]">
+                              {g.duration && <span>⏱ {g.duration}</span>}
+                              {(g.people_min > 0 || g.people_max > 0) && (
+                                <span>👥 {g.people_min}{g.people_max > g.people_min ? `-${g.people_max}` : ""} 人</span>
+                              )}
+                              {g.materials && <span>📦 {g.materials}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()
+              )}
             </div>
           </div>
         </div>

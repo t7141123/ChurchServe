@@ -55,6 +55,19 @@ export interface ScheduleWithAssignments extends DutySchedule {
   })[];
 }
 
+export interface Icebreaker {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  duration: string;
+  people_min: number;
+  people_max: number;
+  materials: string;
+  is_active: number;
+  created_at?: string;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
