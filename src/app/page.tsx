@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Card } from "@/lib/components/ui/Card";
+import { Badge } from "@/lib/components/ui/Badge";
+import { Button } from "@/lib/components/ui/Button";
 
 interface Group {
   id: number;
@@ -47,7 +50,41 @@ const DAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return `${d.getMonth() + 1}/${d.getDate()} (${DAY_NAMES[d.getDay()]})`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function getMemberColor(name: string): string {
+  const colors = [
+    "bg-emerald-100 text-emerald-700 border-emerald-200",
+    "bg-sky-100 text-sky-700 border-sky-200",
+    "bg-violet-100 text-violet-700 border-violet-200",
+    "bg-rose-100 text-rose-700 border-rose-200",
+    "bg-amber-100 text-amber-700 border-amber-200",
+    "bg-teal-100 text-teal-700 border-teal-200",
+    "bg-indigo-100 text-indigo-700 border-indigo-200",
+    "bg-pink-100 text-pink-700 border-pink-200",
+    "bg-lime-100 text-lime-700 border-lime-200",
+    "bg-cyan-100 text-cyan-700 border-cyan-200",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function SkeletonCard() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 space-y-3">
+          <div className="animate-shimmer h-5 w-32 rounded-lg" />
+          <div className="animate-shimmer h-4 w-full rounded-lg" />
+          <div className="animate-shimmer h-4 w-3/4 rounded-lg" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function HomePage() {
@@ -141,14 +178,14 @@ export default function HomePage() {
     setModalOpen(true);
   };
 
-  const handleSelectMember = async (memberId: number | null, customName?: string) => {
+  const handleSelectMember = async (memberId: number | null, customNameStr?: string) => {
     if (modalScheduleId === null || modalItemId === null) return;
 
     const body: { member_id?: number | null; custom_member_name?: string | null } = {};
     if (memberId) {
       body.member_id = memberId;
-    } else if (customName) {
-      body.custom_member_name = customName;
+    } else if (customNameStr) {
+      body.custom_member_name = customNameStr;
     } else {
       body.member_id = null;
       body.custom_member_name = null;
@@ -169,115 +206,135 @@ export default function HomePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto mb-4"></div>
-          <p className="text-[var(--color-muted)]">載入中...</p>
-        </div>
-      </div>
-    );
-  }
+  const currentLabel = `${currentYear} 年 ${currentMonth} 月`;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)] shadow-sm">
+      <header className="sticky top-0 z-40 glass border-b border-[var(--color-glass-border)] shadow-[var(--shadow-glass)]">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-[var(--color-primary)] flex items-center gap-2">
-              <span className="text-2xl">🕊️</span>
+            <h1 className="text-xl font-bold font-serif text-[var(--color-primary)] flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center text-sm">
+                ⛪
+              </span>
               ChurchServe
             </h1>
             <a
               href="/admin/login"
-              className="text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+              className="text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--color-border-light)]"
             >
               管理後台
             </a>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            {/* Group Selector */}
-            <select
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(Number(e.target.value))}
-              className="w-full sm:w-auto px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-base focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative w-full sm:w-56">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                <path d="M9 22V12h6v10" />
+              </svg>
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(Number(e.target.value))}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-base appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all"
+              >
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </div>
 
-            {/* Month Navigator */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] px-2 py-1.5">
               <button
                 onClick={() => {
-                  if (currentMonth === 1) {
-                    setCurrentMonth(12);
-                    setCurrentYear(currentYear - 1);
-                  } else {
-                    setCurrentMonth(currentMonth - 1);
-                  }
+                  if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); }
+                  else { setCurrentMonth(currentMonth - 1); }
                 }}
-                className="w-10 h-10 rounded-lg bg-[var(--color-border-light)] hover:bg-[var(--color-border)] flex items-center justify-center text-lg"
+                className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
               >
-                ◀
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
               </button>
-              <span className="text-base font-medium min-w-[120px] text-center">
-                {currentYear} 年 {currentMonth} 月
+              <span className="text-base font-medium min-w-[130px] text-center text-[var(--color-text)]">
+                {currentLabel}
               </span>
               <button
                 onClick={() => {
-                  if (currentMonth === 12) {
-                    setCurrentMonth(1);
-                    setCurrentYear(currentYear + 1);
-                  } else {
-                    setCurrentMonth(currentMonth + 1);
-                  }
+                  if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); }
+                  else { setCurrentMonth(currentMonth + 1); }
                 }}
-                className="w-10 h-10 rounded-lg bg-[var(--color-border-light)] hover:bg-[var(--color-border)] flex items-center justify-center text-lg"
+                className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
               >
-                ▶
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Schedule Grid */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {schedules.length === 0 ? (
-          <div className="text-center py-12 text-[var(--color-muted)]">
-            <p className="text-lg">本月尚無排班資料</p>
+      {/* Schedule Content */}
+      <main className="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+        {loading ? (
+          <SkeletonCard />
+        ) : schedules.length === 0 ? (
+          <div className="text-center py-16 page-enter">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--color-border-light)] flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <p className="text-lg text-[var(--color-muted)]">本月尚無排班資料</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 page-enter">
             {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)]">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-[var(--color-primary)] text-white">
-                    <th className="px-4 py-3 text-left rounded-tl-lg">日期</th>
+                  <tr className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)]">
+                    <th className="px-5 py-4 text-left text-white font-medium text-base whitespace-nowrap">
+                      日期
+                    </th>
                     {serviceItems.map((item) => (
-                      <th key={item.id} className="px-3 py-3 text-center text-sm font-medium">
+                      <th key={item.id} className="px-3 py-4 text-center text-white font-medium text-sm">
                         {item.name}
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-center rounded-tr-lg">備註</th>
+                    <th className="px-4 py-4 text-center text-white font-medium text-sm whitespace-nowrap">
+                      備註
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {schedules.map((schedule, idx) => (
                     <tr
                       key={schedule.date}
-                      className={idx % 2 === 0 ? "bg-[var(--color-surface)]" : "bg-[var(--color-border-light)]"}
+                      className={
+                        idx % 2 === 0
+                          ? "bg-[var(--color-surface)] transition-colors"
+                          : "bg-[var(--color-border-light)] transition-colors"
+                      }
                     >
-                      <td className="px-4 py-3 font-medium whitespace-nowrap border-r border-[var(--color-border)]">
-                        {formatDate(schedule.date)}
+                      <td className="px-5 py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)]">
+                        <span className="text-sm">{formatDate(schedule.date)}</span>
+                        <span className="text-[var(--color-muted)] text-xs ml-1.5">
+                          ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                        </span>
+                        {schedule.isSpecialEvent && (
+                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent-dark)] font-medium">
+                            {schedule.eventTitle}
+                          </span>
+                        )}
                       </td>
                       {serviceItems.map((item) => {
                         const assignment = schedule.assignments[item.display_order];
@@ -285,8 +342,8 @@ export default function HomePage() {
 
                         if (schedule.isLocked) {
                           return (
-                            <td key={item.id} className="px-3 py-3 text-center border-r border-[var(--color-border)]">
-                              <span className="text-[var(--color-muted)] text-sm">🔒</span>
+                            <td key={item.id} className="px-3 py-4 text-center border-r border-[var(--color-border)]">
+                              <span className="text-[var(--color-muted)]">🔒</span>
                             </td>
                           );
                         }
@@ -294,7 +351,7 @@ export default function HomePage() {
                         return (
                           <td
                             key={item.id}
-                            className="px-3 py-3 text-center border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-accent)] hover:bg-opacity-10 transition-colors"
+                            className="px-3 py-4 text-center border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-accent)]/5 transition-colors"
                             onClick={() =>
                               openModal(schedule.scheduleId || 0, item.id, assignment ? {
                                 member_id: assignment.member_id,
@@ -303,24 +360,24 @@ export default function HomePage() {
                             }
                           >
                             {name ? (
-                              <span className="inline-block px-2 py-1 rounded-lg bg-[var(--color-secondary)] bg-opacity-15 text-[var(--color-secondary-dark)] text-sm font-medium">
+                              <span className={`inline-block px-2.5 py-1 rounded-lg text-sm font-medium border ${getMemberColor(name)}`}>
                                 {name}
                               </span>
                             ) : (
-                              <span className="text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)]">
+                              <span className="text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
                                 點擊登記
                               </span>
                             )}
                           </td>
                         );
                       })}
-                      <td className="px-4 py-3 text-center text-sm text-[var(--color-muted)]">
+                      <td className="px-4 py-4 text-center text-sm">
                         {schedule.isLocked ? (
-                          <span className="text-[var(--color-danger)]">{schedule.lockMessage}</span>
+                          <span className="text-[var(--color-danger)]">{schedule.lockMessage || "暫停"}</span>
                         ) : schedule.isSpecialEvent ? (
                           <span className="text-[var(--color-accent)]">{schedule.eventTitle}</span>
                         ) : (
-                          "-"
+                          <span className="text-[var(--color-muted)]">-</span>
                         )}
                       </td>
                     </tr>
@@ -332,23 +389,21 @@ export default function HomePage() {
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
               {schedules.map((schedule) => (
-                <div
-                  key={schedule.date}
-                  className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden shadow-sm"
-                >
-                  <div className="px-4 py-3 bg-[var(--color-primary)] bg-opacity-10 border-b border-[var(--color-border)]">
+                <Card key={schedule.date} variant="default" padding="none" className="overflow-hidden">
+                  <div className="px-4 py-3.5 bg-gradient-to-r from-[var(--color-primary)]/5 to-transparent border-b border-[var(--color-border)]">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[var(--color-primary)]">
-                        {formatDate(schedule.date)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[var(--color-primary)]">
+                          {formatDate(schedule.date)}
+                        </span>
+                        <span className="text-xs text-[var(--color-muted)]">
+                          ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                        </span>
+                      </div>
                       {schedule.isLocked ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-danger)] bg-opacity-15 text-[var(--color-danger)]">
-                          🔒 {schedule.lockMessage || "已鎖定"}
-                        </span>
+                        <Badge variant="danger">{schedule.lockMessage || "暫停聚會"}</Badge>
                       ) : schedule.isSpecialEvent ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-accent)] bg-opacity-15 text-[var(--color-accent)]">
-                          {schedule.eventTitle}
-                        </span>
+                        <Badge variant="accent">{schedule.eventTitle || "特殊活動"}</Badge>
                       ) : null}
                     </div>
                   </div>
@@ -360,8 +415,8 @@ export default function HomePage() {
                       return (
                         <div
                           key={item.id}
-                          className={`px-4 py-3 flex items-center justify-between ${
-                            schedule.isLocked ? "opacity-60" : "active:bg-[var(--color-border-light)]"
+                          className={`px-4 py-3.5 flex items-center justify-between ${
+                            schedule.isLocked ? "opacity-50" : "cursor-pointer active:bg-[var(--color-border-light)]"
                           }`}
                           onClick={() => {
                             if (!schedule.isLocked) {
@@ -372,21 +427,21 @@ export default function HomePage() {
                             }
                           }}
                         >
-                          <span className="text-sm text-[var(--color-text-light)]">{item.name}</span>
+                          <span className="text-sm font-medium text-[var(--color-text-light)]">{item.name}</span>
                           {name ? (
-                            <span className="text-sm font-medium text-[var(--color-secondary-dark)] bg-[var(--color-secondary)] bg-opacity-15 px-3 py-1 rounded-full">
+                            <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberColor(name)}`}>
                               {name}
                             </span>
                           ) : (
                             <span className="text-sm text-[var(--color-muted)]">
-                              {schedule.isLocked ? "🔒" : "點擊登記"}
+                              {schedule.isLocked ? "🔒" : "登記"}
                             </span>
                           )}
                         </div>
                       );
                     })}
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
@@ -395,29 +450,39 @@ export default function HomePage() {
 
       {/* Bottom Sheet Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black bg-opacity-40"
-            onClick={() => setModalOpen(false)}
-          />
-          <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-surface)] rounded-t-3xl max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-[var(--color-surface)] px-6 pt-4 pb-2 border-b border-[var(--color-border)]">
-              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mb-3"></div>
-              <h3 className="text-lg font-bold text-[var(--color-text)]">選擇服事人員</h3>
-              <p className="text-sm text-[var(--color-muted)] mt-1">
-                {serviceItems.find((i) => i.id === modalItemId)?.name}
-              </p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={() => setModalOpen(false)} />
+          <div className="relative w-full bg-[var(--color-surface)] sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden">
+            <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-10">
+              <div className="flex items-center justify-between px-6 pt-5 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">選擇服事人員</h3>
+                  <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                    {serviceItems.find((i) => i.id === modalItemId)?.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="px-6 py-4">
-              {/* Clear option */}
+
+            <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
               <button
                 onClick={() => handleSelectMember(null)}
-                className="w-full px-4 py-3 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors mb-2 text-[var(--color-danger)]"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors mb-2 text-[var(--color-danger)]"
               >
-                清除此欄位
+                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+                <span className="text-sm font-medium">清除此欄位</span>
               </button>
 
-              {/* Member list */}
               <div className="space-y-1">
                 {members.map((member) => {
                   const isSelected = modalCurrentValue?.member_id === member.id;
@@ -425,59 +490,72 @@ export default function HomePage() {
                     <button
                       key={member.id}
                       onClick={() => handleSelectMember(member.id)}
-                      className={`w-full px-4 py-3 rounded-xl text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all ${
                         isSelected
-                          ? "bg-[var(--color-secondary)] bg-opacity-15 text-[var(--color-secondary-dark)] font-medium"
-                          : "hover:bg-[var(--color-border-light)]"
+                          ? "bg-[var(--color-secondary)]/10 text-[var(--color-secondary-dark)] font-medium ring-1 ring-[var(--color-secondary)]/30"
+                          : "hover:bg-[var(--color-border-light)] text-[var(--color-text)]"
                       }`}
                     >
-                      {member.name}
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        isSelected
+                          ? "bg-[var(--color-secondary)] text-white"
+                          : "bg-[var(--color-border-light)] text-[var(--color-text-light)]"
+                      }`}>
+                        {member.name.charAt(0)}
+                      </span>
+                      <span>{member.name}</span>
+                      {isSelected && (
+                        <svg className="ml-auto w-4 h-4 text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Custom input */}
-              <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+              <div className="mt-4 border-t border-[var(--color-border)] pt-4">
                 {!showCustomInput ? (
                   <button
                     onClick={() => setShowCustomInput(true)}
-                    className="w-full px-4 py-3 rounded-xl text-left text-[var(--color-accent)] hover:bg-[var(--color-border-light)] transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors text-[var(--color-accent)]"
                   >
-                    + 其他（自行輸入姓名）
+                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span className="text-sm font-medium">自行輸入姓名</span>
                   </button>
                 ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      placeholder="輸入姓名..."
-                      maxLength={50}
-                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-base"
-                      autoFocus
-                    />
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={customName}
+                        onChange={(e) => setCustomName(e.target.value)}
+                        placeholder="輸入姓名..."
+                        maxLength={50}
+                        className="w-full pl-4 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all"
+                        autoFocus
+                      />
+                    </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setShowCustomInput(false);
-                          setCustomName("");
-                        }}
-                        className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)] text-[var(--color-muted)]"
+                      <Button
+                        variant="ghost"
+                        size="md"
+                        className="flex-1"
+                        onClick={() => { setShowCustomInput(false); setCustomName(""); }}
                       >
                         取消
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (customName.trim()) {
-                            handleSelectMember(null, customName.trim());
-                          }
-                        }}
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="md"
+                        className="flex-1"
                         disabled={!customName.trim()}
-                        className="flex-1 px-4 py-3 rounded-xl bg-[var(--color-primary)] text-white disabled:opacity-50"
+                        onClick={() => { if (customName.trim()) handleSelectMember(null, customName.trim()); }}
                       >
                         確認
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -488,8 +566,8 @@ export default function HomePage() {
       )}
 
       {/* Footer */}
-      <footer className="mt-auto py-4 text-center text-sm text-[var(--color-muted)] border-t border-[var(--color-border)]">
-        ChurchServe - 開源教會小組服事報名系統
+      <footer className="mt-auto py-5 text-center border-t border-[var(--color-border)]">
+        <p className="text-sm text-[var(--color-muted)]">ChurchServe — 開源教會小組服事排班系統</p>
       </footer>
     </div>
   );

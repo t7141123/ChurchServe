@@ -1,26 +1,9 @@
 @import "tailwindcss";
 
-:root {
-  --color-bg: #FDF8F3;
-  --color-surface: #FFFFFF;
-  --color-primary: #8B6F47;
-  --color-primary-dark: #6B5535;
-  --color-secondary: #6B8E5A;
-  --color-secondary-dark: #4F6B42;
-  --color-accent: #E8913A;
-  --color-accent-dark: #C97A2E;
-  --color-text: #3D3229;
-  --color-text-light: #6B5E52;
-  --color-muted: #A89585;
-  --color-border: #E5DDD4;
-  --color-border-light: #F0EBE5;
-  --color-danger: #C75B3F;
-  --color-danger-dark: #A44A33;
-  --color-success: #6B8E5A;
-  --color-warning: #E8913A;
-}
-
 @theme {
+  --font-serif: var(--font-serif), "Noto Serif TC", serif;
+  --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+
   --color-bg: #FDF8F3;
   --color-surface: #FFFFFF;
   --color-primary: #8B6F47;
@@ -38,13 +21,27 @@
   --color-danger-dark: #A44A33;
   --color-success: #6B8E5A;
   --color-warning: #E8913A;
+
+  --color-glass-bg: rgba(255, 255, 255, 0.72);
+  --color-glass-border: rgba(255, 255, 255, 0.9);
+  --color-glass-shadow: rgba(139, 111, 71, 0.08);
+
+  --shadow-card: 0 1px 3px rgba(139, 111, 71, 0.06), 0 1px 2px rgba(139, 111, 71, 0.04);
+  --shadow-card-hover: 0 4px 12px rgba(139, 111, 71, 0.1), 0 2px 4px rgba(139, 111, 71, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(139, 111, 71, 0.12), 0 4px 8px rgba(139, 111, 71, 0.06);
+  --shadow-modal: 0 16px 48px rgba(61, 50, 41, 0.15), 0 4px 12px rgba(61, 50, 41, 0.1);
+  --shadow-glass: 0 4px 16px rgba(139, 111, 71, 0.08);
 }
 
 body {
-  background-color: var(--color-bg);
+  background: linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%);
+  background-attachment: fixed;
   color: var(--color-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -64,8 +61,79 @@ button {
 a {
   color: var(--color-primary);
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--color-primary-dark);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slideUp 0.35s ease-out;
+}
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out;
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-surface) 50%, var(--color-border-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glass card utility */
+.glass {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+/* Page transition */
+.page-enter {
+  animation: slideUpFade 0.4s ease-out;
 }

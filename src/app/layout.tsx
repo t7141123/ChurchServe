@@ -1,5 +1,20 @@
 import type { Metadata } from "next";
+import { Noto_Serif_TC, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
+
+const notoSerif = Noto_Serif_TC({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const notoSans = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "ChurchServe - 教會小組服事報名系統",
@@ -13,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className="h-full antialiased">
-      <body className="min-h-full flex flex-col" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}>
+    <html lang="zh-TW" className={`${notoSerif.variable} ${notoSans.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
         {children}
       </body>
     </html>

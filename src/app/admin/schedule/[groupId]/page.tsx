@@ -145,14 +145,11 @@ export default function SchedulePage() {
     }
 
     enriched.sort((a, b) => a.date.localeCompare(b.date));
-
     setRows(enriched);
     setLoading(false);
   }, [groupId, currentYear, currentMonth]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleLock = async () => {
     if (!lockDate) return;
@@ -226,139 +223,213 @@ export default function SchedulePage() {
   };
 
   return (
-    <div>
+    <div className="animate-fadeIn">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <a href="/admin" className="text-[var(--color-muted)] hover:text-[var(--color-primary)]">← 返回</a>
-        <h2 className="text-xl font-bold">{groupName} - 排班管理</h2>
+        <a
+          href="/admin/schedule"
+          className="w-8 h-8 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <div>
+          <h1 className="text-xl font-bold font-serif text-[var(--color-primary-dark)]">{groupName}</h1>
+          <p className="text-xs text-[var(--color-muted)]">排班管理</p>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button onClick={() => setSpecialModal(true)} className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white text-sm">
-          + 特殊日
-        </button>
-        <button onClick={() => { setLockDate(""); setLockMessage(""); setLockModal(true); }} className="px-4 py-2 rounded-xl bg-[var(--color-danger)] text-white text-sm">
-          🔒 鎖定日期
-        </button>
+      {/* Actions bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); } else setCurrentMonth(currentMonth - 1); }}
+            className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span className="font-medium min-w-[120px] text-center text-sm">{currentYear} 年 {currentMonth} 月</span>
+          <button
+            onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); } else setCurrentMonth(currentMonth + 1); }}
+            className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setSpecialModal(true)} className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-dark)] shadow-sm shadow-[var(--color-accent)]/20 transition-all hover:shadow-md hover:translate-y-[-1px] active:translate-y-[0px]">
+            <span className="flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+              特殊日
+            </span>
+          </button>
+          <button
+            onClick={() => { setLockDate(""); setLockMessage(""); setLockModal(true); }}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-danger)] to-[#B91C1C] shadow-sm shadow-[var(--color-danger)]/20 transition-all hover:shadow-md hover:translate-y-[-1px] active:translate-y-[0px]"
+          >
+            <span className="flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              鎖定
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <button onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); } else setCurrentMonth(currentMonth - 1); }} className="px-3 py-2 rounded-lg bg-[var(--color-border-light)]">◀</button>
-        <span className="font-medium min-w-[100px] text-center">{currentYear} 年 {currentMonth} 月</span>
-        <button onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); } else setCurrentMonth(currentMonth + 1); }} className="px-3 py-2 rounded-lg bg-[var(--color-border-light)]">▶</button>
-      </div>
-
+      {/* Table */}
       {loading ? (
-        <div className="text-center py-8 text-[var(--color-muted)]">載入中...</div>
+        <div className="glass rounded-2xl overflow-hidden">
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-primary)] border-t-transparent mx-auto" />
+          </div>
+        </div>
       ) : rows.length === 0 ? (
-        <div className="text-center py-8 text-[var(--color-muted)]">本月無排班</div>
+        <div className="text-center py-16 glass rounded-2xl animate-fadeIn">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-border-light)] mb-4">
+            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+            </svg>
+          </div>
+          <p className="text-sm text-[var(--color-muted)]">本月無排班</p>
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-[var(--color-primary)] text-white">
-                <th className="px-3 py-2 text-left">日期</th>
-                {serviceItems.map((item) => (
-                  <th key={item.id} className="px-2 py-2 text-center">{item.name}</th>
-                ))}
-                <th className="px-3 py-2 text-center min-w-[80px]">備註</th>
-                <th className="px-3 py-2 text-center">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, idx) => (
-                <tr key={row.date} className={idx % 2 === 0 ? "bg-[var(--color-surface)]" : "bg-[var(--color-border-light)]"}>
-                  <td className="px-3 py-2 font-medium whitespace-nowrap">
-                    {row.date} ({DAY_NAMES[new Date(row.date + "T00:00:00").getDay()]})
-                  </td>
-                  {row.isLocked ? (
-                    <td colSpan={serviceItems.length + 2} className="px-3 py-3 text-center">
-                      <span className="text-[var(--color-muted)]">🔒 {row.lockMessage || "暫停聚會"}</span>
-                      {row.scheduleId != null && (
-                        <button onClick={() => handleUnlock(row.scheduleId!)} className="ml-3 text-xs text-[var(--color-secondary)] hover:underline">
-                          解鎖
-                        </button>
-                      )}
-                    </td>
-                  ) : (
-                    <>
-                      {serviceItems.map((item) => {
-                        const a = row.assignments[item.display_order];
-                        const name = a?.member_name || a?.custom_member_name;
-                        return (
-                          <td key={item.id} className="px-2 py-2 text-center">
-                            <button
-                              onClick={() => openAssignModal(row.scheduleId || 0, item.id, a ? { member_id: a.member_id, custom_name: a.custom_member_name } : null)}
-                              className={`px-2 py-1 rounded text-xs ${name ? "bg-[var(--color-secondary)] bg-opacity-15 text-[var(--color-secondary-dark)]" : "text-[var(--color-muted)] hover:text-[var(--color-primary)]"}`}
-                            >
-                              {name || "—"}
-                            </button>
-                          </td>
-                        );
-                      })}
-                      <td className="px-2 py-2 text-center">
-                        {editingRemarks?.scheduleId === row.scheduleId ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="text"
-                              value={editingRemarks.value}
-                              onChange={(e) => setEditingRemarks({ ...editingRemarks, value: e.target.value })}
-                              className="w-20 px-2 py-1 rounded border border-[var(--color-border)] text-xs"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  const token = localStorage.getItem("admin_token");
-                                  fetch(`/api/admin/schedules/${row.scheduleId}/remarks`, {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                                    body: JSON.stringify({ remarks: editingRemarks.value }),
-                                  }).then(fetchData);
-                                  setEditingRemarks(null);
-                                }
-                                if (e.key === "Escape") setEditingRemarks(null);
-                              }}
-                            />
-                            <button onClick={() => setEditingRemarks(null)} className="text-xs text-[var(--color-muted)]">✕</button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => row.scheduleId && setEditingRemarks({ scheduleId: row.scheduleId, date: row.date, value: row.remarks || "" })}
-                            className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] max-w-[80px] truncate"
-                            title={row.remarks || ""}
-                          >
-                            {row.remarks || "—"}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {row.scheduleId ? (
-                          <span className="text-xs text-[var(--color-muted)]">已建立</span>
-                        ) : (
-                          <span className="text-xs text-[var(--color-muted)]">—</span>
-                        )}
-                      </td>
-                    </>
-                  )}
+        <div className="glass rounded-2xl overflow-hidden shadow-card animate-slideUp">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+              <thead>
+                <tr>
+                  <th className="sticky top-0 px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap">日期</th>
+                  {serviceItems.map((item) => (
+                    <th key={item.id} className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap">{item.name}</th>
+                  ))}
+                  <th className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap min-w-[80px]">備註</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((row, idx) => (
+                  <tr key={row.date} className={`transition-colors ${idx % 2 === 0 ? "bg-white/40" : "bg-white/10"} hover:bg-[var(--color-primary)]/5`}>
+                    {row.isLocked ? (
+                      <td colSpan={serviceItems.length + 2} className="px-4 py-4">
+                        <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-muted)]">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                          </svg>
+                          <span>{row.lockMessage || "暫停聚會"}</span>
+                          {row.scheduleId != null && (
+                            <button onClick={() => handleUnlock(row.scheduleId!)} className="ml-2 px-3 py-1 rounded-lg text-xs font-medium text-[var(--color-secondary-dark)] bg-[var(--color-secondary)]/10 hover:bg-[var(--color-secondary)]/20 transition-all">
+                              解鎖
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="text-sm font-medium text-[var(--color-text)]">{row.date.replace(/^\d{4}-/, "")}</div>
+                          <div className="text-xs text-[var(--color-muted)]">週{DAY_NAMES[new Date(row.date + "T00:00:00").getDay()]}</div>
+                        </td>
+                        {serviceItems.map((item) => {
+                          const a = row.assignments[item.display_order];
+                          const name = a?.member_name || a?.custom_member_name;
+                          return (
+                            <td key={item.id} className="px-2 py-3 text-center">
+                              <button
+                                onClick={() => openAssignModal(row.scheduleId || 0, item.id, a ? { member_id: a.member_id, custom_name: a.custom_member_name } : null)}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                                  name
+                                    ? "bg-[var(--color-secondary)]/10 text-[var(--color-secondary-dark)] hover:bg-[var(--color-secondary)]/20"
+                                    : "text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
+                                }`}
+                              >
+                                {name || <span className="opacity-40">—</span>}
+                              </button>
+                            </td>
+                          );
+                        })}
+                        <td className="px-3 py-3 text-center">
+                          {editingRemarks?.scheduleId === row.scheduleId ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <input
+                                type="text"
+                                value={editingRemarks.value}
+                                onChange={(e) => setEditingRemarks({ ...editingRemarks, value: e.target.value })}
+                                className="w-20 px-2 py-1.5 rounded-lg border border-[var(--color-glass-border)] bg-white/60 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    const token = localStorage.getItem("admin_token");
+                                    fetch(`/api/admin/schedules/${row.scheduleId}/remarks`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                      body: JSON.stringify({ remarks: editingRemarks.value }),
+                                    }).then(fetchData);
+                                    setEditingRemarks(null);
+                                  }
+                                  if (e.key === "Escape") setEditingRemarks(null);
+                                }}
+                              />
+                              <button onClick={() => setEditingRemarks(null)} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-danger)]">
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => row.scheduleId && setEditingRemarks({ scheduleId: row.scheduleId, date: row.date, value: row.remarks || "" })}
+                              className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] max-w-[80px] truncate inline-block transition-all"
+                              title={row.remarks || ""}
+                            >
+                              {row.remarks || <span className="opacity-40">—</span>}
+                            </button>
+                          )}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Lock Modal */}
       {lockModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setLockModal(false)} />
-          <div className="relative bg-[var(--color-surface)] rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">鎖定日期</h3>
-            <select value={lockDate} onChange={(e) => setLockDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setLockModal(false)} />
+          <div className="relative glass rounded-2xl p-6 w-full max-w-md shadow-modal animate-scaleIn">
+            <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">鎖定日期</h3>
+            <select
+              value={lockDate}
+              onChange={(e) => setLockDate(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            >
               <option value="">選擇日期</option>
               {rows.map((r) => <option key={r.date} value={r.date}>{r.date}</option>)}
             </select>
-            <input type="text" value={lockMessage} onChange={(e) => setLockMessage(e.target.value)} placeholder="鎖定訊息（選填）" className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] mb-4" />
-            <div className="flex gap-2">
-              <button onClick={() => setLockModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)]">取消</button>
-              <button onClick={handleLock} disabled={!lockDate} className="flex-1 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white disabled:opacity-50">確認鎖定</button>
+            <input
+              type="text"
+              value={lockMessage}
+              onChange={(e) => setLockMessage(e.target.value)}
+              placeholder="鎖定訊息（選填）"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setLockModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
+              <button onClick={handleLock} disabled={!lockDate} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-danger)] to-[#B91C1C] shadow-sm transition-all disabled:opacity-50">確認鎖定</button>
             </div>
           </div>
         </div>
@@ -366,15 +437,26 @@ export default function SchedulePage() {
 
       {/* Special Event Modal */}
       {specialModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setSpecialModal(false)} />
-          <div className="relative bg-[var(--color-surface)] rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">新增特殊日</h3>
-            <input type="date" value={specialDate} onChange={(e) => setSpecialDate(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] mb-3" />
-            <input type="text" value={specialTitle} onChange={(e) => setSpecialTitle(e.target.value)} placeholder="活動名稱" className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] mb-4" />
-            <div className="flex gap-2">
-              <button onClick={() => setSpecialModal(false)} className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)]">取消</button>
-              <button onClick={handleSpecialEvent} disabled={!specialDate || !specialTitle.trim()} className="flex-1 px-4 py-3 rounded-xl bg-[var(--color-accent)] text-white disabled:opacity-50">確認</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSpecialModal(false)} />
+          <div className="relative glass rounded-2xl p-6 w-full max-w-md shadow-modal animate-scaleIn">
+            <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">新增特殊日</h3>
+            <input
+              type="date"
+              value={specialDate}
+              onChange={(e) => setSpecialDate(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            />
+            <input
+              type="text"
+              value={specialTitle}
+              onChange={(e) => setSpecialTitle(e.target.value)}
+              placeholder="活動名稱"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setSpecialModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
+              <button onClick={handleSpecialEvent} disabled={!specialDate || !specialTitle.trim()} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-dark)] shadow-sm transition-all disabled:opacity-50">確認</button>
             </div>
           </div>
         </div>
@@ -382,32 +464,76 @@ export default function SchedulePage() {
 
       {/* Assignment Modal */}
       {assignModal && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setAssignModal(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-surface)] rounded-t-3xl max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-[var(--color-surface)] px-6 pt-4 pb-2 border-b border-[var(--color-border)]">
-              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mb-3" />
-              <h3 className="text-lg font-bold">指派服事人員</h3>
+        <div className="fixed inset-0 z-50 animate-fadeIn">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setAssignModal(false)} />
+          <div
+            className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl"
+            style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}
+          >
+            <div className="sticky top-0 px-6 pt-4 pb-2 border-b border-[var(--color-glass-border)]" style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}>
+              <div className="w-10 h-1 bg-[var(--color-glass-border)] rounded-full mx-auto mb-3" />
+              <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)]">指派服事人員</h3>
               <p className="text-sm text-[var(--color-muted)]">{serviceItems.find((i) => i.id === assignItemId)?.name}</p>
             </div>
             <div className="px-6 py-4">
-              <button onClick={() => handleAssign(null)} className="w-full px-4 py-3 rounded-xl text-left text-[var(--color-danger)] hover:bg-[var(--color-border-light)] mb-2">清除</button>
+              <button
+                onClick={() => handleAssign(null)}
+                className="w-full px-4 py-3 rounded-xl text-left text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/5 transition-all mb-2"
+              >
+                清除指派
+              </button>
               <div className="space-y-1">
                 {members.filter((m) => m.is_active === 1).map((m) => (
-                  <button key={m.id} onClick={() => handleAssign(m.id)} className={`w-full px-4 py-3 rounded-xl text-left transition-colors ${assignCurrentValue?.member_id === m.id ? "bg-[var(--color-secondary)] bg-opacity-15 font-medium" : "hover:bg-[var(--color-border-light)]"}`}>
-                    {m.name}
+                  <button
+                    key={m.id}
+                    onClick={() => handleAssign(m.id)}
+                    className={`w-full px-4 py-3 rounded-xl text-left text-sm transition-all ${
+                      assignCurrentValue?.member_id === m.id
+                        ? "bg-[var(--color-secondary)]/15 font-medium text-[var(--color-secondary-dark)]"
+                        : "hover:bg-white/60"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                        {m.name.charAt(0)}
+                      </div>
+                      {m.name}
+                      {assignCurrentValue?.member_id === m.id && (
+                        <svg className="w-4 h-4 ml-auto text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      )}
+                    </span>
                   </button>
                 ))}
               </div>
-              <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+              <div className="mt-3 border-t border-[var(--color-glass-border)] pt-3">
                 {!showCustomInput ? (
-                  <button onClick={() => setShowCustomInput(true)} className="w-full px-4 py-3 rounded-xl text-left text-[var(--color-accent)] hover:bg-[var(--color-border-light)]">+ 其他</button>
+                  <button
+                    onClick={() => setShowCustomInput(true)}
+                    className="w-full px-4 py-3 rounded-xl text-left text-sm text-[var(--color-accent)] hover:bg-white/60 transition-all"
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      其他（非成員）
+                    </span>
+                  </button>
                 ) : (
-                  <div className="space-y-2">
-                    <input type="text" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="輸入姓名..." maxLength={50} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)]" autoFocus />
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      placeholder="輸入姓名..."
+                      maxLength={50}
+                      className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      autoFocus
+                    />
                     <div className="flex gap-2">
-                      <button onClick={() => { setShowCustomInput(false); setCustomName(""); }} className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)]">取消</button>
-                      <button onClick={() => { if (customName.trim()) handleAssign(null, customName.trim()); }} disabled={!customName.trim()} className="flex-1 px-4 py-3 rounded-xl bg-[var(--color-primary)] text-white disabled:opacity-50">確認</button>
+                      <button onClick={() => { setShowCustomInput(false); setCustomName(""); }} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
+                      <button onClick={() => { if (customName.trim()) handleAssign(null, customName.trim()); }} disabled={!customName.trim()} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-sm transition-all disabled:opacity-50">確認</button>
                     </div>
                   </div>
                 )}

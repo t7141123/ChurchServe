@@ -23,17 +23,6 @@ export default function ServiceItemsPage() {
     return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
   };
 
-  const handleUpdate = async (id: number) => {
-    if (!editName.trim()) return;
-    await fetch(`/api/groups/${groupId}/service-items`, {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify({ itemId: id, name: editName.trim() }),
-    });
-    setEditingId(null);
-    fetchItems();
-  };
-
   const fetchItems = () => {
     fetch(`/api/groups/${groupId}/service-items`)
       .then((r) => r.json())
@@ -44,9 +33,7 @@ export default function ServiceItemsPage() {
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => {
-    fetchItems();
-  }, [groupId]);
+  useEffect(() => { fetchItems(); }, [groupId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +44,17 @@ export default function ServiceItemsPage() {
       body: JSON.stringify({ name: newName.trim() }),
     });
     setNewName("");
+    fetchItems();
+  };
+
+  const handleUpdate = async (id: number) => {
+    if (!editName.trim()) return;
+    await fetch(`/api/groups/${groupId}/service-items`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ itemId: id, name: editName.trim() }),
+    });
+    setEditingId(null);
     fetchItems();
   };
 
@@ -109,88 +107,127 @@ export default function ServiceItemsPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <a href="/admin/groups" className="text-[var(--color-muted)] hover:text-[var(--color-primary)]">
-          ← 返回
-        </a>
-        <h2 className="text-xl font-bold">服事項目管理</h2>
+    <>
+      <div className="mb-8 animate-fadeIn">
+        <div className="flex items-center gap-3 mb-1">
+          <a
+            href="/admin/groups"
+            className="w-8 h-8 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </a>
+          <div>
+            <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">服事項目管理</h1>
+            <p className="text-sm text-[var(--color-muted)]">{items.length} 個項目</p>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleCreate} className="mb-6 flex gap-2">
-        <input
-          type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="新增服事項目..."
-          className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        />
-        <button
-          type="submit"
-          disabled={!newName.trim()}
-          className="px-6 py-3 rounded-xl bg-[var(--color-primary)] text-white font-medium disabled:opacity-50"
-        >
-          新增
-        </button>
+      {/* Create form */}
+      <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增服事項目</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="輸入項目名稱..."
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+          />
+          <button
+            type="submit"
+            disabled={!newName.trim()}
+            className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg hover:translate-y-[-1px] active:translate-y-[0px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            新增
+          </button>
+        </div>
       </form>
 
       {loading ? (
-        <div className="text-center py-8 text-[var(--color-muted)]">載入中...</div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-8 text-[var(--color-muted)]">尚無服事項目</div>
-      ) : (
         <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-2xl p-5" style={{ background: "var(--color-surface)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded bg-[var(--color-border-light)] animate-pulse" />
+                <div className="h-5 w-32 rounded bg-[var(--color-border-light)] animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16 animate-fadeIn">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-border-light)] mb-4">
+            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+          </div>
+          <p className="text-sm text-[var(--color-muted)]">尚無服事項目</p>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
           {items.map((item, idx) => (
             <div
               key={item.id}
-              className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-3"
+              className="glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-slideUp"
+              style={{ animationDelay: `${idx * 60}ms` }}
             >
-              <span className="text-[var(--color-muted)] text-sm w-6 text-center">{idx + 1}</span>
+              <span className="w-6 text-center text-sm font-bold text-[var(--color-muted)]">{idx + 1}</span>
               {editingId === item.id ? (
-                <>
+                <div className="flex-1 flex items-center gap-2">
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                     autoFocus
                   />
                   <button
                     onClick={() => handleUpdate(item.id)}
-                    className="px-4 py-2 rounded-lg bg-[var(--color-secondary)] text-white text-sm"
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md"
                   >
                     儲存
                   </button>
-                </>
+                </div>
               ) : (
                 <>
-                  <span className="flex-1 font-medium">{item.name}</span>
+                  <span className="flex-1 font-medium text-[var(--color-text)]">{item.name}</span>
                   <button
                     onClick={() => handleMoveUp(item)}
                     disabled={idx === 0}
-                    className="px-2 py-1 rounded text-sm disabled:opacity-30"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)] disabled:opacity-20 disabled:cursor-not-allowed"
+                    title="上移"
                   >
-                    ↑
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M18 15l-6-6-6 6" />
+                    </svg>
                   </button>
                   <button
                     onClick={() => handleMoveDown(item)}
                     disabled={idx === items.length - 1}
-                    className="px-2 py-1 rounded text-sm disabled:opacity-30"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)] disabled:opacity-20 disabled:cursor-not-allowed"
+                    title="下移"
                   >
-                    ↓
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
                   </button>
                   <button
-                    onClick={() => {
-                      setEditingId(item.id);
-                      setEditName(item.name);
-                    }}
-                    className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+                    onClick={() => { setEditingId(item.id); setEditName(item.name); }}
+                    className="px-3 py-1.5 rounded-xl text-xs border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]"
                   >
                     編輯
                   </button>
                   <button
                     onClick={() => handleDelete(item)}
-                    className="px-4 py-2 rounded-lg text-[var(--color-danger)] border border-[var(--color-danger)] border-opacity-30 text-sm"
+                    className="px-3 py-1.5 rounded-xl text-xs text-[var(--color-danger)] border border-[var(--color-danger)]/20 transition-all hover:bg-[var(--color-danger)]/5"
                   >
                     刪除
                   </button>
@@ -200,6 +237,6 @@ export default function ServiceItemsPage() {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
