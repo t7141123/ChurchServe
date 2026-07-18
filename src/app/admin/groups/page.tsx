@@ -14,20 +14,31 @@ export default function GroupsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (errorMsg) {
+      const t = setTimeout(() => setErrorMsg(""), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [errorMsg]);
 
   const authHeaders = (): Record<string, string> => {
     const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
     return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
   };
 
-  const fetchGroups = () => {
-    fetch("/api/groups")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setGroups(d.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch("/api/groups");
+      if (!res.ok) throw new Error("載入失敗");
+      const d = await res.json();
+      if (d.success) setGroups(d.data);
+    } catch {
+      setErrorMsg("載入小組列表失敗");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchGroups(); }, []);
@@ -35,30 +46,54 @@ export default function GroupsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    await fetch("/api/groups", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ name: newName.trim() }),
-    });
-    setNewName("");
-    fetchGroups();
+    try {
+      const res = await fetch("/api/groups", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "建立失敗");
+      }
+      setNewName("");
+      fetchGroups();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "建立失敗");
+    }
   };
 
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
-    await fetch(`/api/groups/${id}`, {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify({ name: editName.trim() }),
-    });
-    setEditingId(null);
-    fetchGroups();
+    try {
+      const res = await fetch(`/api/groups/${id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "更新失敗");
+      }
+      setEditingId(null);
+      fetchGroups();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "更新失敗");
+    }
   };
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`確定要刪除「${name}」嗎？此操作不可復原。`)) return;
-    await fetch(`/api/groups/${id}`, { method: "DELETE", headers: authHeaders() });
-    fetchGroups();
+    try {
+      const res = await fetch(`/api/groups/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "刪除失敗");
+      }
+      fetchGroups();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "刪除失敗");
+    }
   };
 
   return (
@@ -67,6 +102,12 @@ export default function GroupsPage() {
         <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)] mb-1">小組管理</h1>
         <p className="text-sm text-[var(--color-muted)]">建立、編輯或刪除小組</p>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20 animate-fadeIn" role="alert">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Create form */}
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
@@ -103,7 +144,7 @@ export default function GroupsPage() {
       ) : groups.length === 0 ? (
         <div className="text-center py-16 animate-fadeIn">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-border-light)] mb-4">
-            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />

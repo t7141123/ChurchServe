@@ -14,29 +14,50 @@ export default function GroupEditPage() {
   const [group, setGroup] = useState<Group | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    fetch(`/api/groups/${groupId}`)
-      .then((r) => r.json())
-      .then((d) => {
+    if (errorMsg) {
+      const t = setTimeout(() => setErrorMsg(""), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [errorMsg]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/groups/${groupId}`);
+        if (!res.ok) throw new Error("載入失敗");
+        const d = await res.json();
         if (d.success) {
           setGroup(d.data);
           setName(d.data.name);
         }
+      } catch {
+        setErrorMsg("載入小組資料失敗");
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    })();
   }, [groupId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    await fetch(`/api/groups/${groupId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() }),
-    });
-    window.location.href = "/admin/groups";
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "更新失敗");
+      }
+      window.location.href = "/admin/groups";
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "更新失敗");
+    }
   };
 
   if (loading) return <div className="text-center py-8 text-[var(--color-muted)]">載入中...</div>;
@@ -49,6 +70,12 @@ export default function GroupEditPage() {
         </a>
         <h2 className="text-xl font-bold">編輯小組</h2>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20 animate-fadeIn" role="alert">
+          {errorMsg}
+        </div>
+      )}
 
       <form onSubmit={handleUpdate} className="max-w-md">
         <div className="mb-4">
