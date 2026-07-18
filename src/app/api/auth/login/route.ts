@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verifyPassword } from "@/lib/server/auth/password";
 import { createToken } from "@/lib/server/auth/jwt";
-import { checkRateLimit } from "@/lib/server/middleware/rate-limit";
+import { checkD1RateLimit } from "@/lib/server/middleware/rate-limit";
 import { getJwtSecret } from "@/lib/server/auth/admin";
+import { loginSchema, validateInput } from "@/lib/server/middleware/validate";
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const db = env.DB;
 
     const ip = getClientIp(request);
-    const rateCheck = checkRateLimit(`login:${ip}`, 5, 900000);
+    const rateCheck = await checkD1RateLimit(db, `login:${ip}`, 5, 900000);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "登入嘗試次數過多，請 15 分鐘後再試" },
@@ -26,14 +27,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, password } = body;
-
-    if (!username || !password) {
+    const validation = validateInput(loginSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: "請輸入帳號和密碼" },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
+    const { username, password } = validation.data;
 
     const admin = await db.prepare(
       "SELECT * FROM Admins WHERE username = ?"

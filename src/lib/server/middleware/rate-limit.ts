@@ -38,6 +38,41 @@ export function checkRateLimit(
   return { allowed: true, remaining: maxAttempts - entry.count, resetAt: entry.resetAt };
 }
 
-export function resetRateLimit(key: string) {
-  rateLimitStore.delete(key);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function checkD1RateLimit(
+  db: any,
+  key: string,
+  maxAttempts: number,
+  windowMs: number
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const windowMinutes = Math.ceil(windowMs / 60000);
+  const ip = key.replace("login:", "");
+
+  const cutoff = `-${windowMinutes} minutes`;
+
+  await db.prepare(
+    "DELETE FROM LoginAttempts WHERE attempted_at < datetime('now', ?)"
+  ).bind(cutoff).run();
+
+  const result = await db.prepare(
+    "SELECT COUNT(*) as cnt FROM LoginAttempts WHERE ip_address = ? AND attempted_at >= datetime('now', ?)"
+  ).bind(ip, cutoff).first() as { cnt: number } | null;
+
+  const count = result?.cnt ?? 0;
+
+  if (count >= maxAttempts) {
+    return { allowed: false, remaining: 0, resetAt: Date.now() + windowMs };
+  }
+
+  await db.prepare(
+    "INSERT INTO LoginAttempts (ip_address) VALUES (?)"
+  ).bind(ip).run();
+
+  return { allowed: true, remaining: maxAttempts - count - 1, resetAt: Date.now() + windowMs };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function resetD1RateLimit(db: any, key: string) {
+  const ip = key.replace("login:", "");
+  await db.prepare("DELETE FROM LoginAttempts WHERE ip_address = ?").bind(ip).run();
 }
