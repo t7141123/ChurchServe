@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getAuthAdmin } from "@/lib/server/auth/admin";
+import { sanitize } from "@/lib/server/middleware/sanitize";
 
 export async function PUT(
   request: NextRequest,
@@ -17,11 +18,11 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { is_locked, lock_message } = body;
+    const { remarks } = body;
 
     await db.prepare(
-      "UPDATE DutySchedules SET is_locked = ?, lock_message = ? WHERE id = ?"
-    ).bind(is_locked, lock_message || null, Number(id)).run();
+      "UPDATE DutySchedules SET remarks = ? WHERE id = ?"
+    ).bind(remarks ? sanitize(remarks) : null, Number(id)).run();
 
     return NextResponse.json({ success: true });
   } catch {

@@ -15,6 +15,11 @@ export default function GroupsPage() {
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const authHeaders = (): Record<string, string> => {
+    const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
+  };
+
   const fetchGroups = () => {
     fetch("/api/groups")
       .then((r) => r.json())
@@ -34,7 +39,7 @@ export default function GroupsPage() {
     if (!newName.trim()) return;
     await fetch("/api/groups", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ name: newName.trim() }),
     });
     setNewName("");
@@ -45,7 +50,7 @@ export default function GroupsPage() {
     if (!editName.trim()) return;
     await fetch(`/api/groups/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ name: editName.trim() }),
     });
     setEditingId(null);
@@ -54,7 +59,7 @@ export default function GroupsPage() {
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`確定要刪除「${name}」嗎？此操作不可復原。`)) return;
-    await fetch(`/api/groups/${id}`, { method: "DELETE" });
+    await fetch(`/api/groups/${id}`, { method: "DELETE", headers: authHeaders() });
     fetchGroups();
   };
 

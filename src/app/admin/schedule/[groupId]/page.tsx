@@ -22,6 +22,7 @@ interface ScheduleRow {
   eventTitle: string | null;
   isLocked: number;
   lockMessage: string | null;
+  remarks: string | null;
   assignments: Record<number, { member_id: number | null; custom_member_name: string | null; member_name: string | null; id: number }>;
 }
 
@@ -57,6 +58,8 @@ export default function SchedulePage() {
   const [specialDate, setSpecialDate] = useState("");
   const [specialTitle, setSpecialTitle] = useState("");
 
+  const [editingRemarks, setEditingRemarks] = useState<{ scheduleId: number; date: string; value: string } | null>(null);
+
   const [assignModal, setAssignModal] = useState(false);
   const [assignScheduleId, setAssignScheduleId] = useState<number | null>(null);
   const [assignItemId, setAssignItemId] = useState<number | null>(null);
@@ -81,10 +84,15 @@ export default function SchedulePage() {
     if (itemData.success) setServiceItems(itemData.data);
     if (memberData.success) setMembers(memberData.data);
 
-    const dates = getSaturdaysOfMonth(currentYear, currentMonth);
+    const saturdays = getSaturdaysOfMonth(currentYear, currentMonth);
+    const saturdaySet = new Set(saturdays);
     const apiSchedules = schedData.success ? schedData.data : [];
 
-    const enriched: ScheduleRow[] = dates.map((dateStr) => {
+    const enriched: ScheduleRow[] = [];
+    const seenDates = new Set<string>();
+
+    for (const dateStr of saturdays) {
+      seenDates.add(dateStr);
       const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
       const assignmentsMap: ScheduleRow["assignments"] = {};
       if (existing?.assignments) {
@@ -97,16 +105,46 @@ export default function SchedulePage() {
           };
         }
       }
-      return {
+      enriched.push({
         date: dateStr,
         scheduleId: existing?.id || null,
         isSpecialEvent: existing?.is_special_event || 0,
         eventTitle: existing?.event_title || null,
         isLocked: existing?.is_locked || 0,
         lockMessage: existing?.lock_message || null,
+        remarks: existing?.remarks || null,
         assignments: assignmentsMap,
-      };
-    });
+      });
+    }
+
+    for (const s of apiSchedules) {
+      if (!seenDates.has(s.date)) {
+        seenDates.add(s.date);
+        const assignmentsMap: ScheduleRow["assignments"] = {};
+        if (s.assignments) {
+          for (const a of s.assignments) {
+            assignmentsMap[a.service_item_order || 0] = {
+              member_id: a.member_id,
+              custom_member_name: a.custom_member_name,
+              member_name: a.member_name,
+              id: a.id,
+            };
+          }
+        }
+        enriched.push({
+          date: s.date,
+          scheduleId: s.id || null,
+          isSpecialEvent: s.is_special_event || 0,
+          eventTitle: s.event_title || null,
+          isLocked: s.is_locked || 0,
+          lockMessage: s.lock_message || null,
+          remarks: s.remarks || null,
+          assignments: assignmentsMap,
+        });
+      }
+    }
+
+    enriched.sort((a, b) => a.date.localeCompare(b.date));
 
     setRows(enriched);
     setLoading(false);
@@ -222,6 +260,7 @@ export default function SchedulePage() {
                 {serviceItems.map((item) => (
                   <th key={item.id} className="px-2 py-2 text-center">{item.name}</th>
                 ))}
+                <th className="px-3 py-2 text-center min-w-[80px]">備註</th>
                 <th className="px-3 py-2 text-center">操作</th>
               </tr>
             </thead>
@@ -231,35 +270,74 @@ export default function SchedulePage() {
                   <td className="px-3 py-2 font-medium whitespace-nowrap">
                     {row.date} ({DAY_NAMES[new Date(row.date + "T00:00:00").getDay()]})
                   </td>
-                  {serviceItems.map((item) => {
-                    const a = row.assignments[item.display_order];
-                    const name = a?.member_name || a?.custom_member_name;
-                    return (
-                      <td key={item.id} className="px-2 py-2 text-center">
-                        {row.isLocked ? (
-                          <span className="text-[var(--color-muted)]">🔒</span>
+                  {row.isLocked ? (
+                    <td colSpan={serviceItems.length + 2} className="px-3 py-3 text-center">
+                      <span className="text-[var(--color-muted)]">🔒 {row.lockMessage || "暫停聚會"}</span>
+                      {row.scheduleId != null && (
+                        <button onClick={() => handleUnlock(row.scheduleId!)} className="ml-3 text-xs text-[var(--color-secondary)] hover:underline">
+                          解鎖
+                        </button>
+                      )}
+                    </td>
+                  ) : (
+                    <>
+                      {serviceItems.map((item) => {
+                        const a = row.assignments[item.display_order];
+                        const name = a?.member_name || a?.custom_member_name;
+                        return (
+                          <td key={item.id} className="px-2 py-2 text-center">
+                            <button
+                              onClick={() => openAssignModal(row.scheduleId || 0, item.id, a ? { member_id: a.member_id, custom_name: a.custom_member_name } : null)}
+                              className={`px-2 py-1 rounded text-xs ${name ? "bg-[var(--color-secondary)] bg-opacity-15 text-[var(--color-secondary-dark)]" : "text-[var(--color-muted)] hover:text-[var(--color-primary)]"}`}
+                            >
+                              {name || "—"}
+                            </button>
+                          </td>
+                        );
+                      })}
+                      <td className="px-2 py-2 text-center">
+                        {editingRemarks?.scheduleId === row.scheduleId ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={editingRemarks.value}
+                              onChange={(e) => setEditingRemarks({ ...editingRemarks, value: e.target.value })}
+                              className="w-20 px-2 py-1 rounded border border-[var(--color-border)] text-xs"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  const token = localStorage.getItem("admin_token");
+                                  fetch(`/api/admin/schedules/${row.scheduleId}/remarks`, {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                    body: JSON.stringify({ remarks: editingRemarks.value }),
+                                  }).then(fetchData);
+                                  setEditingRemarks(null);
+                                }
+                                if (e.key === "Escape") setEditingRemarks(null);
+                              }}
+                            />
+                            <button onClick={() => setEditingRemarks(null)} className="text-xs text-[var(--color-muted)]">✕</button>
+                          </div>
                         ) : (
                           <button
-                            onClick={() => openAssignModal(row.scheduleId || 0, item.id, a ? { member_id: a.member_id, custom_name: a.custom_member_name } : null)}
-                            className={`px-2 py-1 rounded text-xs ${name ? "bg-[var(--color-secondary)] bg-opacity-15 text-[var(--color-secondary-dark)]" : "text-[var(--color-muted)] hover:text-[var(--color-primary)]"}`}
+                            onClick={() => row.scheduleId && setEditingRemarks({ scheduleId: row.scheduleId, date: row.date, value: row.remarks || "" })}
+                            className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] max-w-[80px] truncate"
+                            title={row.remarks || ""}
                           >
-                            {name || "—"}
+                            {row.remarks || "—"}
                           </button>
                         )}
                       </td>
-                    );
-                  })}
-                  <td className="px-3 py-2 text-center">
-                    {row.isLocked ? (
-                      <button onClick={() => row.scheduleId && handleUnlock(row.scheduleId)} className="text-xs text-[var(--color-secondary)] hover:underline">
-                        解鎖
-                      </button>
-                    ) : row.scheduleId ? (
-                      <span className="text-xs text-[var(--color-muted)]">已建立</span>
-                    ) : (
-                      <span className="text-xs text-[var(--color-muted)]">—</span>
-                    )}
-                  </td>
+                      <td className="px-3 py-2 text-center">
+                        {row.scheduleId ? (
+                          <span className="text-xs text-[var(--color-muted)]">已建立</span>
+                        ) : (
+                          <span className="text-xs text-[var(--color-muted)]">—</span>
+                        )}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

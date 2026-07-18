@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { verifyToken } from "@/lib/server/auth/jwt";
+import { getAuthAdmin } from "@/lib/server/auth/admin";
 import { sanitize } from "@/lib/server/middleware/sanitize";
-
-function getAuthAdmin(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.slice(7);
-  const jwtSecret = process.env.JWT_SECRET || "default-secret-change-this";
-  return verifyToken(token, jwtSecret);
-}
 
 export async function PUT(
   request: NextRequest,
@@ -24,22 +16,27 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "未授權" }, { status: 401 });
     }
 
-    const { id } = await params;
     const body = await request.json();
-    const { member_id, custom_member_name } = body;
+    const { schedule_id, service_item_id, member_id, custom_member_name } = body;
+
+    if (!schedule_id || !service_item_id) {
+      return NextResponse.json({ success: false, error: "缺少必要欄位" }, { status: 400 });
+    }
 
     const sanitizedName = custom_member_name ? sanitize(custom_member_name) : null;
 
     const existing = await db.prepare(
-      "SELECT id FROM DutyAssignments WHERE id = ?"
-    ).bind(Number(id)).first();
+      "SELECT id, version FROM DutyAssignments WHERE schedule_id = ? AND service_item_id = ?"
+    ).bind(Number(schedule_id), Number(service_item_id)).first<{ id: number; version: number }>();
 
     if (existing) {
       await db.prepare(
-        "UPDATE DutyAssignments SET member_id = ?, custom_member_name = ?, version = version + 1 WHERE id = ?"
-      ).bind(member_id || null, sanitizedName, Number(id)).run();
+        "UPDATE DutyAssignments SET member_id = ?, custom_member_name = ?, version = version + 1 WHERE id = ? AND version = ?"
+      ).bind(member_id || null, sanitizedName, existing.id, existing.version).run();
     } else {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      await db.prepare(
+        "INSERT INTO DutyAssignments (schedule_id, service_item_id, member_id, custom_member_name) VALUES (?, ?, ?, ?)"
+      ).bind(Number(schedule_id), Number(service_item_id), member_id || null, sanitizedName).run();
     }
 
     return NextResponse.json({ success: true });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getAuthAdmin } from "@/lib/server/auth/admin";
 
 export async function GET(
   request: NextRequest,
@@ -24,6 +25,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const admin = await getAuthAdmin(request);
+    if (!admin) {
+      return NextResponse.json({ success: false, error: "未授權" }, { status: 401 });
+    }
+
     const { env } = await getCloudflareContext({ async: true });
     const db = env.DB;
     const { id } = await params;
@@ -43,6 +49,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const admin = await getAuthAdmin(request);
+    if (!admin) {
+      return NextResponse.json({ success: false, error: "未授權" }, { status: 401 });
+    }
+
     const { env } = await getCloudflareContext({ async: true });
     const db = env.DB;
     const { id } = await params;

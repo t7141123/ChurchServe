@@ -18,6 +18,11 @@ export default function MembersPage() {
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const authHeaders = (): Record<string, string> => {
+    const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
+  };
+
   const fetchMembers = () => {
     fetch(`/api/groups/${groupId}/members`)
       .then((r) => r.json())
@@ -37,7 +42,7 @@ export default function MembersPage() {
     if (!newName.trim()) return;
     await fetch(`/api/groups/${groupId}/members`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ name: newName.trim() }),
     });
     setNewName("");
@@ -47,9 +52,9 @@ export default function MembersPage() {
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
     await fetch(`/api/groups/${groupId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName.trim() }),
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ memberId: id, name: editName.trim() }),
     });
     setEditingId(null);
     fetchMembers();
@@ -57,9 +62,9 @@ export default function MembersPage() {
 
   const handleToggleActive = async (member: Member) => {
     await fetch(`/api/groups/${groupId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: member.name, is_active: member.is_active ? 0 : 1 }),
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ memberId: member.id, is_active: member.is_active ? 0 : 1 }),
     });
     fetchMembers();
   };
@@ -67,9 +72,9 @@ export default function MembersPage() {
   const handleDelete = async (member: Member) => {
     if (!confirm(`確定要刪除「${member.name}」嗎？`)) return;
     await fetch(`/api/groups/${groupId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: member.name, is_active: -1 }),
+      method: "DELETE",
+      headers: authHeaders(),
+      body: JSON.stringify({ memberId: member.id }),
     });
     fetchMembers();
   };

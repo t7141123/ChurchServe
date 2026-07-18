@@ -3,6 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verifyPassword } from "@/lib/server/auth/password";
 import { createToken } from "@/lib/server/auth/jwt";
 import { checkRateLimit } from "@/lib/server/middleware/rate-limit";
+import { getJwtSecret } from "@/lib/server/auth/admin";
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
@@ -58,8 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const jwtSecret = process.env.JWT_SECRET || "default-secret-change-this";
-    const token = await createToken(admin as unknown as Parameters<typeof createToken>[0], jwtSecret);
+    const token = await createToken(admin as unknown as Parameters<typeof createToken>[0], getJwtSecret());
 
     return NextResponse.json({
       success: true,

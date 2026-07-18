@@ -8,8 +8,8 @@ INSERT INTO ServiceItems (group_id, name, display_order) VALUES (1, '見證（�
 INSERT INTO ServiceItems (group_id, name, display_order) VALUES (1, '信息分享', 5);
 INSERT INTO ServiceItems (group_id, name, display_order) VALUES (1, '報告', 6);
 
-INSERT INTO Members (group_id, name) VALUES (1, '小明');
-INSERT INTO Members (group_id, name) VALUES (1, '小華');
-INSERT INTO Members (group_id, name) VALUES (1, '小美');
-INSERT INTO Members (group_id, name) VALUES (1, '小強');
-INSERT INTO Members (group_id, name) VALUES (1, '小玲');
+INSERT INTO Members (group_id, name) VALUES (1, 'UserA');
+INSERT INTO Members (group_id, name) VALUES (1, 'UserB');
+INSERT INTO Members (group_id, name) VALUES (1, 'UserC');
+INSERT INTO Members (group_id, name) VALUES (1, 'UserD');
+INSERT INTO Members (group_id, name) VALUES (1, 'UserE');

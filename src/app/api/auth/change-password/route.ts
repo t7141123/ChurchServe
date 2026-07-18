@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { verifyToken } from "@/lib/server/auth/jwt";
 import { hashPassword } from "@/lib/server/auth/password";
-
-function getAuthAdmin(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.slice(7);
-  const jwtSecret = process.env.JWT_SECRET || "default-secret-change-this";
-  return verifyToken(token, jwtSecret);
-}
+import { getAuthAdmin } from "@/lib/server/auth/admin";
 
 export async function PUT(request: NextRequest) {
   try {

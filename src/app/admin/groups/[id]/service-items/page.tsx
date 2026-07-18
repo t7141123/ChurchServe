@@ -18,6 +18,22 @@ export default function ServiceItemsPage() {
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const authHeaders = (): Record<string, string> => {
+    const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
+  };
+
+  const handleUpdate = async (id: number) => {
+    if (!editName.trim()) return;
+    await fetch(`/api/groups/${groupId}/service-items`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ itemId: id, name: editName.trim() }),
+    });
+    setEditingId(null);
+    fetchItems();
+  };
+
   const fetchItems = () => {
     fetch(`/api/groups/${groupId}/service-items`)
       .then((r) => r.json())
@@ -37,7 +53,7 @@ export default function ServiceItemsPage() {
     if (!newName.trim()) return;
     await fetch(`/api/groups/${groupId}/service-items`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ name: newName.trim() }),
     });
     setNewName("");
@@ -50,14 +66,14 @@ export default function ServiceItemsPage() {
     const prev = items[idx - 1];
     await Promise.all([
       fetch(`/api/groups/${groupId}/service-items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: item.name, display_order: prev.display_order }),
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ itemId: item.id, display_order: prev.display_order }),
       }),
       fetch(`/api/groups/${groupId}/service-items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: prev.name, display_order: item.display_order }),
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ itemId: prev.id, display_order: item.display_order }),
       }),
     ]);
     fetchItems();
@@ -69,14 +85,14 @@ export default function ServiceItemsPage() {
     const next = items[idx + 1];
     await Promise.all([
       fetch(`/api/groups/${groupId}/service-items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: item.name, display_order: next.display_order }),
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ itemId: item.id, display_order: next.display_order }),
       }),
       fetch(`/api/groups/${groupId}/service-items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: next.name, display_order: item.display_order }),
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ itemId: next.id, display_order: item.display_order }),
       }),
     ]);
     fetchItems();
@@ -85,9 +101,9 @@ export default function ServiceItemsPage() {
   const handleDelete = async (item: ServiceItem) => {
     if (!confirm(`確定要刪除「${item.name}」嗎？`)) return;
     await fetch(`/api/groups/${groupId}/service-items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: item.name, display_order: -1 }),
+      method: "DELETE",
+      headers: authHeaders(),
+      body: JSON.stringify({ itemId: item.id }),
     });
     fetchItems();
   };
@@ -140,7 +156,7 @@ export default function ServiceItemsPage() {
                     autoFocus
                   />
                   <button
-                    onClick={() => setEditingId(null)}
+                    onClick={() => handleUpdate(item.id)}
                     className="px-4 py-2 rounded-lg bg-[var(--color-secondary)] text-white text-sm"
                   >
                     儲存

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminLayout({
   children,
@@ -9,18 +9,22 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
     if (!token) {
-      router.push("/admin/login");
+      if (pathname !== "/admin/login") {
+        router.replace("/admin/login");
+      }
+      setLoading(false);
       return;
     }
     setIsAuthenticated(true);
     setLoading(false);
-  }, [router]);
+  }, [router, pathname]);
 
   if (loading) {
     return (
@@ -30,7 +34,9 @@ export default function AdminLayout({
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
