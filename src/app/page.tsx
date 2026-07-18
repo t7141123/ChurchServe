@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/lib/components/ui/Card";
-import { Badge } from "@/lib/components/ui/Badge";
 import { Button } from "@/lib/components/ui/Button";
 
 interface Group {
@@ -51,6 +50,19 @@ const DAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function isCurrentWeek(dateStr: string): boolean {
+  const now = new Date();
+  const day = now.getDay();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  const target = new Date(dateStr + "T00:00:00");
+  return target >= startOfWeek && target <= endOfWeek;
 }
 
 function getMemberColor(name: string): string {
@@ -321,133 +333,163 @@ export default function HomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {schedules.map((schedule, idx) => (
-                    <tr
-                      key={schedule.date}
-                      className={
-                        idx % 2 === 0
-                          ? "bg-[var(--color-surface)] transition-colors"
-                          : "bg-[var(--color-border-light)] transition-colors"
-                      }
-                    >
-                      <td className="px-5 py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)]">
-                        <span className="text-sm">{formatDate(schedule.date)}</span>
-                        <span className="text-[var(--color-muted)] text-xs ml-1.5">
-                          ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
-                        </span>
-                        {schedule.isSpecialEvent && (
-                          <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent-dark)] font-medium">
-                            {schedule.eventTitle}
-                          </span>
-                        )}
-                      </td>
-                      {serviceItems.map((item) => {
-                        const assignment = schedule.assignments[item.display_order];
-                        const name = assignment?.member_name || assignment?.custom_member_name;
+                  {schedules.map((schedule, idx) => {
+                    const colCount = serviceItems.length + 2;
+                    const isCurrent = isCurrentWeek(schedule.date);
 
-                        if (schedule.isLocked) {
+                    if (schedule.isLocked) {
+                      return (
+                        <tr key={schedule.date} className="bg-[var(--color-border-light)]/60 transition-colors">
+                          <td colSpan={colCount} className="px-5 py-6 text-center relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-[0.07]" style={{
+                              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, var(--color-muted) 8px, var(--color-muted) 9px)`,
+                            }} />
+                            <span className="relative text-base text-[var(--color-muted)] font-medium">
+                              {schedule.lockMessage || "暫停聚會"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    if (schedule.isSpecialEvent) {
+                      return (
+                        <tr key={schedule.date} className="transition-colors" style={{ background: "var(--color-accent)" }}>
+                          <td colSpan={colCount} className="px-5 py-6 text-center">
+                            <span className="text-white font-bold text-lg">
+                              {schedule.eventTitle}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return (
+                      <tr
+                        key={schedule.date}
+                        className={
+                          (idx % 2 === 0 ? "bg-[var(--color-surface)] " : "bg-[var(--color-border-light)] ") +
+                          "transition-colors"
+                        }
+                      >
+                        <td className={"py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)]" + (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")}>
+                          <span className="text-sm">{formatDate(schedule.date)}</span>
+                          <span className="text-[var(--color-muted)] text-xs ml-1.5">
+                            ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                          </span>
+                        </td>
+                        {serviceItems.map((item) => {
+                          const assignment = schedule.assignments[item.display_order];
+                          const name = assignment?.member_name || assignment?.custom_member_name;
+
                           return (
-                            <td key={item.id} className="px-3 py-4 text-center border-r border-[var(--color-border)]">
-                              <span className="text-[var(--color-muted)]">🔒</span>
+                            <td
+                              key={item.id}
+                              className="px-3 py-4 text-center border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-accent)]/5 transition-colors"
+                              onClick={() =>
+                                openModal(schedule.scheduleId || 0, item.id, assignment ? {
+                                  member_id: assignment.member_id,
+                                  custom_name: assignment.custom_member_name,
+                                } : null)
+                              }
+                            >
+                              {name ? (
+                                <span className={`inline-block px-2.5 py-1 rounded-lg text-sm font-medium border ${getMemberColor(name)}`}>
+                                  {name}
+                                </span>
+                              ) : (
+                                <span className="text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
+                                  點擊登記
+                                </span>
+                              )}
                             </td>
                           );
-                        }
-
-                        return (
-                          <td
-                            key={item.id}
-                            className="px-3 py-4 text-center border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-accent)]/5 transition-colors"
-                            onClick={() =>
-                              openModal(schedule.scheduleId || 0, item.id, assignment ? {
-                                member_id: assignment.member_id,
-                                custom_name: assignment.custom_member_name,
-                              } : null)
-                            }
-                          >
-                            {name ? (
-                              <span className={`inline-block px-2.5 py-1 rounded-lg text-sm font-medium border ${getMemberColor(name)}`}>
-                                {name}
-                              </span>
-                            ) : (
-                              <span className="text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
-                                點擊登記
-                              </span>
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td className="px-4 py-4 text-center text-sm">
-                        {schedule.isLocked ? (
-                          <span className="text-[var(--color-danger)]">{schedule.lockMessage || "暫停"}</span>
-                        ) : schedule.isSpecialEvent ? (
-                          <span className="text-[var(--color-accent)]">{schedule.eventTitle}</span>
-                        ) : (
+                        })}
+                        <td className="px-4 py-4 text-center text-sm">
                           <span className="text-[var(--color-muted)]">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {schedules.map((schedule) => (
-                <Card key={schedule.date} variant="default" padding="none" className="overflow-hidden">
-                  <div className="px-4 py-3.5 bg-gradient-to-r from-[var(--color-primary)]/5 to-transparent border-b border-[var(--color-border)]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[var(--color-primary)]">
-                          {formatDate(schedule.date)}
-                        </span>
-                        <span className="text-xs text-[var(--color-muted)]">
-                          ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+              {schedules.map((schedule) => {
+                const isCurrent = isCurrentWeek(schedule.date);
+
+                if (schedule.isLocked) {
+                  return (
+                    <div key={schedule.date} className="rounded-2xl overflow-hidden border border-[var(--color-border)] relative" style={{ background: "var(--color-border-light)" }}>
+                      <div className="absolute inset-0 opacity-[0.06]" style={{
+                        backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, var(--color-muted) 8px, var(--color-muted) 9px)`,
+                      }} />
+                      <div className="relative px-4 py-8 text-center">
+                        <span className="text-base text-[var(--color-muted)] font-medium">
+                          {schedule.lockMessage || "暫停聚會"}
                         </span>
                       </div>
-                      {schedule.isLocked ? (
-                        <Badge variant="danger">{schedule.lockMessage || "暫停聚會"}</Badge>
-                      ) : schedule.isSpecialEvent ? (
-                        <Badge variant="accent">{schedule.eventTitle || "特殊活動"}</Badge>
-                      ) : null}
                     </div>
-                  </div>
-                  <div className="divide-y divide-[var(--color-border-light)]">
-                    {serviceItems.map((item) => {
-                      const assignment = schedule.assignments[item.display_order];
-                      const name = assignment?.member_name || assignment?.custom_member_name;
+                  );
+                }
 
-                      return (
-                        <div
-                          key={item.id}
-                          className={`px-4 py-3.5 flex items-center justify-between ${
-                            schedule.isLocked ? "opacity-50" : "cursor-pointer active:bg-[var(--color-border-light)]"
-                          }`}
-                          onClick={() => {
-                            if (!schedule.isLocked) {
-                              openModal(schedule.scheduleId || 0, item.id, assignment ? {
-                                member_id: assignment.member_id,
-                                custom_name: assignment.custom_member_name,
-                              } : null);
-                            }
-                          }}
-                        >
-                          <span className="text-sm font-medium text-[var(--color-text-light)]">{item.name}</span>
-                          {name ? (
-                            <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberColor(name)}`}>
-                              {name}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-[var(--color-muted)]">
-                              {schedule.isLocked ? "🔒" : "登記"}
-                            </span>
-                          )}
+                if (schedule.isSpecialEvent) {
+                  return (
+                    <div key={schedule.date} className="rounded-2xl overflow-hidden" style={{ background: "var(--color-accent)" }}>
+                      <div className="px-4 py-8 text-center">
+                        <span className="text-white font-bold text-lg">
+                          {schedule.eventTitle}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Card key={schedule.date} variant="default" padding="none" className="overflow-hidden">
+                    <div className={"py-3.5 bg-gradient-to-r from-[var(--color-primary)]/5 to-transparent border-b border-[var(--color-border)]" + (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-4" : " px-4")}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[var(--color-primary)]">
+                            {formatDate(schedule.date)}
+                          </span>
+                          <span className="text-xs text-[var(--color-muted)]">
+                            ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                          </span>
                         </div>
-                      );
-                    })}
-                  </div>
-                </Card>
-              ))}
+                      </div>
+                    </div>
+                    <div className="divide-y divide-[var(--color-border-light)]">
+                      {serviceItems.map((item) => {
+                        const assignment = schedule.assignments[item.display_order];
+                        const name = assignment?.member_name || assignment?.custom_member_name;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-[var(--color-border-light)]"
+                            onClick={() => openModal(schedule.scheduleId || 0, item.id, assignment ? {
+                              member_id: assignment.member_id,
+                              custom_name: assignment.custom_member_name,
+                            } : null)}
+                          >
+                            <span className="text-sm font-medium text-[var(--color-text-light)]">{item.name}</span>
+                            {name ? (
+                              <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberColor(name)}`}>
+                                {name}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-[var(--color-muted)]">登記</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
