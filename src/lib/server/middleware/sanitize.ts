@@ -32,6 +32,8 @@ export function sanitize(input: string): string {
   let result = input;
 
   result = result.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  result = result.replace(/"/g, "&quot;");
+  result = result.replace(/'/g, "&#x27;");
 
   result = result.replace(EVENT_ATTR_RE, " data-removed=");
   result = result.replace(JS_PROTOCOL_RE, "blocked:");

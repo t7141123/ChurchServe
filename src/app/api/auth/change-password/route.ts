@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hashPassword } from "@/lib/server/auth/password";
 import { getAuthAdmin } from "@/lib/server/auth/admin";
+import { changePasswordSchema, validateInput } from "@/lib/server/middleware/validate";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -14,14 +15,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { newPassword } = body;
-
-    if (!newPassword || newPassword.length < 6) {
+    const validation = validateInput(changePasswordSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: "密碼至少 6 個字元" },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
+    const { newPassword } = validation.data;
 
     const hash = await hashPassword(newPassword);
     await db.prepare(

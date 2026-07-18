@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getAuthAdmin } from "@/lib/server/auth/admin";
+import { specialEventSchema, validateInput } from "@/lib/server/middleware/validate";
 
 export async function POST(request: NextRequest) {
   try {
+    const admin = await getAuthAdmin(request);
+    if (!admin) {
+      return NextResponse.json({ success: false, error: "未授權" }, { status: 401 });
+    }
+
     const { env } = await getCloudflareContext({ async: true });
     const db = env.DB;
     const body = await request.json();
-    const { group_id, date, event_title } = body;
-
-    if (!group_id || !date || !event_title) {
-      return NextResponse.json({ success: false, error: "缺少必要欄位" }, { status: 400 });
+    const validation = validateInput(specialEventSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const { group_id, date, event_title } = validation.data;
 
     const existing = await db.prepare(
       "SELECT id FROM DutySchedules WHERE group_id = ? AND date = ?"
@@ -34,6 +41,11 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const admin = await getAuthAdmin(request);
+    if (!admin) {
+      return NextResponse.json({ success: false, error: "未授權" }, { status: 401 });
+    }
+
     const { env } = await getCloudflareContext({ async: true });
     const db = env.DB;
     const { searchParams } = new URL(request.url);

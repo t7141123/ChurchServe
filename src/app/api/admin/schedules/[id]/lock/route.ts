@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getAuthAdmin } from "@/lib/server/auth/admin";
+import { lockScheduleSchema, validateInput } from "@/lib/server/middleware/validate";
 
 export async function PUT(
   request: NextRequest,
@@ -17,11 +18,14 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { is_locked, lock_message } = body;
+    const validation = validateInput(lockScheduleSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
 
     await db.prepare(
       "UPDATE DutySchedules SET is_locked = ?, lock_message = ? WHERE id = ?"
-    ).bind(is_locked, lock_message || null, Number(id)).run();
+    ).bind(validation.data.is_locked, validation.data.lock_message || null, Number(id)).run();
 
     return NextResponse.json({ success: true });
   } catch {

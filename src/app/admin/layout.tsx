@@ -86,10 +86,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-2">
               <a
                 href="/"
+                aria-label="返回首頁"
                 className="px-3 py-2 rounded-xl text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-border-light)] transition-all"
               >
                 <span className="hidden sm:inline">返回首頁</span>
-                <svg className="sm:hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="sm:hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   <path d="M9 22V12h6v10" />
                 </svg>
@@ -99,10 +100,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   localStorage.removeItem("admin_token");
                   router.push("/admin/login");
                 }}
+                aria-label="登出"
                 className="px-3 py-2 rounded-xl text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/5 transition-all"
               >
                 <span className="hidden sm:inline">登出</span>
-                <svg className="sm:hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="sm:hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                 </svg>
               </button>

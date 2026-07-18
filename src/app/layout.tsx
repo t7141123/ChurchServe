@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className={`${notoSerif.variable} ${notoSans.variable} h-full antialiased`}>
+    <html lang="zh-TW" className={`${notoSerif.variable} ${notoSans.variable} h-full antialiased`} style={{ colorScheme: "light dark" }}>
       <body className="min-h-full flex flex-col">
         {children}
       </body>

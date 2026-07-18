@@ -33,6 +33,38 @@
   --shadow-glass: 0 4px 16px rgba(139, 111, 71, 0.08);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1A1614;
+    --color-surface: #252120;
+    --color-primary: #C4A882;
+    --color-primary-dark: #D4BFA0;
+    --color-secondary: #8FB880;
+    --color-secondary-dark: #A8D096;
+    --color-accent: #F0A850;
+    --color-accent-dark: #FFC070;
+    --color-text: #E8E0D8;
+    --color-text-light: #B8AFA5;
+    --color-muted: #8A7E72;
+    --color-border: #3D352F;
+    --color-border-light: #2E2823;
+    --color-danger: #D47A60;
+    --color-danger-dark: #E89078;
+    --color-success: #8FB880;
+    --color-warning: #F0A850;
+
+    --color-glass-bg: rgba(37, 33, 32, 0.8);
+    --color-glass-border: rgba(61, 53, 47, 0.8);
+    --color-glass-shadow: rgba(0, 0, 0, 0.3);
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-glass: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
 body {
   background: linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%);
   background-attachment: fixed;
@@ -42,6 +74,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(145deg, #1A1614 0%, #1F1A18 50%, #252120 100%);
+  }
 }
 
 * {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { initializeDatabase } from "@/lib/server/db/schema";
 import { getAuthAdmin } from "@/lib/server/auth/admin";
+import { groupSchema, validateInput } from "@/lib/server/middleware/validate";
 
 let dbInitialized = false;
 
@@ -35,16 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name } = body;
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "小組名稱不可為空" },
-        { status: 400 }
-      );
+    const validation = validateInput(groupSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
 
-    await db.prepare("INSERT INTO Groups (name) VALUES (?)").bind(name.trim()).run();
+    await db.prepare("INSERT INTO Groups (name) VALUES (?)").bind(validation.data.name.trim()).run();
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
     return NextResponse.json(

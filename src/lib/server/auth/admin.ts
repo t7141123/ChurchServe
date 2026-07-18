@@ -2,7 +2,11 @@ import { NextRequest } from "next/server";
 import { verifyToken } from "./jwt";
 
 export function getJwtSecret(): string {
-  return process.env.JWT_SECRET || "default-secret-change-this";
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret === "default-secret-change-this") {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+  return secret;
 }
 
 export function getAuthAdmin(request: NextRequest) {

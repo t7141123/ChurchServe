@@ -103,6 +103,7 @@ export default function HomePage() {
   const [modalCurrentValue, setModalCurrentValue] = useState<{ member_id: number | null; custom_name: string | null } | null>(null);
   const [customName, setCustomName] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/groups")
@@ -199,10 +200,12 @@ export default function HomePage() {
 
     if (res.ok) {
       setModalOpen(false);
+      setErrorMsg("");
       fetchSchedules();
     } else {
       const data = await res.json();
-      alert(data.error || "操作失敗");
+      setErrorMsg(data.error || "操作失敗");
+      setTimeout(() => setErrorMsg(""), 3000);
     }
   };
 
@@ -230,7 +233,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <div className="relative w-full sm:w-56">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <path d="M9 22V12h6v10" />
               </svg>
@@ -245,7 +248,7 @@ export default function HomePage() {
                   </option>
                 ))}
               </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </div>
@@ -256,9 +259,10 @@ export default function HomePage() {
                   if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); }
                   else { setCurrentMonth(currentMonth - 1); }
                 }}
+                aria-label="上一個月"
                 className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
@@ -270,9 +274,10 @@ export default function HomePage() {
                   if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); }
                   else { setCurrentMonth(currentMonth + 1); }
                 }}
+                aria-label="下一個月"
                 className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
@@ -288,7 +293,7 @@ export default function HomePage() {
         ) : schedules.length === 0 ? (
           <div className="text-center py-16 page-enter">
             <div className="w-16 h-16 rounded-2xl bg-[var(--color-border-light)] flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <path d="M16 2v4M8 2v4M3 10h18" />
               </svg>
@@ -448,6 +453,13 @@ export default function HomePage() {
         )}
       </main>
 
+      {/* Error Toast */}
+      {errorMsg && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white text-sm shadow-lg animate-slide-up" role="alert">
+          {errorMsg}
+        </div>
+      )}
+
       {/* Bottom Sheet Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
@@ -463,9 +475,10 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={() => setModalOpen(false)}
+                  aria-label="關閉"
                   className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
@@ -477,7 +490,7 @@ export default function HomePage() {
                 onClick={() => handleSelectMember(null)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors mb-2 text-[var(--color-danger)]"
               >
-                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
                 <span className="text-sm font-medium">清除此欄位</span>
@@ -505,7 +518,7 @@ export default function HomePage() {
                       </span>
                       <span>{member.name}</span>
                       {isSelected && (
-                        <svg className="ml-auto w-4 h-4 text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="ml-auto w-4 h-4 text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       )}
@@ -520,7 +533,7 @@ export default function HomePage() {
                     onClick={() => setShowCustomInput(true)}
                     className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors text-[var(--color-accent)]"
                   >
-                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                     <span className="text-sm font-medium">自行輸入姓名</span>
