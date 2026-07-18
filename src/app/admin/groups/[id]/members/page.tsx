@@ -17,20 +17,31 @@ export default function MembersPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (errorMsg) {
+      const t = setTimeout(() => setErrorMsg(""), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [errorMsg]);
 
   const authHeaders = (): Record<string, string> => {
     const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
     return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
   };
 
-  const fetchMembers = () => {
-    fetch(`/api/groups/${groupId}/members`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setMembers(d.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`);
+      if (!res.ok) throw new Error("載入失敗");
+      const d = await res.json();
+      if (d.success) setMembers(d.data);
+    } catch {
+      setErrorMsg("載入成員列表失敗");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchMembers(); }, [groupId]);
@@ -38,43 +49,75 @@ export default function MembersPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    await fetch(`/api/groups/${groupId}/members`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ name: newName.trim() }),
-    });
-    setNewName("");
-    fetchMembers();
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "建立失敗");
+      }
+      setNewName("");
+      fetchMembers();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "建立失敗");
+    }
   };
 
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
-    await fetch(`/api/groups/${groupId}/members`, {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify({ memberId: id, name: editName.trim() }),
-    });
-    setEditingId(null);
-    fetchMembers();
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ memberId: id, name: editName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "更新失敗");
+      }
+      setEditingId(null);
+      fetchMembers();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "更新失敗");
+    }
   };
 
   const handleToggleActive = async (member: Member) => {
-    await fetch(`/api/groups/${groupId}/members`, {
-      method: "PATCH",
-      headers: authHeaders(),
-      body: JSON.stringify({ memberId: member.id, is_active: member.is_active ? 0 : 1 }),
-    });
-    fetchMembers();
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ memberId: member.id, is_active: member.is_active ? 0 : 1 }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "操作失敗");
+      }
+      fetchMembers();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "操作失敗");
+    }
   };
 
   const handleDelete = async (member: Member) => {
     if (!confirm(`確定要刪除「${member.name}」嗎？`)) return;
-    await fetch(`/api/groups/${groupId}/members`, {
-      method: "DELETE",
-      headers: authHeaders(),
-      body: JSON.stringify({ memberId: member.id }),
-    });
-    fetchMembers();
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: "DELETE",
+        headers: authHeaders(),
+        body: JSON.stringify({ memberId: member.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "刪除失敗");
+      }
+      fetchMembers();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "刪除失敗");
+    }
   };
 
   const activeMembers = members.filter((m) => m.is_active === 1);
@@ -86,9 +129,10 @@ export default function MembersPage() {
         <div className="flex items-center gap-3 mb-1">
           <a
             href="/admin/groups"
+            aria-label="返回小組列表"
             className="w-8 h-8 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </a>
@@ -100,6 +144,12 @@ export default function MembersPage() {
           </div>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20 animate-fadeIn" role="alert">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Create form */}
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
@@ -136,7 +186,7 @@ export default function MembersPage() {
       ) : members.length === 0 ? (
         <div className="text-center py-16 animate-fadeIn">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-border-light)] mb-4">
-            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" />
             </svg>

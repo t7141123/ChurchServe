@@ -50,6 +50,14 @@ export default function SchedulePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [rows, setRows] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (errorMsg) {
+      const t = setTimeout(() => setErrorMsg(""), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [errorMsg]);
 
   const [lockModal, setLockModal] = useState(false);
   const [lockDate, setLockDate] = useState("");
@@ -69,60 +77,36 @@ export default function SchedulePage() {
 
   const fetchData = useCallback(async () => {
     const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-    const [groupRes, schedRes, itemRes, memberRes] = await Promise.all([
-      fetch(`/api/groups/${groupId}`),
-      fetch(`/api/schedules/${groupId}/${ym}`),
-      fetch(`/api/groups/${groupId}/service-items`),
-      fetch(`/api/groups/${groupId}/members`),
-    ]);
-    const groupData = await groupRes.json();
-    const schedData = await schedRes.json();
-    const itemData = await itemRes.json();
-    const memberData = await memberRes.json();
+    try {
+      const [groupRes, schedRes, itemRes, memberRes] = await Promise.all([
+        fetch(`/api/groups/${groupId}`),
+        fetch(`/api/schedules/${groupId}/${ym}`),
+        fetch(`/api/groups/${groupId}/service-items`),
+        fetch(`/api/groups/${groupId}/members`),
+      ]);
+      if (!groupRes.ok || !schedRes.ok || !itemRes.ok || !memberRes.ok) throw new Error("載入失敗");
+      const groupData = await groupRes.json();
+      const schedData = await schedRes.json();
+      const itemData = await itemRes.json();
+      const memberData = await memberRes.json();
 
-    if (groupData.success) setGroupName(groupData.data.name);
-    if (itemData.success) setServiceItems(itemData.data);
-    if (memberData.success) setMembers(memberData.data);
+      if (groupData.success) setGroupName(groupData.data.name);
+      if (itemData.success) setServiceItems(itemData.data);
+      if (memberData.success) setMembers(memberData.data);
 
-    const saturdays = getSaturdaysOfMonth(currentYear, currentMonth);
-    const saturdaySet = new Set(saturdays);
-    const apiSchedules = schedData.success ? schedData.data : [];
+      const saturdays = getSaturdaysOfMonth(currentYear, currentMonth);
+      const saturdaySet = new Set(saturdays);
+      const apiSchedules = schedData.success ? schedData.data : [];
 
-    const enriched: ScheduleRow[] = [];
-    const seenDates = new Set<string>();
+      const enriched: ScheduleRow[] = [];
+      const seenDates = new Set<string>();
 
-    for (const dateStr of saturdays) {
-      seenDates.add(dateStr);
-      const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
-      const assignmentsMap: ScheduleRow["assignments"] = {};
-      if (existing?.assignments) {
-        for (const a of existing.assignments) {
-          assignmentsMap[a.service_item_order || 0] = {
-            member_id: a.member_id,
-            custom_member_name: a.custom_member_name,
-            member_name: a.member_name,
-            id: a.id,
-          };
-        }
-      }
-      enriched.push({
-        date: dateStr,
-        scheduleId: existing?.id || null,
-        isSpecialEvent: existing?.is_special_event || 0,
-        eventTitle: existing?.event_title || null,
-        isLocked: existing?.is_locked || 0,
-        lockMessage: existing?.lock_message || null,
-        remarks: existing?.remarks || null,
-        assignments: assignmentsMap,
-      });
-    }
-
-    for (const s of apiSchedules) {
-      if (!seenDates.has(s.date)) {
-        seenDates.add(s.date);
+      for (const dateStr of saturdays) {
+        seenDates.add(dateStr);
+        const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
         const assignmentsMap: ScheduleRow["assignments"] = {};
-        if (s.assignments) {
-          for (const a of s.assignments) {
+        if (existing?.assignments) {
+          for (const a of existing.assignments) {
             assignmentsMap[a.service_item_order || 0] = {
               member_id: a.member_id,
               custom_member_name: a.custom_member_name,
@@ -132,68 +116,112 @@ export default function SchedulePage() {
           }
         }
         enriched.push({
-          date: s.date,
-          scheduleId: s.id || null,
-          isSpecialEvent: s.is_special_event || 0,
-          eventTitle: s.event_title || null,
-          isLocked: s.is_locked || 0,
-          lockMessage: s.lock_message || null,
-          remarks: s.remarks || null,
+          date: dateStr,
+          scheduleId: existing?.id || null,
+          isSpecialEvent: existing?.is_special_event || 0,
+          eventTitle: existing?.event_title || null,
+          isLocked: existing?.is_locked || 0,
+          lockMessage: existing?.lock_message || null,
+          remarks: existing?.remarks || null,
           assignments: assignmentsMap,
         });
       }
-    }
 
-    enriched.sort((a, b) => a.date.localeCompare(b.date));
-    setRows(enriched);
-    setLoading(false);
+      for (const s of apiSchedules) {
+        if (!seenDates.has(s.date)) {
+          seenDates.add(s.date);
+          const assignmentsMap: ScheduleRow["assignments"] = {};
+          if (s.assignments) {
+            for (const a of s.assignments) {
+              assignmentsMap[a.service_item_order || 0] = {
+                member_id: a.member_id,
+                custom_member_name: a.custom_member_name,
+                member_name: a.member_name,
+                id: a.id,
+              };
+            }
+          }
+          enriched.push({
+            date: s.date,
+            scheduleId: s.id || null,
+            isSpecialEvent: s.is_special_event || 0,
+            eventTitle: s.event_title || null,
+            isLocked: s.is_locked || 0,
+            lockMessage: s.lock_message || null,
+            remarks: s.remarks || null,
+            assignments: assignmentsMap,
+          });
+        }
+      }
+
+      enriched.sort((a, b) => a.date.localeCompare(b.date));
+      setRows(enriched);
+    } catch {
+      setErrorMsg("載入排班資料失敗");
+    } finally {
+      setLoading(false);
+    }
   }, [groupId, currentYear, currentMonth]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleLock = async () => {
     if (!lockDate) return;
-    let sched = rows.find((r) => r.date === lockDate);
-    if (!sched?.scheduleId) {
-      await fetch("/api/schedules/special", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ group_id: Number(groupId), date: lockDate, event_title: lockMessage || "暫停聚會" }),
-      });
-      fetchData();
+    try {
+      let sched = rows.find((r) => r.date === lockDate);
+      if (!sched?.scheduleId) {
+        const res = await fetch("/api/schedules/special", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ group_id: Number(groupId), date: lockDate, event_title: lockMessage || "暫停聚會" }),
+        });
+        if (!res.ok) throw new Error("鎖定失敗");
+      } else {
+        const token = localStorage.getItem("admin_token");
+        const res = await fetch(`/api/admin/schedules/${sched.scheduleId}/lock`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ is_locked: 1, lock_message: lockMessage }),
+        });
+        if (!res.ok) throw new Error("鎖定失敗");
+      }
       setLockModal(false);
-      return;
+      fetchData();
+    } catch {
+      setErrorMsg("鎖定失敗");
     }
-    const token = localStorage.getItem("admin_token");
-    await fetch(`/api/admin/schedules/${sched.scheduleId}/lock`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ is_locked: 1, lock_message: lockMessage }),
-    });
-    setLockModal(false);
-    fetchData();
   };
 
   const handleUnlock = async (scheduleId: number) => {
-    const token = localStorage.getItem("admin_token");
-    await fetch(`/api/admin/schedules/${scheduleId}/lock`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ is_locked: 0, lock_message: null }),
-    });
-    fetchData();
+    try {
+      const token = localStorage.getItem("admin_token");
+      const res = await fetch(`/api/admin/schedules/${scheduleId}/lock`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ is_locked: 0, lock_message: null }),
+      });
+      if (!res.ok) throw new Error("解鎖失敗");
+      fetchData();
+    } catch {
+      setErrorMsg("解鎖失敗");
+    }
   };
 
   const handleSpecialEvent = async () => {
     if (!specialDate || !specialTitle.trim()) return;
-    await fetch("/api/schedules/special", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ group_id: Number(groupId), date: specialDate, event_title: specialTitle.trim() }),
-    });
-    setSpecialModal(false);
-    setSpecialTitle("");
-    fetchData();
+    try {
+      const res = await fetch("/api/schedules/special", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_id: Number(groupId), date: specialDate, event_title: specialTitle.trim() }),
+      });
+      if (!res.ok) throw new Error("新增特殊日失敗");
+      setSpecialModal(false);
+      setSpecialTitle("");
+      fetchData();
+    } catch {
+      setErrorMsg("新增特殊日失敗");
+    }
   };
 
   const openAssignModal = (scheduleId: number, itemId: number, currentValue: { member_id: number | null; custom_name: string | null } | null) => {
@@ -207,19 +235,24 @@ export default function SchedulePage() {
 
   const handleAssign = async (memberId: number | null, customNameVal?: string) => {
     if (assignScheduleId === null || assignItemId === null) return;
-    const body: { member_id?: number | null; custom_member_name?: string | null } = {};
-    if (memberId) body.member_id = memberId;
-    else if (customNameVal) body.custom_member_name = customNameVal;
-    else body.member_id = null;
+    try {
+      const body: { member_id?: number | null; custom_member_name?: string | null } = {};
+      if (memberId) body.member_id = memberId;
+      else if (customNameVal) body.custom_member_name = customNameVal;
+      else body.member_id = null;
 
-    const token = localStorage.getItem("admin_token");
-    await fetch(`/api/admin/assignments/0`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...body, schedule_id: assignScheduleId, service_item_id: assignItemId }),
-    });
-    setAssignModal(false);
-    fetchData();
+      const token = localStorage.getItem("admin_token");
+      const res = await fetch(`/api/admin/assignments/0`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...body, schedule_id: assignScheduleId, service_item_id: assignItemId }),
+      });
+      if (!res.ok) throw new Error("指派失敗");
+      setAssignModal(false);
+      fetchData();
+    } catch {
+      setErrorMsg("指派失敗");
+    }
   };
 
   return (
@@ -228,9 +261,10 @@ export default function SchedulePage() {
       <div className="flex items-center gap-3 mb-4">
         <a
           href="/admin/schedule"
+          aria-label="返回排班總覽"
           className="w-8 h-8 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </a>
@@ -245,18 +279,20 @@ export default function SchedulePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); } else setCurrentMonth(currentMonth - 1); }}
+            aria-label="上一個月"
             className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
           <span className="font-medium min-w-[120px] text-center text-sm">{currentYear} 年 {currentMonth} 月</span>
           <button
             onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); } else setCurrentMonth(currentMonth + 1); }}
+            aria-label="下一個月"
             className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
@@ -264,7 +300,7 @@ export default function SchedulePage() {
         <div className="flex gap-2">
           <button onClick={() => setSpecialModal(true)} className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-dark)] shadow-sm shadow-[var(--color-accent)]/20 transition-all hover:shadow-md hover:translate-y-[-1px] active:translate-y-[0px]">
             <span className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
               特殊日
@@ -275,7 +311,7 @@ export default function SchedulePage() {
             className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-danger)] to-[#B91C1C] shadow-sm shadow-[var(--color-danger)]/20 transition-all hover:shadow-md hover:translate-y-[-1px] active:translate-y-[0px]"
           >
             <span className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
@@ -284,6 +320,12 @@ export default function SchedulePage() {
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20 animate-fadeIn" role="alert">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -295,7 +337,7 @@ export default function SchedulePage() {
       ) : rows.length === 0 ? (
         <div className="text-center py-16 glass rounded-2xl animate-fadeIn">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-border-light)] mb-4">
-            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -322,7 +364,7 @@ export default function SchedulePage() {
                     {row.isLocked ? (
                       <td colSpan={serviceItems.length + 2} className="px-4 py-4">
                         <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-muted)]">
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
                           </svg>
@@ -367,21 +409,27 @@ export default function SchedulePage() {
                                 onChange={(e) => setEditingRemarks({ ...editingRemarks, value: e.target.value })}
                                 className="w-20 px-2 py-1.5 rounded-lg border border-[var(--color-glass-border)] bg-white/60 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                                 autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    const token = localStorage.getItem("admin_token");
-                                    fetch(`/api/admin/schedules/${row.scheduleId}/remarks`, {
-                                      method: "PUT",
-                                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                                      body: JSON.stringify({ remarks: editingRemarks.value }),
-                                    }).then(fetchData);
-                                    setEditingRemarks(null);
-                                  }
-                                  if (e.key === "Escape") setEditingRemarks(null);
-                                }}
+                                  onKeyDown={async (e) => {
+                                    if (e.key === "Enter") {
+                                      try {
+                                        const token = localStorage.getItem("admin_token");
+                                        const res = await fetch(`/api/admin/schedules/${row.scheduleId}/remarks`, {
+                                          method: "PUT",
+                                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                          body: JSON.stringify({ remarks: editingRemarks.value }),
+                                        });
+                                        if (!res.ok) throw new Error("儲存備註失敗");
+                                        fetchData();
+                                      } catch {
+                                        setErrorMsg("儲存備註失敗");
+                                      }
+                                      setEditingRemarks(null);
+                                    }
+                                    if (e.key === "Escape") setEditingRemarks(null);
+                                  }}
                               />
-                              <button onClick={() => setEditingRemarks(null)} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-danger)]">
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <button onClick={() => setEditingRemarks(null)} aria-label="取消編輯" className="text-xs text-[var(--color-muted)] hover:text-[var(--color-danger)]">
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                                   <path d="M18 6L6 18M6 6l12 12" />
                                 </svg>
                               </button>
@@ -499,7 +547,7 @@ export default function SchedulePage() {
                       </div>
                       {m.name}
                       {assignCurrentValue?.member_id === m.id && (
-                        <svg className="w-4 h-4 ml-auto text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <svg className="w-4 h-4 ml-auto text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       )}
@@ -514,7 +562,7 @@ export default function SchedulePage() {
                     className="w-full px-4 py-3 rounded-xl text-left text-sm text-[var(--color-accent)] hover:bg-white/60 transition-all"
                   >
                     <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                         <path d="M12 5v14M5 12h14" />
                       </svg>
                       其他（非成員）
