@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           <p className="text-sm text-[var(--color-muted)] mb-4">尚無任何小組</p>
           <Link
             href="/admin/groups"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[var(--color-primary)] hover:brightness-110 transition-all shadow-sm"
           >
             前往建立小組
           </Link>
