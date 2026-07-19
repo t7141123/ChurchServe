@@ -375,7 +375,7 @@ export default function SchedulePage() {
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-white/10"
+                    className="sticky top-0 px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
                   >
                     日期
                   </th>
@@ -385,7 +385,7 @@ export default function SchedulePage() {
                         <th
                           key={group.category}
                           colSpan={group.items.length}
-                          className="sticky top-0 px-3 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] border-b border-white/10"
+                          className="sticky top-0 px-3 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] border-b border-r border-white/15"
                         >
                           {group.category}
                         </th>
@@ -395,7 +395,7 @@ export default function SchedulePage() {
                       <th
                         key={item.id}
                         rowSpan={2}
-                        className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-white/10"
+                        className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
                       >
                         {item.name}
                       </th>
@@ -417,7 +417,7 @@ export default function SchedulePage() {
                         return group.items.map((item) => (
                           <th
                             key={item.id}
-                            className="sticky top-[38px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap border-b border-white/10"
+                            className="sticky top-[38px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap border-b border-r border-white/15"
                           >
                             {item.name}
                           </th>

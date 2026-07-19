@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, startTransition } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, startTransition } from "react";
 import Link from "next/link";
 import { Card } from "@/lib/components/ui/Card";
 import { Button } from "@/lib/components/ui/Button";
+import { Select } from "@/lib/components/ui/Select";
 
 interface Group {
   id: number;
@@ -13,6 +14,7 @@ interface Group {
 interface ServiceItem {
   id: number;
   name: string;
+  category: string;
   display_order: number;
 }
 
@@ -392,6 +394,23 @@ export default function HomePage() {
 
   const currentLabel = `${currentYear} 年 ${currentMonth} 月`;
   const selectedGroupName = groups.find((g) => g.id === selectedGroup)?.name || "選擇小組";
+
+  const serviceItemGroups = useMemo(() => {
+    const groups: { category: string | null; items: ServiceItem[] }[] = [];
+    let currentCat: string | null = null;
+    let currentItems: ServiceItem[] = [];
+    for (const item of serviceItems) {
+      const cat = item.category || null;
+      if (cat !== currentCat) {
+        if (currentItems.length > 0) groups.push({ category: currentCat, items: currentItems });
+        currentCat = cat;
+        currentItems = [];
+      }
+      currentItems.push(item);
+    }
+    if (currentItems.length > 0) groups.push({ category: currentCat, items: currentItems });
+    return groups;
+  }, [serviceItems]);
   const modalItemName = serviceItems.find((i) => i.id === modalItemId)?.name || "";
 
   const prevMonth = () => {
@@ -425,24 +444,17 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="relative">
-                <select
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(Number(e.target.value))}
-                  aria-label="選擇小組"
-                  className="appearance-none pl-3 pr-9 py-2.5 rounded-xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-border-light)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 transition-all max-w-[140px] sm:max-w-[200px]"
-                >
-                  {groups.length === 0 && <option value={0}>尚無小組</option>}
-                  {groups.map((g) => (
-                    <option key={g.id} value={g.id} className="text-[var(--color-text)]">
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
+              <Select
+                value={String(selectedGroup)}
+                onChange={(v) => setSelectedGroup(Number(v))}
+                options={
+                  groups.length === 0
+                    ? [{ value: "0", label: "尚無小組" }]
+                    : groups.map((g) => ({ value: String(g.id), label: g.name }))
+                }
+                ariaLabel="選擇小組"
+                className="max-w-[140px] sm:max-w-[200px]"
+              />
             </div>
           </div>
 
@@ -563,16 +575,39 @@ export default function HomePage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-table-head)]">
-                    <th className="px-5 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-[var(--color-border)]">
+                    <th rowSpan={2} className="w-[1%] px-5 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-r border-[var(--color-border)]">
                       日期
                     </th>
-                    {serviceItems.map((item) => (
-                      <th key={item.id} className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">
-                        {item.name}
-                      </th>
-                    ))}
-                    <th className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)] whitespace-nowrap min-w-[80px]">備註</th>
+                    {serviceItemGroups.map((group) => {
+                      if (group.category) {
+                        return (
+                          <th key={group.category} colSpan={group.items.length} className="px-3 py-3 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                            {group.category}
+                          </th>
+                        );
+                      }
+                      return group.items.map((item) => (
+                        <th key={item.id} rowSpan={2} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                          {item.name}
+                        </th>
+                      ));
+                    })}
+                    <th rowSpan={2} className="w-full px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
                   </tr>
+                  {serviceItemGroups.some((g) => g.category) && (
+                    <tr className="bg-[var(--color-table-head)]">
+                      {serviceItemGroups.map((group) => {
+                        if (group.category) {
+                          return group.items.map((item) => (
+                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                              {item.name}
+                            </th>
+                          ));
+                        }
+                        return null;
+                      })}
+                    </tr>
+                  )}
                 </thead>
                 <tbody>
                   {schedules.map((schedule, idx) => {
@@ -666,7 +701,7 @@ export default function HomePage() {
                                   {name}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[var(--color-text-light)] text-sm hover:text-[var(--color-accent)] transition-colors">
+                                <span className="inline-flex items-center gap-1 text-[var(--color-text-light)] text-sm hover:text-[var(--color-accent)] transition-colors whitespace-nowrap">
                                   <span className="w-5 h-5 rounded-full border border-dashed border-[var(--color-border)] flex items-center justify-center text-xs">+</span>
                                   登記
                                 </span>
@@ -687,7 +722,7 @@ export default function HomePage() {
                           }}
                         >
                           {schedule.remarks ? (
-                            <span className="text-[var(--color-muted)] line-clamp-2 max-w-[120px] mx-auto">{schedule.remarks}</span>
+                            <span className="text-[var(--color-muted)] line-clamp-2 mx-auto">{schedule.remarks}</span>
                           ) : (
                             <span className="text-[var(--color-accent)] opacity-60 hover:opacity-100 transition-opacity text-xs font-medium">+ 備註</span>
                           )}
@@ -977,7 +1012,7 @@ export default function HomePage() {
                         {games.map((g) => (
                           <div key={g.id} className="bg-[var(--color-bg-soft)] rounded-2xl p-4 border border-[var(--color-border)]">
                             <h5 className="font-semibold text-[var(--color-text)] mb-1">{g.name}</h5>
-                            {g.description && <p className="text-sm text-[var(--color-text-light)] mb-2 leading-relaxed">{g.description}</p>}
+                            {g.description && <p className="text-sm text-[var(--color-text-light)] mb-2 leading-relaxed whitespace-pre-line">{g.description}</p>}
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-muted)]">
                               {g.duration && <span>⏱ {g.duration}</span>}
                               {(g.people_min > 0 || g.people_max > 0) && (
