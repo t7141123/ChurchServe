@@ -101,11 +101,11 @@ function SkeletonCard() {
 }
 
 const serviceDescriptions: Record<string, string> = {
-  "破冰": "喜樂，盡情地玩。\n• 可以有懲罰、獎品",
-  "敬拜讚美": "朝見神\n• 1–2 首，2 首的話要注意時間\n• 選歌要好唱的\n• 提前將歌曲傳到群組\n• 提前預備禱告、要講的話，歌曲和帶領方向要一致",
-  "見證": "分享各自的經歷、經歷神\n• 先找莊腳",
-  "信息分享": "小組長針對小組的牧養時刻\n• 信息結束後，有回應信息的禱告（小組長帶）\n• 分組禱告（代禱事項）：人太多會很難了解全部人情況，小小組比較好聊",
-  "報告": "• 跟小組長確認是否有事項需要報告\n• 報告教會的事項\n• 如果有活動需要，可以在小組當下跟大家確認時間、並放在記事本裡面",
+  "破冰": "喜樂，盡情地玩。\n• 可以加入懲罰或獎品增添趣味",
+  "敬拜讚美": "藉著詩歌朝見神。\n• 預備 1–2 首詩歌，2 首的話請留意時間\n• 選擇會眾容易跟唱的歌\n• 提前將詩歌連結傳到群組\n• 事先禱告、預備要說的話，確保歌曲與帶領方向一致",
+  "見證": "分享個人經歷，一起看見神的作為。\n• 可事先邀請弟兄姊妹（找莊腳）預備分享內容\n• 由主領掌控節奏，適時 cue 分享者上台",
+  "信息分享": "小組長針對小組的牧養時刻。\n• 信息結束後，由小組長帶領回應信息的禱告\n• 分組禱告（代禱事項）：人數多時較難顧及每個人，小小組討論效果更好",
+  "報告": "• 先跟小組長確認是否有事項需要報告\n• 報告教會相關資訊\n• 若有活動需要，可在聚會中與大家確認時間，並記錄在記事本",
 };
 
 export default function HomePage() {
@@ -605,7 +605,7 @@ export default function HomePage() {
                     {serviceItemGroups.map((group) => {
                       if (group.category) {
                         return (
-                          <th key={group.category} colSpan={group.items.length} className="px-3 py-3 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                          <th key={group.category} colSpan={group.items.length} className="px-3 py-3 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { if (group.category) { setServiceDescTitle(group.category); setServiceDescOpen(true); } }}>
                             {group.category}
                           </th>
                         );
@@ -623,7 +623,7 @@ export default function HomePage() {
                       {serviceItemGroups.map((group) => {
                         if (group.category) {
                           return group.items.map((item) => (
-                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { setServiceDescTitle(item.name); setServiceDescOpen(true); }}>
+                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
                               {item.name}
                             </th>
                           ));
