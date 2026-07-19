@@ -95,7 +95,8 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <Link
                     href={`/admin/groups/members?id=${group.id}`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--color-primary)] bg-[var(--color-primary-soft)] hover:bg-[var(--color-primary-muted)] transition-all min-h-[48px]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] shadow-sm shadow-[var(--color-primary)]/20 hover:shadow-md hover:translate-y-[-1px] active:translate-y-[0px] transition-all min-h-[48px]"
+                    style={{ color: "#FFFFFF" }}
                   >
                     <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />

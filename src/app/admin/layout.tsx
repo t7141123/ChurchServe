@@ -166,9 +166,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             window.location.href = "/admin/login";
           }}
           aria-label="登出"
-          className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm text-[#F0A090] hover:bg-white/10 transition-all text-left min-h-[48px]"
+          className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-500/5 transition-all text-left min-h-[48px] w-full"
+          style={{ color: "#DC2626" }}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+          <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{ color: "#DC2626" }}>
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
           </svg>
           登出
