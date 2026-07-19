@@ -552,7 +552,7 @@ export default function HomePage() {
                 <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
                 <path d="M8 21h8" />
               </svg>
-              破冰遊戲
+              破冰遊戲推薦
             </button>
             <button
               onClick={() => { setViewMode(viewMode === "table" ? "card" : "table"); setMenuOpen(false); }}
