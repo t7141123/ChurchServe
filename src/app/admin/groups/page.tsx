@@ -142,6 +142,10 @@ export default function GroupsPage() {
     return districts.find((d) => d.id === id)?.name ?? "";
   };
 
+  const currentRole = (() => {
+    try { return JSON.parse(atob((typeof window !== "undefined" ? localStorage.getItem("admin_token") : "")?.split(".")[1] ?? "")).role; } catch { return ""; }
+  })();
+
   return (
     <>
       <div className="mb-8 animate-fadeIn">
@@ -156,6 +160,7 @@ export default function GroupsPage() {
       )}
 
       {/* Create form */}
+      {currentRole !== "group_leader" && (
       <form onSubmit={handleCreateDistrict} className="glass rounded-2xl p-5 mb-4 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增分區</label>
         <div className="flex gap-2">
@@ -175,6 +180,7 @@ export default function GroupsPage() {
           </button>
         </div>
       </form>
+      )}
 
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增小組</label>

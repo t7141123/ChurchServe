@@ -119,6 +119,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
+  let adminRole = "";
+  try { adminRole = JSON.parse(atob(token.split(".")[1])).role; } catch {}
+
   const isDashboard = pathname === "/admin" || pathname === "/admin/";
   const isGroups = pathname.startsWith("/admin/groups");
   const isSchedule = pathname.startsWith("/admin/schedule");
@@ -156,9 +159,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarLink href="/admin/icebreakers" active={isIcebreakers} onClick={closeSidebar} icon={<SparkIcon />}>
           破冰遊戲推薦
         </SidebarLink>
-        <SidebarLink href="/admin/admins" active={isAdmins} onClick={closeSidebar} icon={<UsersIcon />}>
-          後台帳號管理
-        </SidebarLink>
+        {adminRole === "super_admin" && (
+          <SidebarLink href="/admin/admins" active={isAdmins} onClick={closeSidebar} icon={<UsersIcon />}>
+            後台帳號管理
+          </SidebarLink>
+        )}
       </nav>
 
       <div className="flex flex-col gap-1 pt-4 border-t border-white/15">
