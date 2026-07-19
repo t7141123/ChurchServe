@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <!-- Define gradients and shadows -->
   <defs>
-    <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#557A5F" />
-      <stop offset="100%" stop-color="#3D5A45" />
+    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A56E47" />
+      <stop offset="100%" stop-color="#6B3F21" />
     </linearGradient>
     <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F4A259" />
-      <stop offset="100%" stop-color="#E08E45" />
+      <stop offset="0%" stop-color="#FDBA74" />
+      <stop offset="100%" stop-color="#D97736" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#2F4636" flood-opacity="0.15" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#3E2718" flood-opacity="0.15" />
     </filter>
   </defs>
 
   <!-- Rounded container background -->
-  <rect width="512" height="512" rx="128" fill="url(#grad-green)" filter="url(#shadow)"/>
+  <rect width="512" height="512" rx="128" fill="url(#grad-primary)" filter="url(#shadow)"/>
   
   <!-- Church dome shape watermark -->
   <path d="M256 90 L390 280 A12 12 0 0 1 380 295 L132 295 A12 12 0 0 1 122 280 Z" fill="rgba(255, 255, 255, 0.08)" />
@@ -33,7 +33,7 @@
     <!-- Vertical beam -->
     <rect x="-14" y="-85" width="28" height="180" rx="14" fill="#FFFFFF" />
     <!-- Golden Core representing grace -->
-    <circle cx="0" cy="0" r="10" fill="#E08E45" stroke="#FFFFFF" stroke-width="4" />
+    <circle cx="0" cy="0" r="10" fill="#D97736" stroke="#FFFFFF" stroke-width="4" />
   </g>
   
   <!-- Supporting hands shape at the bottom -->
