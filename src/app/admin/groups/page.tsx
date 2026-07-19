@@ -2,6 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import type { Group, District } from "@/types";
+import { Select } from "@/lib/components/ui/Select";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -200,14 +201,12 @@ export default function GroupsPage() {
             新增
           </button>
         </div>
-        <select
+        <Select
           value={newDistrictId}
-          onChange={(e) => setNewDistrictId(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-        >
-          <option value="">不分區</option>
-          {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
+          onChange={(v) => setNewDistrictId(v)}
+          options={[{ value: "", label: "不分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]}
+          className="mt-3"
+        />
       </form>
 
       {loading ? (
@@ -263,10 +262,11 @@ export default function GroupsPage() {
                       取消
                     </button>
                   </div>
-                  <select value={editDistrictId} onChange={(e) => setEditDistrictId(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20">
-                    <option value="">不分區</option>
-                    {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
+                  <Select
+                    value={editDistrictId}
+                    onChange={(v) => setEditDistrictId(v)}
+                    options={[{ value: "", label: "不分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]}
+                  />
                 </div>
               ) : (
                 <>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from "react";
 import type { ManagedAdmin, District } from "@/types";
+import { Select } from "@/lib/components/ui/Select";
 
 function decodeJwt(): { role: string; username: string } | null {
   try {
@@ -166,14 +167,15 @@ export default function AdminsPage() {
 
   const roleSelect = (value: string, onChange: (v: string) => void, username?: string) => {
     const isAdminAcct = username === "admin";
+    const opts = [
+      { value: "group_leader", label: "小組長" },
+      { value: "district_leader", label: "區長" },
+      ...(isAdminAcct ? [{ value: "super_admin", label: "超級管理員" }] : []),
+    ];
     return (
       <div>
         <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">角色</label>
-        <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-          <option value="group_leader">小組長</option>
-          <option value="district_leader">區長</option>
-          {isAdminAcct && <option value="super_admin">超級管理員</option>}
-        </select>
+        <Select value={value} onChange={onChange} options={opts} />
         {!isAdminAcct && value === "super_admin" && (
           <p className="text-xs text-amber-600 mt-1.5">僅 admin 帳號可設為超級管理員</p>
         )}
@@ -188,10 +190,7 @@ export default function AdminsPage() {
       return (
         <div>
           <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理分區</label>
-          <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-            <option value="">請選擇分區</option>
-            {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
+          <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]} />
         </div>
       );
     }
@@ -204,18 +203,12 @@ export default function AdminsPage() {
       <div className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分區</label>
-          <select value={districtFilter} onChange={(e) => { onDistrictFilter(e.target.value); onChange(""); }} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-            <option value="">請選擇分區</option>
-            {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
+          <Select value={districtFilter} onChange={(v) => { onDistrictFilter(v); onChange(""); }} options={[{ value: "", label: "請選擇分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]} />
         </div>
         {districtFilter && (
           <div>
             <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組</label>
-            <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-              <option value="">請選擇小組</option>
-              {filteredGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
+            <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇小組" }, ...filteredGroups.map((g) => ({ value: String(g.id), label: g.name }))]} />
           </div>
         )}
       </div>
