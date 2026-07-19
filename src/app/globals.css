@@ -74,66 +74,7 @@
   --color-modal-bg: linear-gradient(145deg, #FCFAF6 0%, #F5EFEB 50%, #E8DFD7 100%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #201A16;
-    --color-bg-soft: #29211C;
-    --color-surface: #322822;
-    --color-surface-raised: #3D312A;
 
-    --color-primary: #D5A687;
-    --color-primary-dark: #E6C2A9;
-    --color-primary-light: #B8896A;
-    --color-primary-muted: #3D2D23;
-    --color-primary-soft: #2C2018;
-
-    --color-secondary: #D5A687;
-    --color-secondary-dark: #E6C2A9;
-
-    --color-accent: #F59E0B;
-    --color-accent-dark: #FBBF24;
-    --color-accent-soft: #3D2C1E;
-
-    --color-text: #F3EFEA;
-    --color-text-light: #D5CBC0;
-    --color-muted: #968778;
-    --color-border: #57463B;
-    --color-border-light: #3D3027;
-
-    --color-danger: #E11D48;
-    --color-danger-dark: #FB7185;
-    --color-danger-soft: #4C0519;
-    --color-success: #D5A687;
-    --color-warning: #F59E0B;
-
-    --color-header: #322822;
-    --color-header-text: #F3EFEA;
-    --color-table-head: #3D2D23;
-    --color-table-head-text: #E6C2A9;
-    --color-locked-bg: #3A312A;
-    --color-locked-stripe: #615044;
-    --color-special-bg: #D97736;
-    --color-special-text: #FCF8F5;
-
-    --color-glass-bg: rgba(50, 40, 34, 0.88);
-    --color-glass-border: rgba(87, 70, 59, 0.9);
-    --color-glass-shadow: rgba(0, 0, 0, 0.35);
-
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
-    --shadow-card-hover: 0 6px 16px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
-    --shadow-elevated: 0 10px 28px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3);
-    --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.6), 0 6px 16px rgba(0, 0, 0, 0.4);
-    --shadow-glass: 0 4px 16px rgba(0, 0, 0, 0.35);
-    --shadow-header: 0 2px 12px rgba(0, 0, 0, 0.4);
-
-    /* Theme adaptive input, rows, and hover backgrounds */
-    --color-input-bg: rgba(50, 40, 34, 0.6);
-    --color-row-even: rgba(50, 40, 34, 0.4);
-    --color-row-odd: rgba(50, 40, 34, 0.1);
-    --color-hover-bg: rgba(50, 40, 34, 0.6);
-    --color-modal-bg: linear-gradient(145deg, #322822 0%, #29211C 50%, #201A16 100%);
-  }
-}
 
 body {
   background: var(--color-bg);
@@ -287,14 +228,43 @@ a:hover {
 
 /* Admin sidebar solid brand panel */
 .admin-sidebar {
-  background: linear-gradient(180deg, #2F4636 0%, #3D5A45 55%, #354F3C 100%);
-  color: #F5F0E8;
+  background: linear-gradient(180deg, #FCFAF6 0%, #F5EFEB 55%, #E8DFD7 100%);
+  color: var(--color-text);
 }
 
-@media (prefers-color-scheme: dark) {
-  .admin-sidebar {
-    background: linear-gradient(180deg, #1A221C 0%, #243028 55%, #1E2822 100%);
-  }
+/* Force override sidebar link text & icons to be dark brown when sidebar is light theme */
+.admin-sidebar a {
+  color: var(--color-text-light) !important;
+}
+
+.admin-sidebar a:hover {
+  background-color: rgba(162, 114, 79, 0.06) !important;
+  color: var(--color-primary) !important;
+}
+
+.admin-sidebar a.bg-white\/15 {
+  background-color: rgba(162, 114, 79, 0.1) !important;
+  color: var(--color-primary) !important;
+  font-weight: 600;
+}
+
+.admin-sidebar a span {
+  color: inherit !important;
+}
+
+.admin-sidebar span.text-white,
+.admin-sidebar span.text-white\/55,
+.admin-sidebar div.text-white,
+.admin-sidebar span.block.text-white {
+  color: var(--color-text) !important;
+}
+
+.admin-sidebar span.text-white\/55 {
+  color: var(--color-muted) !important;
+}
+
+.admin-sidebar div.border-t.border-white\/15 {
+  border-color: var(--color-border) !important;
 }
 
 /* Member chip color helpers (light + dark) */
