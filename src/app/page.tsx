@@ -646,7 +646,7 @@ th{background:#f0f4f8;font-weight:600;position:sticky;top:0;}
                         </th>
                       ));
                     })}
-                    <th rowSpan={2} className="w-full px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
+                    <th rowSpan={2} className="w-full px-3 py-3.5 text-center font-semibold text-sm whitespace-nowrap text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
                   </tr>
                   {serviceItemGroups.some((g) => g.category) && (
                     <tr className="bg-[var(--color-table-head)]">
