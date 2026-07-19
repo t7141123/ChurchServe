@@ -1174,7 +1174,7 @@ export default function HomePage() {
         <p className="text-sm text-[var(--color-muted)] flex items-center justify-center gap-1.5 flex-wrap">
           <span>ChurchServe</span>
           <span className="text-[var(--color-border)]">|</span>
-          <span>Copyright ©</span>
+          <span>Copyright © 2026</span>
           <a
             href="https://david-liu.pages.dev"
             target="_blank"
@@ -1184,9 +1184,6 @@ export default function HomePage() {
             David Liu
           </a>
         </p>
-        <Link href="/admin/login" className="sm:hidden inline-block mt-2 text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)]">
-          管理後台
-        </Link>
       </footer>
     </div>
   );
