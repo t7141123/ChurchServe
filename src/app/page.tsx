@@ -404,7 +404,6 @@ export default function HomePage() {
 
   const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
   const currentLabel = `${currentYear} 年 ${startMonth} - ${startMonth + 1} 月`;
-  const selectedGroupName = groups.find((g) => g.id === selectedGroup)?.name || "選擇小組";
 
   const serviceItemGroups = useMemo(() => {
     const groups: { category: string | null; items: ServiceItem[] }[] = [];
