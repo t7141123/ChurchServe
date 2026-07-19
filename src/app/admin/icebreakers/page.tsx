@@ -50,7 +50,7 @@ export default function IcebreakersPage() {
     fetch("/api/icebreakers?all=1")
       .then((res) => { if (!res.ok) throw new Error("載入失敗"); return res.json(); })
       .then((d) => setItems(d))
-      .catch(() => setErrorMsg("載入破冰遊戲失敗"))
+      .catch(() => setErrorMsg("載入推薦清單失敗"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -151,7 +151,7 @@ export default function IcebreakersPage() {
       <div className="mb-8 animate-fadeIn">
         <div className="flex items-center justify-between gap-3 mb-1">
           <div>
-            <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">破冰遊戲管理</h1>
+            <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">破冰遊戲推薦</h1>
             <p className="text-sm text-[var(--color-muted)]">{items.length} 個遊戲</p>
           </div>
           <button onClick={() => setShowCreateModal(true)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg hover:translate-y-[-1px]">
@@ -159,7 +159,7 @@ export default function IcebreakersPage() {
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              新增破冰遊戲
+              新增推薦
             </span>
           </button>
         </div>
@@ -175,7 +175,7 @@ export default function IcebreakersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
           <div className="relative glass rounded-2xl p-6 w-full max-w-lg shadow-modal animate-scaleIn max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">新增破冰遊戲</h3>
+            <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">新增推薦</h3>
             <form onSubmit={handleCreateClick}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="遊戲名稱 *" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
@@ -216,7 +216,7 @@ export default function IcebreakersPage() {
               <path d="M12 16v-4M12 8h.01" />
             </svg>
           </div>
-          <p className="text-sm text-[var(--color-muted)]">尚無破冰遊戲</p>
+          <p className="text-sm text-[var(--color-muted)]">尚無推薦的破冰遊戲</p>
         </div>
       ) : (
         <div className="space-y-2">

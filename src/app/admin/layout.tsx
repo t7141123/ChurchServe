@@ -144,7 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           小組群組管理
         </SidebarLink>
         <SidebarLink href="/admin/icebreakers" active={isIcebreakers} onClick={closeSidebar} icon={<SparkIcon />}>
-          破冰遊戲
+          破冰遊戲推薦
         </SidebarLink>
       </nav>
 
