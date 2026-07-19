@@ -758,7 +758,7 @@ export default function HomePage() {
                           {schedule.remarks ? (
                             <span className="text-[var(--color-muted)] whitespace-nowrap mx-auto">{schedule.remarks}</span>
                           ) : (
-                            <span className="text-[var(--color-accent)] opacity-60 hover:opacity-100 transition-opacity text-sm font-medium">+ 備註</span>
+                            <span className="text-[var(--color-accent)] opacity-85 hover:opacity-100 transition-opacity text-sm font-medium">+ 備註</span>
                           )}
                         </td>
                       </tr>
