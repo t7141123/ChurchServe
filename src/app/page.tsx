@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, startTransition } from "react";
+import Link from "next/link";
 import { Card } from "@/lib/components/ui/Card";
 import { Button } from "@/lib/components/ui/Button";
 
@@ -47,6 +48,19 @@ function getSaturdaysOfMonth(year: number, month: number): string[] {
 
 const DAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
+const CHIP_CLASSES = [
+  "chip-emerald",
+  "chip-sky",
+  "chip-violet",
+  "chip-rose",
+  "chip-amber",
+  "chip-teal",
+  "chip-indigo",
+  "chip-pink",
+  "chip-lime",
+  "chip-cyan",
+];
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -65,34 +79,34 @@ function isCurrentWeek(dateStr: string): boolean {
   return target >= startOfWeek && target <= endOfWeek;
 }
 
-function getMemberColor(name: string): string {
-  const colors = [
-    "bg-emerald-100 text-emerald-700 border-emerald-200",
-    "bg-sky-100 text-sky-700 border-sky-200",
-    "bg-violet-100 text-violet-700 border-violet-200",
-    "bg-rose-100 text-rose-700 border-rose-200",
-    "bg-amber-100 text-amber-700 border-amber-200",
-    "bg-teal-100 text-teal-700 border-teal-200",
-    "bg-indigo-100 text-indigo-700 border-indigo-200",
-    "bg-pink-100 text-pink-700 border-pink-200",
-    "bg-lime-100 text-lime-700 border-lime-200",
-    "bg-cyan-100 text-cyan-700 border-cyan-200",
-  ];
+function getMemberChipClass(name: string): string {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return colors[Math.abs(hash) % colors.length];
+  return CHIP_CLASSES[Math.abs(hash) % CHIP_CLASSES.length];
+}
+
+function SproutIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22v-8" />
+      <path d="M12 14c-4 0-7-2.5-7-6 3.5 0 7 2 7 6z" />
+      <path d="M12 14c4 0 7-2.5 7-6-3.5 0-7 2-7 6z" />
+      <path d="M12 22c-2 0-3.5-1-3.5-1" />
+    </svg>
+  );
 }
 
 function SkeletonCard() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" aria-busy="true" aria-label="載入中">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 space-y-3">
-          <div className="animate-shimmer h-5 w-32 rounded-lg" />
+        <div key={i} className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-5 space-y-3 shadow-[var(--shadow-card)]">
+          <div className="animate-shimmer h-5 w-28 rounded-lg" />
           <div className="animate-shimmer h-4 w-full rounded-lg" />
           <div className="animate-shimmer h-4 w-3/4 rounded-lg" />
+          <div className="animate-shimmer h-4 w-1/2 rounded-lg" />
         </div>
       ))}
     </div>
@@ -108,13 +122,17 @@ export default function HomePage() {
   const [schedules, setSchedules] = useState<ScheduleDate[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalScheduleId, setModalScheduleId] = useState<number | null>(null);
   const [modalItemId, setModalItemId] = useState<number | null>(null);
+  const [modalDate, setModalDate] = useState<string>("");
   const [modalCurrentValue, setModalCurrentValue] = useState<{ member_id: number | null; custom_name: string | null } | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null | undefined>(undefined);
   const [customName, setCustomName] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [icebreakerOpen, setIcebreakerOpen] = useState(false);
   const [icebreakers, setIcebreakers] = useState<{ id: number; name: string; description: string; category: string; duration: string; people_min: number; people_max: number; materials: string }[]>([]);
@@ -135,196 +153,295 @@ export default function HomePage() {
 
   const fetchSchedules = useCallback(async () => {
     if (!selectedGroup) return;
-    const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-    const [schedRes, itemRes, memberRes] = await Promise.all([
-      fetch(`/api/schedules/${selectedGroup}/${ym}`),
-      fetch(`/api/groups/${selectedGroup}/service-items`),
-      fetch(`/api/groups/${selectedGroup}/members`),
-    ]);
-    const schedData = await schedRes.json();
-    const itemData = await itemRes.json();
-    const memberData = await memberRes.json();
+    setScheduleLoading(true);
+    try {
+      const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+      const [schedRes, itemRes, memberRes] = await Promise.all([
+        fetch(`/api/schedules/${selectedGroup}/${ym}`),
+        fetch(`/api/groups/${selectedGroup}/service-items`),
+        fetch(`/api/groups/${selectedGroup}/members`),
+      ]);
+      const schedData = await schedRes.json();
+      const itemData = await itemRes.json();
+      const memberData = await memberRes.json();
 
-    if (itemData.success) setServiceItems(itemData.data);
-    if (memberData.success) setMembers(memberData.data.filter((m: Member & { is_active: number }) => m.is_active === 1));
+      if (itemData.success) setServiceItems(itemData.data);
+      else if (Array.isArray(itemData)) setServiceItems(itemData);
 
-    const dates = getSaturdaysOfMonth(currentYear, currentMonth);
-    const apiSchedules = schedData.success ? schedData.data : [];
+      if (memberData.success) setMembers(memberData.data.filter((m: Member & { is_active: number }) => m.is_active === 1));
+      else if (Array.isArray(memberData)) setMembers(memberData.filter((m: Member & { is_active: number }) => m.is_active === 1));
 
-    const enriched: ScheduleDate[] = dates.map((dateStr) => {
-      const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
-      const assignmentsMap: ScheduleDate["assignments"] = {};
+      const dates = getSaturdaysOfMonth(currentYear, currentMonth);
+      const apiSchedules = schedData.success ? schedData.data : (Array.isArray(schedData) ? schedData : []);
 
-      if (existing?.assignments) {
-        for (const a of existing.assignments) {
-          assignmentsMap[a.service_item_order || a.display_order || 0] = {
-            member_id: a.member_id,
-            custom_member_name: a.custom_member_name,
-            member_name: a.member_name,
-            id: a.id,
-          };
+      const enriched: ScheduleDate[] = dates.map((dateStr) => {
+        const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
+        const assignmentsMap: ScheduleDate["assignments"] = {};
+
+        if (existing?.assignments) {
+          for (const a of existing.assignments) {
+            assignmentsMap[a.service_item_order || a.display_order || 0] = {
+              member_id: a.member_id,
+              custom_member_name: a.custom_member_name,
+              member_name: a.member_name,
+              id: a.id,
+            };
+          }
         }
-      }
 
-      return {
-        date: dateStr,
-        dayOfWeek: DAY_NAMES[new Date(dateStr + "T00:00:00").getDay()],
-        scheduleId: existing?.id || null,
-        isSpecialEvent: existing?.is_special_event || 0,
-        eventTitle: existing?.event_title || null,
-        isLocked: existing?.is_locked || 0,
-        lockMessage: existing?.lock_message || null,
-        assignments: assignmentsMap,
-      };
-    });
+        return {
+          date: dateStr,
+          dayOfWeek: DAY_NAMES[new Date(dateStr + "T00:00:00").getDay()],
+          scheduleId: existing?.id || null,
+          isSpecialEvent: existing?.is_special_event || 0,
+          eventTitle: existing?.event_title || null,
+          isLocked: existing?.is_locked || 0,
+          lockMessage: existing?.lock_message || null,
+          assignments: assignmentsMap,
+        };
+      });
 
-    setSchedules(enriched);
+      setSchedules(enriched);
+    } finally {
+      setScheduleLoading(false);
+    }
   }, [selectedGroup, currentYear, currentMonth]);
 
   useEffect(() => {
     startTransition(() => { fetchSchedules(); });
   }, [fetchSchedules]);
 
-  const openModal = (scheduleId: number, itemId: number, currentValue: { member_id: number | null; custom_name: string | null } | null) => {
+  const openModal = (
+    scheduleId: number,
+    itemId: number,
+    date: string,
+    currentValue: { member_id: number | null; custom_name: string | null } | null
+  ) => {
     setModalScheduleId(scheduleId);
     setModalItemId(itemId);
+    setModalDate(date);
     setModalCurrentValue(currentValue);
-    setCustomName("");
-    setShowCustomInput(false);
+    setSelectedMemberId(currentValue?.member_id ?? undefined);
+    setCustomName(currentValue?.custom_name || "");
+    setShowCustomInput(Boolean(currentValue?.custom_name));
     setModalOpen(true);
   };
 
-  const handleSelectMember = async (memberId: number | null, customNameStr?: string) => {
+  const closeModal = () => {
+    setModalOpen(false);
+    setShowCustomInput(false);
+    setCustomName("");
+    setSelectedMemberId(undefined);
+    setSubmitting(false);
+  };
+
+  const handleConfirm = async () => {
     if (modalScheduleId === null || modalItemId === null) return;
+    setSubmitting(true);
 
     const body: { member_id?: number | null; custom_member_name?: string | null } = {};
-    if (memberId) {
-      body.member_id = memberId;
-    } else if (customNameStr) {
-      body.custom_member_name = customNameStr;
-    } else {
+    if (showCustomInput && customName.trim()) {
+      body.custom_member_name = customName.trim();
+      body.member_id = null;
+    } else if (selectedMemberId === null) {
       body.member_id = null;
       body.custom_member_name = null;
+    } else if (typeof selectedMemberId === "number") {
+      body.member_id = selectedMemberId;
+      body.custom_member_name = null;
+    } else {
+      setSubmitting(false);
+      return;
     }
 
-    const res = await fetch(`/api/assignments/${modalScheduleId}/${modalItemId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch(`/api/assignments/${modalScheduleId}/${modalItemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
-      setModalOpen(false);
-      setErrorMsg("");
-      fetchSchedules();
-    } else {
-      const data = await res.json();
-      setErrorMsg(data.error || "操作失敗");
+      if (res.ok) {
+        closeModal();
+        setErrorMsg("");
+        fetchSchedules();
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "操作失敗");
+        setTimeout(() => setErrorMsg(""), 3000);
+      }
+    } catch {
+      setErrorMsg("網路錯誤，請稍後再試");
       setTimeout(() => setErrorMsg(""), 3000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const handleClear = async () => {
+    setSelectedMemberId(null);
+    setShowCustomInput(false);
+    setCustomName("");
+    if (modalScheduleId === null || modalItemId === null) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/assignments/${modalScheduleId}/${modalItemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: null, custom_member_name: null }),
+      });
+      if (res.ok) {
+        closeModal();
+        fetchSchedules();
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "清除失敗");
+        setTimeout(() => setErrorMsg(""), 3000);
+      }
+    } catch {
+      setErrorMsg("網路錯誤，請稍後再試");
+      setTimeout(() => setErrorMsg(""), 3000);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const canConfirm =
+    (showCustomInput && customName.trim().length > 0) ||
+    (typeof selectedMemberId === "number");
+
   const currentLabel = `${currentYear} 年 ${currentMonth} 月`;
+  const selectedGroupName = groups.find((g) => g.id === selectedGroup)?.name || "選擇小組";
+  const modalItemName = serviceItems.find((i) => i.id === modalItemId)?.name || "";
+
+  const prevMonth = () => {
+    if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); }
+    else setCurrentMonth(currentMonth - 1);
+  };
+  const nextMonth = () => {
+    if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); }
+    else setCurrentMonth(currentMonth + 1);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 glass border-b border-[var(--color-glass-border)] shadow-[var(--shadow-glass)]">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold font-serif text-[var(--color-primary)] flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center text-sm">
-                ⛪
+      {/* Brand header — solid earth green */}
+      <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-text)] shadow-[var(--shadow-header)]">
+        <div className="max-w-6xl mx-auto px-4">
+          {/* Top row: logo + group + admin */}
+          <div className="flex items-center justify-between gap-3 py-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                <SproutIcon className="w-5 h-5 text-white" />
               </span>
-              ChurchServe
-            </h1>
-            <a
-              href="/admin/login"
-              className="text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--color-border-light)]"
-            >
-              管理後台
-            </a>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate">
+                  ChurchServe
+                </h1>
+                <p className="text-[11px] sm:text-xs text-white/70 leading-tight hidden sm:block">
+                  小組服事報名
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="relative">
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(Number(e.target.value))}
+                  aria-label="選擇小組"
+                  className="appearance-none pl-3 pr-9 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/40 transition-all max-w-[140px] sm:max-w-[200px]"
+                >
+                  {groups.length === 0 && <option value={0}>尚無小組</option>}
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id} className="text-[var(--color-text)]">
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+              <Link
+                href="/admin/login"
+                className="hidden sm:inline-flex items-center px-3 py-2 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                管理
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            <div className="relative w-full sm:w-56">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                <path d="M9 22V12h6v10" />
-              </svg>
-              <select
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(Number(e.target.value))}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-base appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all"
-              >
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </div>
-
-            <div className="flex items-center gap-2 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] px-2 py-1.5">
-              <button
-                onClick={() => {
-                  if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); }
-                  else { setCurrentMonth(currentMonth - 1); }
-                }}
-                aria-label="上一個月"
-                className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-              <span className="text-base font-medium min-w-[130px] text-center text-[var(--color-text)]">
-                {currentLabel}
-              </span>
-              <button
-                onClick={() => {
-                  if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); }
-                  else { setCurrentMonth(currentMonth + 1); }
-                }}
-                aria-label="下一個月"
-                className="w-9 h-9 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            </div>
-
+          {/* Month switcher — centered primary control */}
+          <div className="flex items-center justify-center gap-1 pb-3">
             <button
-              onClick={() => {
-                setIcebreakerOpen(true);
-                setIcebreakerLoading(true);
-                fetch("/api/icebreakers")
-                  .then((r) => r.json())
-                  .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
-                  .finally(() => setIcebreakerLoading(false));
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--color-accent)] bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/10 transition-all flex-shrink-0"
+              onClick={prevMonth}
+              aria-label="上一個月"
+              className="w-11 h-11 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/90 transition-colors"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
               </svg>
-              破冰遊戲建議
+            </button>
+            <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
+              <span className="text-base sm:text-lg font-semibold tracking-wide">{currentLabel}</span>
+              {selectedGroupName && groups.length > 0 && (
+                <p className="text-[11px] text-white/65 mt-0.5 truncate">{selectedGroupName}</p>
+              )}
+            </div>
+            <button
+              onClick={nextMonth}
+              aria-label="下一個月"
+              className="w-11 h-11 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/90 transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Schedule Content */}
-      <main className="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+      {/* Secondary toolbar */}
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+          <p className="text-xs sm:text-sm text-[var(--color-muted)]">
+            點擊格子即可報名服事 · 無需登入
+          </p>
+          <button
+            onClick={() => {
+              setIcebreakerOpen(true);
+              setIcebreakerLoading(true);
+              fetch("/api/icebreakers")
+                .then((r) => r.json())
+                .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
+                .finally(() => setIcebreakerLoading(false));
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--color-accent-dark)] bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40 transition-all flex-shrink-0 min-h-[40px]"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
+              <path d="M8 21h8" />
+            </svg>
+            破冰遊戲
+          </button>
+        </div>
+      </div>
+
+      {/* Schedule content */}
+      <main className="max-w-6xl mx-auto w-full px-4 py-5 sm:py-6 flex-1">
         {loading ? (
           <SkeletonCard />
+        ) : groups.length === 0 ? (
+          <div className="text-center py-20 page-enter">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--color-primary-soft)] flex items-center justify-center mx-auto mb-4 text-[var(--color-primary)]">
+              <SproutIcon className="w-8 h-8" />
+            </div>
+            <p className="text-lg font-medium text-[var(--color-text)] mb-1">尚無小組資料</p>
+            <p className="text-sm text-[var(--color-muted)]">請先由管理員建立小組</p>
+          </div>
         ) : schedules.length === 0 ? (
-          <div className="text-center py-16 page-enter">
+          <div className="text-center py-20 page-enter">
             <div className="w-16 h-16 rounded-2xl bg-[var(--color-border-light)] flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -334,38 +451,36 @@ export default function HomePage() {
             <p className="text-lg text-[var(--color-muted)]">本月尚無排班資料</p>
           </div>
         ) : (
-          <div className="space-y-4 page-enter">
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)]">
+          <div className={`space-y-4 page-enter ${scheduleLoading ? "opacity-60 pointer-events-none" : ""}`}>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] bg-[var(--color-surface)]">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)]">
-                    <th className="px-5 py-4 text-left text-white font-medium text-base whitespace-nowrap">
+                  <tr className="bg-[var(--color-table-head)]">
+                    <th className="px-5 py-3.5 text-left font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-[var(--color-border)]">
                       日期
                     </th>
                     {serviceItems.map((item) => (
-                      <th key={item.id} className="px-3 py-4 text-center text-white font-medium text-sm">
+                      <th key={item.id} className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">
                         {item.name}
                       </th>
                     ))}
-                    <th className="px-4 py-4 text-center text-white font-medium text-sm whitespace-nowrap">
-                      備註
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {schedules.map((schedule, idx) => {
-                    const colCount = serviceItems.length + 2;
+                    const colCount = serviceItems.length + 1;
                     const isCurrent = isCurrentWeek(schedule.date);
 
                     if (schedule.isLocked) {
                       return (
-                        <tr key={schedule.date} className="bg-[var(--color-border-light)]/60 transition-colors">
-                          <td colSpan={colCount} className="px-5 py-6 text-center relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-[0.07]" style={{
-                              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, var(--color-muted) 8px, var(--color-muted) 9px)`,
-                            }} />
-                            <span className="relative text-base text-[var(--color-muted)] font-medium">
+                        <tr key={schedule.date}>
+                          <td colSpan={colCount} className="px-5 py-7 text-center stripe-locked">
+                            <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0110 0v4" />
+                              </svg>
                               {schedule.lockMessage || "暫停聚會"}
                             </span>
                           </td>
@@ -375,9 +490,9 @@ export default function HomePage() {
 
                     if (schedule.isSpecialEvent) {
                       return (
-                        <tr key={schedule.date} className="transition-colors" style={{ background: "var(--color-accent)" }}>
-                          <td colSpan={colCount} className="px-5 py-6 text-center">
-                            <span className="text-white font-bold text-lg">
+                        <tr key={schedule.date}>
+                          <td colSpan={colCount} className="px-5 py-7 text-center bg-[var(--color-special-bg)]">
+                            <span className="text-[var(--color-special-text)] font-bold text-lg">
                               {schedule.eventTitle}
                             </span>
                           </td>
@@ -389,15 +504,29 @@ export default function HomePage() {
                       <tr
                         key={schedule.date}
                         className={
-                          (idx % 2 === 0 ? "bg-[var(--color-surface)] " : "bg-[var(--color-border-light)] ") +
-                          "transition-colors"
+                          (idx % 2 === 0 ? "bg-[var(--color-surface)] " : "bg-[var(--color-bg-soft)]/60 ") +
+                          "transition-colors hover:bg-[var(--color-primary-soft)]/50"
                         }
                       >
-                        <td className={"py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)]" + (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")}>
-                          <span className="text-sm">{formatDate(schedule.date)}</span>
-                          <span className="text-[var(--color-muted)] text-xs ml-1.5">
-                            ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
-                          </span>
+                        <td
+                          className={
+                            "py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
+                            (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")
+                          }
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm">
+                              {formatDate(schedule.date)}
+                              <span className="text-[var(--color-muted)] text-xs font-normal ml-1.5">
+                                ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                              </span>
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-accent-dark)]">
+                                本週
+                              </span>
+                            )}
+                          </div>
                         </td>
                         {serviceItems.map((item) => {
                           const assignment = schedule.assignments[item.display_order];
@@ -406,29 +535,38 @@ export default function HomePage() {
                           return (
                             <td
                               key={item.id}
-                              className="px-3 py-4 text-center border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-accent)]/5 transition-colors"
+                              role="button"
+                              tabIndex={0}
+                              className="px-3 py-4 text-center border-r border-[var(--color-border)] last:border-r-0 cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
                               onClick={() =>
-                                openModal(schedule.scheduleId || 0, item.id, assignment ? {
+                                openModal(schedule.scheduleId || 0, item.id, schedule.date, assignment ? {
                                   member_id: assignment.member_id,
                                   custom_name: assignment.custom_member_name,
                                 } : null)
                               }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  openModal(schedule.scheduleId || 0, item.id, schedule.date, assignment ? {
+                                    member_id: assignment.member_id,
+                                    custom_name: assignment.custom_member_name,
+                                  } : null);
+                                }
+                              }}
                             >
                               {name ? (
-                                <span className={`inline-block px-2.5 py-1 rounded-lg text-sm font-medium border ${getMemberColor(name)}`}>
+                                <span className={`inline-block px-2.5 py-1 rounded-lg text-sm font-medium border ${getMemberChipClass(name)}`}>
                                   {name}
                                 </span>
                               ) : (
-                                <span className="text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
-                                  點擊登記
+                                <span className="inline-flex items-center gap-1 text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
+                                  <span className="w-5 h-5 rounded-full border border-dashed border-[var(--color-border)] flex items-center justify-center text-xs">+</span>
+                                  登記
                                 </span>
                               )}
                             </td>
                           );
                         })}
-                        <td className="px-4 py-4 text-center text-sm">
-                          <span className="text-[var(--color-muted)]">-</span>
-                        </td>
                       </tr>
                     );
                   })}
@@ -436,19 +574,20 @@ export default function HomePage() {
               </table>
             </div>
 
-            {/* Mobile Cards */}
+            {/* Mobile card stream */}
             <div className="md:hidden space-y-3">
               {schedules.map((schedule) => {
                 const isCurrent = isCurrentWeek(schedule.date);
 
                 if (schedule.isLocked) {
                   return (
-                    <div key={schedule.date} className="rounded-2xl overflow-hidden border border-[var(--color-border)] relative" style={{ background: "var(--color-border-light)" }}>
-                      <div className="absolute inset-0 opacity-[0.06]" style={{
-                        backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, var(--color-muted) 8px, var(--color-muted) 9px)`,
-                      }} />
-                      <div className="relative px-4 py-8 text-center">
-                        <span className="text-base text-[var(--color-muted)] font-medium">
+                    <div key={schedule.date} className="rounded-2xl overflow-hidden border border-[var(--color-border)] stripe-locked">
+                      <div className="px-4 py-8 text-center">
+                        <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                          </svg>
                           {schedule.lockMessage || "暫停聚會"}
                         </span>
                       </div>
@@ -458,9 +597,9 @@ export default function HomePage() {
 
                 if (schedule.isSpecialEvent) {
                   return (
-                    <div key={schedule.date} className="rounded-2xl overflow-hidden" style={{ background: "var(--color-accent)" }}>
+                    <div key={schedule.date} className="rounded-2xl overflow-hidden bg-[var(--color-special-bg)] shadow-[var(--shadow-card)]">
                       <div className="px-4 py-8 text-center">
-                        <span className="text-white font-bold text-lg">
+                        <span className="text-[var(--color-special-text)] font-bold text-lg">
                           {schedule.eventTitle}
                         </span>
                       </div>
@@ -469,18 +608,31 @@ export default function HomePage() {
                 }
 
                 return (
-                  <Card key={schedule.date} variant="default" padding="none" className="overflow-hidden">
-                    <div className={"py-3.5 bg-gradient-to-r from-[var(--color-primary)]/5 to-transparent border-b border-[var(--color-border)]" + (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-4" : " px-4")}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-[var(--color-primary)]">
-                            {formatDate(schedule.date)}
-                          </span>
-                          <span className="text-xs text-[var(--color-muted)]">
-                            ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
-                          </span>
-                        </div>
+                  <Card
+                    key={schedule.date}
+                    variant="default"
+                    padding="none"
+                    className={`overflow-hidden ${isCurrent ? "ring-2 ring-[var(--color-accent)]/40" : ""}`}
+                  >
+                    <div
+                      className={
+                        "py-3.5 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)] flex items-center justify-between" +
+                        (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-4" : " px-4")
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[var(--color-primary)] text-base">
+                          {formatDate(schedule.date)}
+                        </span>
+                        <span className="text-xs text-[var(--color-muted)]">
+                          ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                        </span>
                       </div>
+                      {isCurrent && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--color-accent)] text-white">
+                          本週
+                        </span>
+                      )}
                     </div>
                     <div className="divide-y divide-[var(--color-border-light)]">
                       {serviceItems.map((item) => {
@@ -488,23 +640,26 @@ export default function HomePage() {
                         const name = assignment?.member_name || assignment?.custom_member_name;
 
                         return (
-                          <div
+                          <button
                             key={item.id}
-                            className="px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-[var(--color-border-light)]"
-                            onClick={() => openModal(schedule.scheduleId || 0, item.id, assignment ? {
+                            type="button"
+                            className="w-full px-4 py-3.5 flex items-center justify-between min-h-[52px] active:bg-[var(--color-border-light)] transition-colors text-left"
+                            onClick={() => openModal(schedule.scheduleId || 0, item.id, schedule.date, assignment ? {
                               member_id: assignment.member_id,
                               custom_name: assignment.custom_member_name,
                             } : null)}
                           >
                             <span className="text-sm font-medium text-[var(--color-text-light)]">{item.name}</span>
                             {name ? (
-                              <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberColor(name)}`}>
+                              <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberChipClass(name)}`}>
                                 {name}
                               </span>
                             ) : (
-                              <span className="text-sm text-[var(--color-muted)]">登記</span>
+                              <span className="text-sm font-medium text-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-1 rounded-full">
+                                點擊登記
+                              </span>
                             )}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -516,30 +671,32 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Error Toast */}
+      {/* Error toast */}
       {errorMsg && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white text-sm shadow-lg animate-slide-up" role="alert">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white text-sm shadow-lg animate-slide-up max-w-[90vw]" role="alert">
           {errorMsg}
         </div>
       )}
 
-      {/* Bottom Sheet Modal */}
+      {/* Assignment modal — button grid + confirm */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={() => setModalOpen(false)} />
-          <div className="relative w-full bg-[var(--color-surface)] sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden">
-            <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-10">
-              <div className="flex items-center justify-between px-6 pt-5 pb-4">
-                <div>
-                  <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">選擇服事人員</h3>
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={closeModal} />
+          <div className="relative w-full bg-[var(--color-surface)] sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex-shrink-0 border-b border-[var(--color-border)]">
+              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
+              <div className="flex items-start justify-between px-5 sm:px-6 pt-4 pb-4">
+                <div className="min-w-0 pr-3">
+                  <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">登記服事</h3>
                   <p className="text-sm text-[var(--color-muted)] mt-0.5">
-                    {serviceItems.find((i) => i.id === modalItemId)?.name}
+                    {modalDate ? `${formatDate(modalDate)} (${DAY_NAMES[new Date(modalDate + "T00:00:00").getDay()]})` : ""}
+                    {modalItemName ? ` · ${modalItemName}` : ""}
                   </p>
                 </div>
                 <button
-                  onClick={() => setModalOpen(false)}
+                  onClick={closeModal}
                   aria-label="關閉"
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors flex-shrink-0"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <path d="M18 6L6 18M6 6l12 12" />
@@ -548,111 +705,109 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
-              <button
-                onClick={() => handleSelectMember(null)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors mb-2 text-[var(--color-danger)]"
-              >
-                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-                <span className="text-sm font-medium">清除此欄位</span>
-              </button>
-
-              <div className="space-y-1">
+            <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4">
+              {/* Member button grid */}
+              <div className="grid grid-cols-2 gap-2.5">
                 {members.map((member) => {
-                  const isSelected = modalCurrentValue?.member_id === member.id;
+                  const isSelected = !showCustomInput && selectedMemberId === member.id;
                   return (
                     <button
                       key={member.id}
-                      onClick={() => handleSelectMember(member.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all ${
+                      type="button"
+                      onClick={() => {
+                        setSelectedMemberId(member.id);
+                        setShowCustomInput(false);
+                        setCustomName("");
+                      }}
+                      className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border ${
                         isSelected
-                          ? "bg-[var(--color-secondary)]/10 text-[var(--color-secondary-dark)] font-medium ring-1 ring-[var(--color-secondary)]/30"
-                          : "hover:bg-[var(--color-border-light)] text-[var(--color-text)]"
+                          ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
+                          : "bg-[var(--color-bg-soft)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary-soft)]"
                       }`}
                     >
-                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        isSelected
-                          ? "bg-[var(--color-secondary)] text-white"
-                          : "bg-[var(--color-border-light)] text-[var(--color-text-light)]"
-                      }`}>
-                        {member.name.charAt(0)}
-                      </span>
-                      <span>{member.name}</span>
-                      {isSelected && (
-                        <svg className="ml-auto w-4 h-4 text-[var(--color-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      )}
+                      {member.name}
                     </button>
                   );
                 })}
+
+                {/* Other / custom name */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomInput(true);
+                    setSelectedMemberId(undefined);
+                  }}
+                  className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border col-span-2 sm:col-span-1 ${
+                    showCustomInput
+                      ? "bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-sm"
+                      : "bg-[var(--color-accent-soft)] text-[var(--color-accent-dark)] border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50"
+                  }`}
+                >
+                  其他…
+                </button>
               </div>
 
-              <div className="mt-4 border-t border-[var(--color-border)] pt-4">
-                {!showCustomInput ? (
-                  <button
-                    onClick={() => setShowCustomInput(true)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left hover:bg-[var(--color-border-light)] transition-colors text-[var(--color-accent)]"
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                    <span className="text-sm font-medium">自行輸入姓名</span>
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={customName}
-                        onChange={(e) => setCustomName(e.target.value)}
-                        placeholder="輸入姓名..."
-                        maxLength={50}
-                        className="w-full pl-4 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="md"
-                        className="flex-1"
-                        onClick={() => { setShowCustomInput(false); setCustomName(""); }}
-                      >
-                        取消
-                      </Button>
-                      <Button
-                        variant="primary"
-                        size="md"
-                        className="flex-1"
-                        disabled={!customName.trim()}
-                        onClick={() => { if (customName.trim()) handleSelectMember(null, customName.trim()); }}
-                      >
-                        確認
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {showCustomInput && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="請輸入您的姓名"
+                    maxLength={50}
+                    className="w-full px-4 py-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-all"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {(modalCurrentValue?.member_id || modalCurrentValue?.custom_name) && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={submitting}
+                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] transition-colors"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  清除此欄位
+                </button>
+              )}
+            </div>
+
+            <div className="flex-shrink-0 border-t border-[var(--color-border)] px-5 sm:px-6 py-4 flex gap-3 safe-bottom bg-[var(--color-surface)]">
+              <Button variant="outline" size="md" className="flex-1" onClick={closeModal} disabled={submitting}>
+                取消
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                className="flex-1"
+                disabled={!canConfirm || submitting}
+                loading={submitting}
+                onClick={handleConfirm}
+              >
+                確認登記
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Icebreaker Modal */}
+      {/* Icebreaker modal */}
       {icebreakerOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={() => setIcebreakerOpen(false)} />
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={() => setIcebreakerOpen(false)} />
           <div className="relative w-full max-h-[85vh] sm:max-w-2xl bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden flex flex-col">
             <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-10 flex-shrink-0">
-              <div className="flex items-center justify-between px-6 pt-5 pb-4">
+              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
+              <div className="flex items-center justify-between px-6 pt-4 pb-4">
                 <div>
                   <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">破冰遊戲建議</h3>
-                  <p className="text-sm text-[var(--color-muted)] mt-0.5">點子庫 &middot; 共 {icebreakers.length} 個遊戲</p>
+                  <p className="text-sm text-[var(--color-muted)] mt-0.5">點子庫 · 共 {icebreakers.length} 個遊戲</p>
                 </div>
-                <button onClick={() => setIcebreakerOpen(false)} aria-label="關閉" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
+                <button onClick={() => setIcebreakerOpen(false)} aria-label="關閉" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
@@ -660,10 +815,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 safe-bottom">
               {icebreakerLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-primary)] border-t-transparent" />
+                  <div className="animate-spin rounded-full h-7 w-7 border-2 border-[var(--color-primary)] border-t-transparent" />
                 </div>
               ) : icebreakers.length === 0 ? (
                 <div className="text-center py-12">
@@ -679,14 +834,15 @@ export default function HomePage() {
                   }
                   return Object.entries(grouped).map(([cat, games]) => (
                     <div key={cat} className="mb-6 last:mb-0">
-                      <h4 className="text-sm font-bold text-[var(--color-primary-dark)] mb-3 px-1">{cat}</h4>
+                      <h4 className="text-sm font-bold text-[var(--color-primary)] mb-3 px-1 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
+                        {cat}
+                      </h4>
                       <div className="space-y-3">
                         {games.map((g) => (
-                          <div key={g.id} className="bg-[var(--color-border-light)]/50 rounded-2xl p-4 border border-[var(--color-border)]/50">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h5 className="font-semibold text-[var(--color-text)]">{g.name}</h5>
-                            </div>
-                            {g.description && <p className="text-sm text-[var(--color-text-light)] mb-2">{g.description}</p>}
+                          <div key={g.id} className="bg-[var(--color-bg-soft)] rounded-2xl p-4 border border-[var(--color-border)]">
+                            <h5 className="font-semibold text-[var(--color-text)] mb-1">{g.name}</h5>
+                            {g.description && <p className="text-sm text-[var(--color-text-light)] mb-2 leading-relaxed">{g.description}</p>}
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-muted)]">
                               {g.duration && <span>⏱ {g.duration}</span>}
                               {(g.people_min > 0 || g.people_max > 0) && (
@@ -706,9 +862,11 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="mt-auto py-5 text-center border-t border-[var(--color-border)]">
+      <footer className="mt-auto py-5 text-center border-t border-[var(--color-border)] bg-[var(--color-surface)]/50">
         <p className="text-sm text-[var(--color-muted)]">ChurchServe — 開源教會小組服事排班系統</p>
+        <Link href="/admin/login" className="sm:hidden inline-block mt-2 text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)]">
+          管理後台
+        </Link>
       </footer>
     </div>
   );

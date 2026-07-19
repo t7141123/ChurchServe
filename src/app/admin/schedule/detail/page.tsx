@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 interface ServiceItem {
   id: number;
@@ -257,7 +258,7 @@ export default function SchedulePage() {
   return (
     <div className="animate-fadeIn">
       <div className="flex items-center gap-3 mb-4">
-        <a
+        <Link
           href="/admin/schedule"
           aria-label="返回排班總覽"
           className="w-8 h-8 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
@@ -265,7 +266,7 @@ export default function SchedulePage() {
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-        </a>
+        </Link>
         <div>
           <h1 className="text-xl font-bold font-serif text-[var(--color-primary-dark)]">{groupName}</h1>
           <p className="text-xs text-[var(--color-muted)]">排班管理</p>

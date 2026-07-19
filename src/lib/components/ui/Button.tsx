@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "glass";
+type ButtonVariant = "primary" | "secondary" | "accent" | "danger" | "ghost" | "glass" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,15 +14,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-sm hover:shadow-md active:scale-[0.97]",
+    "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-sm hover:shadow-md active:scale-[0.98]",
   secondary:
-    "bg-[var(--color-secondary)] text-white hover:bg-[var(--color-secondary-dark)] shadow-sm hover:shadow-md active:scale-[0.97]",
+    "bg-[var(--color-secondary)] text-white hover:bg-[var(--color-secondary-dark)] shadow-sm hover:shadow-md active:scale-[0.98]",
+  accent:
+    "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] shadow-sm hover:shadow-md active:scale-[0.98]",
   danger:
-    "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-dark)] shadow-sm active:scale-[0.97]",
+    "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-dark)] shadow-sm active:scale-[0.98]",
   ghost:
-    "bg-transparent text-[var(--color-text-light)] hover:bg-[var(--color-border-light)] active:scale-[0.97]",
+    "bg-transparent text-[var(--color-text-light)] hover:bg-[var(--color-border-light)] active:scale-[0.98]",
   glass:
-    "glass text-[var(--color-text)] hover:shadow-md active:scale-[0.97]",
+    "glass text-[var(--color-text)] hover:shadow-md active:scale-[0.98]",
+  outline:
+    "bg-transparent border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-border-light)] active:scale-[0.98]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -37,11 +41,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {loading ? (
-          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
