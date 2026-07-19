@@ -517,7 +517,7 @@ export default function HomePage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-table-head)]">
-                    <th className="px-5 py-3.5 text-left font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-[var(--color-border)]">
+                    <th className="px-5 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-[var(--color-border)]">
                       日期
                     </th>
                     {serviceItems.map((item) => (
@@ -571,11 +571,11 @@ export default function HomePage() {
                       >
                         <td
                           className={
-                            "py-4 font-semibold whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
+                            "py-4 font-semibold text-center whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
                             (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")
                           }
                         >
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col items-center justify-center gap-0.5 text-center">
                             <span className="text-sm">
                               {formatDate(schedule.date)}
                               <span className="text-[var(--color-muted)] text-xs font-normal ml-1.5">
@@ -583,7 +583,7 @@ export default function HomePage() {
                               </span>
                             </span>
                             {isCurrent && (
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-accent-dark)]">
+                              <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-accent-dark)]">
                                 本週
                               </span>
                             )}
@@ -708,7 +708,7 @@ export default function HomePage() {
                         </span>
                       </div>
                       {isCurrent && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--color-accent)] text-white">
+                        <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[var(--color-accent)] text-white">
                           本週
                         </span>
                       )}
