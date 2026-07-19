@@ -69,11 +69,8 @@ function SparkIcon() {
 function UsersIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-      <path d="M19.4 15a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-.33-.57" />
-      <path d="M4.6 15a1.65 1.65 0 01-.33-1.82 1.65 1.65 0 01.33-.57" />
-      <path d="M2.06 20.7A2.64 2.64 0 014 19.06h16a2.64 2.64 0 011.94 1.64" />
-      <path d="M8 7a4 4 0 118 0" />
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0116 0" />
     </svg>
   );
 }
