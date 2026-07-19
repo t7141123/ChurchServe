@@ -554,40 +554,21 @@ export default function HomePage() {
               </svg>
               破冰遊戲
             </button>
-            <div className="border-b border-[var(--color-border)] p-2">
-              <div className="flex rounded-lg bg-[var(--color-bg-soft)] p-0.5">
-                <button
-                  onClick={() => { setViewMode("table"); setMenuOpen(false); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                    viewMode === "table"
-                      ? "bg-white text-[var(--color-text)] shadow-sm"
-                      : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                  </svg>
-                  表格
-                </button>
-                <button
-                  onClick={() => { setViewMode("card"); setMenuOpen(false); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                    viewMode === "card"
-                      ? "bg-white text-[var(--color-text)] shadow-sm"
-                      : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                  單日
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => { setViewMode(viewMode === "table" ? "card" : "table"); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+            >
+              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg>
+              <span>顯示模式</span>
+              <span className="ml-auto text-xs font-medium text-[var(--color-muted)] bg-[var(--color-bg-soft)] px-2.5 py-1 rounded-full">
+                {viewMode === "table" ? "表格" : "單日"}
+              </span>
+            </button>
             <Link
               href="/admin/login"
               onClick={() => setMenuOpen(false)}
@@ -627,7 +608,7 @@ export default function HomePage() {
         ) : (
           <div className={`space-y-4 page-enter ${scheduleLoading ? "opacity-60 pointer-events-none" : ""}`}>
             {/* Desktop table */}
-            <div className={`${viewMode === "table" ? "block" : "hidden"} overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] bg-[var(--color-surface)]`}>
+            <div className={`${viewMode === "table" ? "block" : "hidden"} overflow-x-auto rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] bg-[var(--color-surface)]`}>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-table-head)]">
