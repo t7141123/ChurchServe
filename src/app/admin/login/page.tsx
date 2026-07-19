@@ -35,15 +35,29 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      
+      let data: { token?: string; error?: string };
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`連線或系統異常 (HTTP ${res.status})。請確認 D1 資料庫與環境變數已在 Cloudflare 中綁定。`);
+      }
+
       if (!res.ok) throw new Error(data.error || "Login failed");
-      localStorage.setItem("admin_token", data.token);
+      localStorage.setItem("admin_token", data.token || "");
       window.location.replace("/admin");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
-      setError(msg.includes("失敗") || msg.includes("錯誤") || msg.includes("鎖定")
-        ? msg
-        : "密碼錯誤。連續失敗 5 次將鎖定 15 分鐘");
+      setError(
+        msg.includes("失敗") ||
+        msg.includes("錯誤") ||
+        msg.includes("鎖定") ||
+        msg.includes("異常") ||
+        msg.includes("未設定") ||
+        msg.includes("未綁定")
+          ? msg
+          : "密碼錯誤。連續失敗 5 次將鎖定 15 分鐘"
+      );
       triggerShake();
     } finally {
       setLoading(false);
