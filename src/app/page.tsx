@@ -476,17 +476,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Secondary toolbar */}
-      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <p className="text-xs sm:text-sm text-[var(--color-muted)]">
-            - 點擊格子即可報名服事
-          </p>
-        </div>
-      </div>
-
       {/* Floating hamburger menu */}
-      <div ref={menuRef} className="fixed top-20 right-3 sm:right-4 z-50">
+      <div ref={menuRef} className="fixed bottom-6 right-3 sm:right-6 z-50">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="選單"
@@ -503,43 +494,44 @@ export default function HomePage() {
           )}
         </button>
 
-        {menuOpen && (
-          <div
-            className="absolute right-0 top-full mt-2 w-48 origin-top-right animate-fade-in"
-            style={{ animation: "fadeIn 0.15s ease-out" }}
-          >
-            <div className="bg-white rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setIcebreakerOpen(true);
-                  setIcebreakerLoading(true);
-                  fetch("/api/icebreakers")
-                    .then((r) => r.json())
-                    .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
-                    .finally(() => setIcebreakerLoading(false));
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
-              >
-                <svg className="w-5 h-5 text-[var(--color-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
-                  <path d="M8 21h8" />
-                </svg>
-                破冰遊戲
-              </button>
-              <Link
-                href="/admin/login"
-                onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors"
-              >
-                <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
-                </svg>
-                登入後台
-              </Link>
-            </div>
+        <div
+          className={`absolute right-0 bottom-full mb-3 w-48 transition-all duration-300 ease-out ${
+            menuOpen
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-3 pointer-events-none"
+          }`}
+        >
+          <div className="bg-white rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                setIcebreakerOpen(true);
+                setIcebreakerLoading(true);
+                fetch("/api/icebreakers")
+                  .then((r) => r.json())
+                  .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
+                  .finally(() => setIcebreakerLoading(false));
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+            >
+              <svg className="w-5 h-5 text-[var(--color-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
+                <path d="M8 21h8" />
+              </svg>
+              破冰遊戲
+            </button>
+            <Link
+              href="/admin/login"
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors"
+            >
+              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
+              </svg>
+              登入後台
+            </Link>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Schedule content */}
