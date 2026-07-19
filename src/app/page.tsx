@@ -419,7 +419,7 @@ export default function HomePage() {
                   ChurchServe
                 </h1>
                 <p className="text-[11px] sm:text-xs text-[var(--color-header-text)]/75 leading-tight hidden sm:block">
-                  小組服事報名
+                  小組服事表
                 </p>
               </div>
             </div>
@@ -448,30 +448,30 @@ export default function HomePage() {
 
           {/* Month switcher — centered primary control */}
           <div className="flex items-center justify-center gap-1 pb-3">
-              <button
-                onClick={prevMonth}
-                aria-label="上一個月"
-                className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-              <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
-                <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
-                {selectedGroupName && groups.length > 0 && (
-                  <p className="text-[11px] text-[var(--color-muted)] mt-0.5 truncate">{selectedGroupName}</p>
-                )}
-              </div>
-              <button
-                onClick={nextMonth}
-                aria-label="下一個月"
-                className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
+            <button
+              onClick={prevMonth}
+              aria-label="上一個月"
+              className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
+              <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+              {selectedGroupName && groups.length > 0 && (
+                <p className="text-xs sm:text-sm text-[var(--color-text-light)] mt-0.5 truncate">{selectedGroupName}</p>
+              )}
+            </div>
+            <button
+              onClick={nextMonth}
+              aria-label="下一個月"
+              className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -674,7 +674,7 @@ export default function HomePage() {
                                   {name}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[var(--color-muted)] text-sm hover:text-[var(--color-accent)] transition-colors">
+                                <span className="inline-flex items-center gap-1 text-[var(--color-text-light)] text-sm hover:text-[var(--color-accent)] transition-colors">
                                   <span className="w-5 h-5 rounded-full border border-dashed border-[var(--color-border)] flex items-center justify-center text-xs">+</span>
                                   登記
                                 </span>
@@ -865,8 +865,8 @@ export default function HomePage() {
                         setCustomName("");
                       }}
                       className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border ${isSelected
-                          ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
-                          : "bg-[var(--color-bg-soft)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary-soft)]"
+                        ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
+                        : "bg-[var(--color-bg-soft)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary-soft)]"
                         }`}
                     >
                       {member.name}
@@ -882,8 +882,8 @@ export default function HomePage() {
                     setSelectedMemberId(undefined);
                   }}
                   className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border col-span-2 sm:col-span-1 ${showCustomInput
-                      ? "bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-sm"
-                      : "bg-[var(--color-accent-soft)] text-[var(--color-accent-dark)] border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50"
+                    ? "bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-sm"
+                    : "bg-[var(--color-accent-soft)] text-[var(--color-accent-dark)] border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50"
                     }`}
                 >
                   其他…

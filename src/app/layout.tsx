@@ -17,7 +17,7 @@ const notoSans = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "ChurchServe - 教會小組服事報名系統",
+  title: "ChurchServe - 教會小組服事表系統",
   description: "開源、免費、簡單好用的教會小組服事排班系統",
   icons: { icon: "/icon.svg" },
 };
