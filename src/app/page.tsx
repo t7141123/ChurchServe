@@ -24,6 +24,7 @@ interface ScheduleDate {
   eventTitle: string | null;
   isLocked: number;
   lockMessage: string | null;
+  remarks: string | null;
   assignments: Record<number, { member_id: number | null; custom_member_name: string | null; member_name: string | null; id: number }>;
 }
 
@@ -32,13 +33,26 @@ interface Member {
   name: string;
 }
 
+interface Icebreaker {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  duration: string;
+  people_min: number;
+  people_max: number;
+  materials: string;
+  is_active: number;
+  created_at?: string;
+}
+
 function getSaturdaysOfMonth(year: number, month: number): string[] {
   const dates: string[] = [];
-  const date = new Date(year, month, 1);
-  while (date.getMonth() === month) {
+  const date = new Date(year, month - 1, 1);
+  while (date.getMonth() === month - 1) {
     if (date.getDay() === 6) {
       dates.push(
-        `${year}-${String(month + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+        `${year}-${String(month).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
       );
     }
     date.setDate(date.getDate() + 1);
@@ -122,21 +136,26 @@ export default function HomePage() {
   const [schedules, setSchedules] = useState<ScheduleDate[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalScheduleId, setModalScheduleId] = useState<number | null>(null);
   const [modalItemId, setModalItemId] = useState<number | null>(null);
-  const [modalDate, setModalDate] = useState<string>("");
+  const [modalDate, setModalDate] = useState<string | null>(null);
   const [modalCurrentValue, setModalCurrentValue] = useState<{ member_id: number | null; custom_name: string | null } | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null | undefined>(undefined);
-  const [customName, setCustomName] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState<number | undefined | null>(undefined);
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customName, setCustomName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [icebreakers, setIcebreakers] = useState<Icebreaker[]>([]);
   const [icebreakerOpen, setIcebreakerOpen] = useState(false);
-  const [icebreakers, setIcebreakers] = useState<{ id: number; name: string; description: string; category: string; duration: string; people_min: number; people_max: number; materials: string }[]>([]);
   const [icebreakerLoading, setIcebreakerLoading] = useState(false);
+
+  const [remarksModalOpen, setRemarksModalOpen] = useState(false);
+  const [remarksScheduleId, setRemarksScheduleId] = useState<number | null>(null);
+  const [remarksText, setRemarksText] = useState("");
+  const [remarksSubmitting, setRemarksSubmitting] = useState(false);
 
   useEffect(() => {
     fetch("/api/groups")
@@ -197,11 +216,14 @@ export default function HomePage() {
           eventTitle: existing?.event_title || null,
           isLocked: existing?.is_locked || 0,
           lockMessage: existing?.lock_message || null,
+          remarks: existing?.remarks || null,
           assignments: assignmentsMap,
         };
       });
 
       setSchedules(enriched);
+    } catch (e) {
+      console.error("fetchSchedules error:", e);
     } finally {
       setScheduleLoading(false);
     }
@@ -303,6 +325,44 @@ export default function HomePage() {
       setTimeout(() => setErrorMsg(""), 3000);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openRemarksModal = (schedule: ScheduleDate) => {
+    setRemarksScheduleId(schedule.scheduleId);
+    setRemarksText(schedule.remarks || "");
+    setRemarksModalOpen(true);
+  };
+
+  const closeRemarksModal = () => {
+    setRemarksModalOpen(false);
+    setRemarksScheduleId(null);
+    setRemarksText("");
+  };
+
+  const handleSaveRemarks = async () => {
+    if (remarksScheduleId === null) return;
+    setRemarksSubmitting(true);
+    try {
+      const res = await fetch(`/api/remarks/${remarksScheduleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remarks: remarksText }),
+      });
+      if (res.ok) {
+        closeRemarksModal();
+        setErrorMsg("");
+        fetchSchedules();
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "儲存失敗");
+        setTimeout(() => setErrorMsg(""), 3000);
+      }
+    } catch {
+      setErrorMsg("網路錯誤，請稍後再試");
+      setTimeout(() => setErrorMsg(""), 3000);
+    } finally {
+      setRemarksSubmitting(false);
     }
   };
 
@@ -440,7 +500,7 @@ export default function HomePage() {
             <p className="text-lg font-medium text-[var(--color-text)] mb-1">尚無小組資料</p>
             <p className="text-sm text-[var(--color-muted)]">請先由管理員建立小組</p>
           </div>
-        ) : schedules.length === 0 ? (
+        ) : schedules.length === 0 && !scheduleLoading ? (
           <div className="text-center py-20 page-enter">
             <div className="w-16 h-16 rounded-2xl bg-[var(--color-border-light)] flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -465,11 +525,12 @@ export default function HomePage() {
                         {item.name}
                       </th>
                     ))}
+                      <th className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)] whitespace-nowrap min-w-[80px]">備註</th>
                   </tr>
                 </thead>
                 <tbody>
                   {schedules.map((schedule, idx) => {
-                    const colCount = serviceItems.length + 1;
+                    const colCount = serviceItems.length + 2;
                     const isCurrent = isCurrentWeek(schedule.date);
 
                     if (schedule.isLocked) {
@@ -567,6 +628,24 @@ export default function HomePage() {
                             </td>
                           );
                         })}
+                          <td
+                            role="button"
+                            tabIndex={0}
+                            className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
+                            onClick={() => openRemarksModal(schedule)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                openRemarksModal(schedule);
+                              }
+                            }}
+                          >
+                            {schedule.remarks ? (
+                              <span className="text-[var(--color-muted)] line-clamp-2 max-w-[120px] mx-auto">{schedule.remarks}</span>
+                            ) : (
+                              <span className="text-[var(--color-accent)] opacity-60 hover:opacity-100 transition-opacity text-xs font-medium">+ 備註</span>
+                            )}
+                          </td>
                       </tr>
                     );
                   })}
@@ -662,6 +741,18 @@ export default function HomePage() {
                           </button>
                         );
                       })}
+                      <button
+                        type="button"
+                        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--color-bg-soft)]/50 active:bg-[var(--color-border-light)] transition-colors"
+                        onClick={() => openRemarksModal(schedule)}
+                      >
+                        <span className="text-xs font-medium text-[var(--color-text-light)]">備註</span>
+                        {schedule.remarks ? (
+                          <span className="text-xs text-[var(--color-muted)] text-right max-w-[60%] truncate">{schedule.remarks}</span>
+                        ) : (
+                          <span className="text-xs text-[var(--color-accent)] font-medium">+ 新增</span>
+                        )}
+                      </button>
                     </div>
                   </Card>
                 );
@@ -857,6 +948,67 @@ export default function HomePage() {
                   ));
                 })()
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remarks modal */}
+      {remarksModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={closeRemarksModal} />
+          <div className="relative w-full bg-[var(--color-surface)] sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden flex flex-col">
+            <div className="flex-shrink-0 border-b border-[var(--color-border)]">
+              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
+              <div className="flex items-start justify-between px-5 sm:px-6 pt-4 pb-4">
+                <div className="min-w-0 pr-3">
+                  <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">編輯備註</h3>
+                </div>
+                <button
+                  onClick={closeRemarksModal}
+                  aria-label="關閉"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors flex-shrink-0"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 sm:px-6 py-4">
+              <textarea
+                value={remarksText}
+                onChange={(e) => setRemarksText(e.target.value)}
+                placeholder="輸入備註內容…"
+                maxLength={500}
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-all resize-none"
+                autoFocus
+              />
+              <p className="text-xs text-[var(--color-muted)] mt-1.5 text-right">{remarksText.length}/500</p>
+            </div>
+
+            <div className="flex-shrink-0 border-t border-[var(--color-border)] px-5 sm:px-6 py-4 flex gap-3 safe-bottom bg-[var(--color-surface)]">
+              <button
+                type="button"
+                onClick={closeRemarksModal}
+                disabled={remarksSubmitting}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-border-light)] transition-colors disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRemarks}
+                disabled={remarksSubmitting}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {remarksSubmitting && (
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                )}
+                儲存
+              </button>
             </div>
           </div>
         </div>
