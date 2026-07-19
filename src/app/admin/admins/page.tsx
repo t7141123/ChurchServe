@@ -26,7 +26,7 @@ const ROLE_STYLES: Record<string, string> = {
 export default function AdminsPage() {
   const [admins, setAdmins] = useState<ManagedAdmin[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
+  const [groups, setGroups] = useState<{ id: number; name: string; district_id: number | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -95,7 +95,9 @@ export default function AdminsPage() {
 
   const handleCreate = async () => {
     if (!addUsername.trim() || !addPassword.trim()) { setErrorMsg("帳號與密碼為必填"); return; }
-    if (addPassword.length < 6) { setErrorMsg("密碼至少 6 碼"); return; }
+    if (!/^[a-z]+$/.test(addUsername.trim())) { setErrorMsg("帳號僅限小寫英文"); return; }
+    if (addPassword.length < 8) { setErrorMsg("密碼至少 8 碼"); return; }
+    if (!/[a-zA-Z]/.test(addPassword) || !/[0-9]/.test(addPassword)) { setErrorMsg("密碼須包含英文與數字"); return; }
     try {
       const body: Record<string, unknown> = {
         username: addUsername.trim(),
@@ -128,7 +130,9 @@ export default function AdminsPage() {
   const handleUpdate = async () => {
     if (!editing) return;
     if (!editUsername.trim()) { setErrorMsg("帳號不可為空"); return; }
-    if (editPassword.length > 0 && editPassword.length < 6) { setErrorMsg("密碼至少 6 碼"); return; }
+    if (!/^[a-z]+$/.test(editUsername.trim())) { setErrorMsg("帳號僅限小寫英文"); return; }
+    if (editPassword.length > 0 && editPassword.length < 8) { setErrorMsg("密碼至少 8 碼"); return; }
+    if (editPassword.length > 0 && (!/[a-zA-Z]/.test(editPassword) || !/[0-9]/.test(editPassword))) { setErrorMsg("密碼須包含英文與數字"); return; }
     try {
       const body: Record<string, unknown> = { username: editUsername.trim(), role: editRole };
       if (editPassword) body.password = editPassword;
@@ -282,11 +286,11 @@ export default function AdminsPage() {
             <div className="px-6 pb-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">帳號名稱</label>
-                <input value={addUsername} onChange={(e) => setAddUsername(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="輸入帳號名稱" />
+                <input value={addUsername} onChange={(e) => setAddUsername(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="僅限小寫英文" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">密碼</label>
-                <input type="password" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
+                <input type="password" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 8 碼，含英文與數字" />
               </div>
               {roleSelect(addRole, (v) => { setAddRole(v); setAddDistrictFilter(""); setAddManagedId(""); })}
               {managedIdSelector(addManagedId, setAddManagedId, addRole, addDistrictFilter, setAddDistrictFilter)}
@@ -315,7 +319,7 @@ export default function AdminsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">新密碼（留空則不變）</label>
-                <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
+                <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 8 碼，含英文與數字" />
               </div>
               {roleSelect(editRole, (v) => { setEditRole(v); setEditDistrictFilter(""); setEditManagedId(""); }, editing.username)}
               {managedIdSelector(editManagedId, setEditManagedId, editRole, editDistrictFilter, setEditDistrictFilter)}

@@ -25,6 +25,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   if (body.username !== undefined) {
     if (!body.username.trim()) return jsonError("帳號不可為空", 400);
+    if (!/^[a-z]+$/.test(body.username.trim())) return jsonError("帳號僅限小寫英文", 400);
     const dup = await (env.DB as D1Database).prepare(
       "SELECT id FROM Admins WHERE username = ? AND id != ? LIMIT 1"
     ).bind(body.username.trim(), adminId).first();
@@ -34,7 +35,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   if (body.password !== undefined) {
-    if (body.password.length < 6 && body.password.length > 0) return jsonError("密碼至少 6 碼", 400);
+    if (body.password.length > 0 && body.password.length < 8) return jsonError("密碼至少 8 碼", 400);
+    if (body.password.length > 0 && (!/[a-zA-Z]/.test(body.password) || !/[0-9]/.test(body.password))) return jsonError("密碼須包含英文與數字", 400);
     if (body.password.length > 0) {
       const password_hash = await hashPassword(body.password);
       updates.push("password_hash = ?");

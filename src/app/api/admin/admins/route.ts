@@ -24,7 +24,9 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
 
   if (!body.username?.trim() || !body.password?.trim()) return jsonError("帳號與密碼為必填", 400);
-  if (body.password.length < 6) return jsonError("密碼至少 6 碼", 400);
+  if (!/^[a-z]+$/.test(body.username.trim())) return jsonError("帳號僅限小寫英文", 400);
+  if (body.password.length < 8) return jsonError("密碼至少 8 碼", 400);
+  if (!/[a-zA-Z]/.test(body.password) || !/[0-9]/.test(body.password)) return jsonError("密碼須包含英文與數字", 400);
 
   const existing = await (env.DB as D1Database).prepare(
     "SELECT id FROM Admins WHERE username = ? LIMIT 1"
