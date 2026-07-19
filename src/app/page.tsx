@@ -537,15 +537,31 @@ export default function HomePage() {
               </span>
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setMenuOpen(false);
                 const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
                 const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
                 const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
-                const a = document.createElement("a");
-                a.href = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
-                a.download = `服事表_${startMonth}-${startMonth + 1}月.svg`;
-                a.click();
+                try {
+                  const img = new Image();
+                  img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
+                  await img.decode();
+                  const canvas = document.createElement("canvas");
+                  canvas.width = img.naturalWidth;
+                  canvas.height = img.naturalHeight;
+                  const ctx = canvas.getContext("2d")!;
+                  ctx.drawImage(img, 0, 0);
+                  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
+                  if (!blob) throw new Error();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch {
+                  setErrorMsg("圖片下載失敗");
+                }
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
             >
