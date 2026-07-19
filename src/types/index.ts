@@ -45,6 +45,8 @@ export interface Admin {
   username: string;
   password_hash: string;
   must_change_password: number;
+  role: string;
+  managed_group_id: number | null;
   created_at: string;
 }
 

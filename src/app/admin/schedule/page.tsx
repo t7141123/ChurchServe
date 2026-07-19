@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-interface Group {
-  id: number;
-  name: string;
-}
+import type { Group } from "@/types";
 
 export default function ScheduleListPage() {
   const [groups, setGroups] = useState<Group[]>([]);

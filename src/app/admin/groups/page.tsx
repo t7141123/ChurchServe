@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect, startTransition } from "react";
-
-interface Group {
-  id: number;
-  name: string;
-  created_at: string;
-}
+import type { Group } from "@/types";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);

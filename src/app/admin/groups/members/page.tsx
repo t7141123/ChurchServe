@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from "react";
 import { useSearchParams } from "next/navigation";
-
-interface Member {
-  id: number;
-  name: string;
-  is_active: number;
-}
+import type { Member } from "@/types";
 
 export default function MembersPage() {
   const searchParams = useSearchParams();

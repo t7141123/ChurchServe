@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS Admins (
   username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   must_change_password INTEGER DEFAULT 1,
+  role TEXT NOT NULL DEFAULT 'admin',
+  managed_group_id INTEGER,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -74,3 +76,20 @@ CREATE TABLE IF NOT EXISTS Icebreakers (
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS AssignmentAudit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  schedule_id INTEGER NOT NULL,
+  service_item_id INTEGER NOT NULL,
+  member_id INTEGER,
+  custom_member_name TEXT,
+  action TEXT NOT NULL,
+  old_value TEXT,
+  new_value TEXT,
+  admin_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (schedule_id) REFERENCES DutySchedules(id),
+  FOREIGN KEY (service_item_id) REFERENCES ServiceItems(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_assignment_audit_schedule ON AssignmentAudit(schedule_id, service_item_id);

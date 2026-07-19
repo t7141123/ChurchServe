@@ -1,18 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, startTransition } from "react";
-
-interface Icebreaker {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  duration: string;
-  people_min: number;
-  people_max: number;
-  materials: string;
-  is_active: number;
-}
+import type { Icebreaker } from "@/types";
 
 export default function IcebreakersPage() {
   const [items, setItems] = useState<Icebreaker[]>([]);

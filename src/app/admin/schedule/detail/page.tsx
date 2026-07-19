@@ -3,20 +3,8 @@
 import { useState, useEffect, useCallback, useMemo, startTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import type { ServiceItem, Member } from "@/types";
 import { Select } from "@/lib/components/ui/Select";
-
-interface ServiceItem {
-  id: number;
-  name: string;
-  category: string;
-  display_order: number;
-}
-
-interface Member {
-  id: number;
-  name: string;
-  is_active: number;
-}
 
 interface ScheduleRow {
   date: string;

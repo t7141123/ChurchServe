@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from "react";
 import { useSearchParams } from "next/navigation";
-
-interface ServiceItem {
-  id: number;
-  name: string;
-  category: string;
-  display_order: number;
-}
+import type { ServiceItem } from "@/types";
 
 export default function ServiceItemsPage() {
   const searchParams = useSearchParams();
@@ -84,51 +78,38 @@ export default function ServiceItemsPage() {
     }
   };
 
-  const handleMoveUp = async (item: ServiceItem) => {
-    const idx = items.findIndex((i) => i.id === item.id);
-    if (idx <= 0) return;
-    const prev = items[idx - 1];
-    try {
-      const results = await Promise.all([
-        fetch(`/api/groups/${groupId}/service-items`, {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ itemId: item.id, display_order: prev.display_order }),
-        }),
-        fetch(`/api/groups/${groupId}/service-items`, {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ itemId: prev.id, display_order: item.display_order }),
-        }),
-      ]);
-      if (results.some((r) => !r.ok)) throw new Error("排序失敗");
-      refetch();
-    } catch {
-      setErrorMsg("排序失敗");
-    }
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const handleDragStart = (idx: number) => {
+    setDragIdx(idx);
   };
 
-  const handleMoveDown = async (item: ServiceItem) => {
-    const idx = items.findIndex((i) => i.id === item.id);
-    if (idx >= items.length - 1) return;
-    const next = items[idx + 1];
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const reordered = [...items];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(idx, 0, moved);
+    setItems(reordered);
+    setDragIdx(idx);
+  };
+
+  const handleDragEnd = async () => {
+    setDragIdx(null);
+    const updates = items.map((item, idx) =>
+      fetch(`/api/groups/${groupId}/service-items`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ itemId: item.id, display_order: (idx + 1) * 10 }),
+      })
+    );
     try {
-      const results = await Promise.all([
-        fetch(`/api/groups/${groupId}/service-items`, {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ itemId: item.id, display_order: next.display_order }),
-        }),
-        fetch(`/api/groups/${groupId}/service-items`, {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ itemId: next.id, display_order: item.display_order }),
-        }),
-      ]);
+      const results = await Promise.all(updates);
       if (results.some((r) => !r.ok)) throw new Error("排序失敗");
       refetch();
     } catch {
       setErrorMsg("排序失敗");
+      refetch();
     }
   };
 
@@ -233,10 +214,25 @@ export default function ServiceItemsPage() {
           {items.map((item, idx) => (
             <div
               key={item.id}
-              className="glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-slideUp"
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              className={`glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 animate-slideUp ${
+                dragIdx === idx ? "opacity-50 scale-95" : ""
+              } hover:shadow-elevated cursor-grab active:cursor-grabbing`}
               style={{ animationDelay: `${idx * 60}ms` }}
             >
-              <span className="w-6 text-center text-sm font-bold text-[var(--color-muted)]">{idx + 1}</span>
+              <span className="flex-shrink-0 w-6 text-center text-sm font-bold text-[var(--color-muted)] cursor-grab active:cursor-grabbing" aria-label="拖曳排序">
+                <svg className="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <circle cx="9" cy="5" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="5" r="1.5" fill="currentColor" />
+                  <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="9" cy="19" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="19" r="1.5" fill="currentColor" />
+                </svg>
+              </span>
               {editingId === item.id ? (
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
@@ -271,26 +267,6 @@ export default function ServiceItemsPage() {
                       </span>
                     )}
                   </span>
-                  <button
-                    onClick={() => handleMoveUp(item)}
-                    disabled={idx === 0}
-                    aria-label="上移"
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)] disabled:opacity-20 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path d="M18 15l-6-6-6 6" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleMoveDown(item)}
-                    disabled={idx === items.length - 1}
-                    aria-label="下移"
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)] disabled:opacity-20 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
                   <button
                     onClick={() => { setEditingId(item.id); setEditName(item.name); setEditCategory(item.category || ""); }}
                     className="px-3 py-1.5 rounded-xl text-xs border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]"

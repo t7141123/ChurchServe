@@ -2,21 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef, startTransition } from "react";
 import Link from "next/link";
+import type { Group, Member, ServiceItem, Icebreaker } from "@/types";
 import { Card } from "@/lib/components/ui/Card";
 import { Button } from "@/lib/components/ui/Button";
 import { Select } from "@/lib/components/ui/Select";
-
-interface Group {
-  id: number;
-  name: string;
-}
-
-interface ServiceItem {
-  id: number;
-  name: string;
-  category: string;
-  display_order: number;
-}
 
 interface ScheduleDate {
   date: string;
@@ -28,24 +17,6 @@ interface ScheduleDate {
   lockMessage: string | null;
   remarks: string | null;
   assignments: Record<number, { member_id: number | null; custom_member_name: string | null; member_name: string | null; id: number }>;
-}
-
-interface Member {
-  id: number;
-  name: string;
-}
-
-interface Icebreaker {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  duration: string;
-  people_min: number;
-  people_max: number;
-  materials: string;
-  is_active: number;
-  created_at?: string;
 }
 
 function getSaturdaysOfMonth(year: number, month: number): string[] {
@@ -564,6 +535,56 @@ export default function HomePage() {
               <span className="ml-auto text-xs font-medium text-[var(--color-muted)] bg-[var(--color-bg-soft)] px-2.5 py-1 rounded-full">
                 {viewMode === "table" ? "表格" : "單日"}
               </span>
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                const a = document.createElement("a");
+                a.href = `/api/schedules/${selectedGroup}/${currentYear}-${String(currentMonth + 1).padStart(2, "0")}/image`;
+                a.download = `服事表_${currentYear}-${String(currentMonth + 1).padStart(2, "0")}.svg`;
+                a.click();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+            >
+              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              下載服事表圖片
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                const ym = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
+                const groupName = groups.find(g => g.id === selectedGroup)?.name ?? "小組";
+                const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
+                const rows = schedules.map(s => {
+                  const d = new Date(s.date + "T00:00:00");
+                  const dayName = DAY_NAMES[d.getDay()];
+                  const cells = sortedItems.map(item => {
+                    const a = s.assignments[item.display_order];
+                    return a?.member_name ?? a?.custom_member_name ?? "";
+                  });
+                  return { label: `${s.date.slice(5)} (${dayName})`, cells, isSpecial: s.isSpecialEvent };
+                });
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>服事表</title><style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:40px;color:#1a202c;}
+h1{font-size:20px;text-align:center;margin-bottom:24px;}table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #e2e8f0;padding:8px 10px;font-size:13px;text-align:center;}
+th{background:#f0f4f8;font-weight:600;position:sticky;top:0;}
+.special{color:#d97706;font-weight:500;}</style></head><body>
+<h1>${groupName} ${ym.replace("-", "年")}月服事表</h1>
+<table><thead><tr><th style="min-width:80px">日期</th>${sortedItems.map(i => `<th>${i.name}</th>`).join("")}</tr></thead>
+<tbody>${rows.map(r => `<tr${r.isSpecial ? ' class="special"' : ""}><td>${r.label}</td>${r.cells.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>
+<script>window.onload=function(){window.print();}<\/script></body></html>`;
+                const w = window.open("", "_blank");
+                if (w) { w.document.write(html); w.document.close(); }
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+            >
+              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M6 9V3h12v6M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM6 13v4h12v-4" />
+              </svg>
+              列印 / 匯出 PDF
             </button>
             <Link
               href="/admin/login"

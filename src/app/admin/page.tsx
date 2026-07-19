@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-interface Group {
-  id: number;
-  name: string;
-  created_at: string;
-}
+import type { Group } from "@/types";
 
 export default function AdminDashboard() {
   const [groups, setGroups] = useState<Group[]>([]);

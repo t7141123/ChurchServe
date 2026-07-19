@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
 import { memberSchema, validateInput } from "@/lib/validate";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireGroupAccess } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET(
@@ -27,6 +27,7 @@ export async function POST(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
 
   let body: unknown;
   try {
@@ -54,6 +55,8 @@ export async function PUT(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+
   let body: { memberId?: number; name?: string };
   try { body = await request.json(); }
   catch { return jsonError("無效的請求格式", 400); }
@@ -75,6 +78,8 @@ export async function PATCH(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+
   let body: { memberId?: number; is_active?: number };
   try { body = await request.json(); }
   catch { return jsonError("無效的請求格式", 400); }
@@ -96,6 +101,8 @@ export async function DELETE(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+
   let body: { memberId?: number };
   try { body = await request.json(); }
   catch { return jsonError("無效的請求格式", 400); }

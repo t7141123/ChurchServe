@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
 import { specialEventSchema, validateInput } from "@/lib/validate";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireGroupAccess } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request) {
@@ -33,6 +33,8 @@ export async function POST(request: Request) {
 
   const parsed = validateInput(specialEventSchema, body);
   if (!parsed.success) return jsonError(parsed.error, 400);
+
+  if (!requireGroupAccess(admin, parsed.data.group_id)) return jsonError("無權限操作此小組", 403);
 
   const result = await (env.DB as D1Database).prepare(
     `INSERT INTO DutySchedules (group_id, date, is_special_event, event_title)

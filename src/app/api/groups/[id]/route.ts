@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
 import { groupSchema, validateInput } from "@/lib/validate";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireGroupAccess } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +22,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
 
   let body: unknown;
   try { body = await request.json(); }
@@ -43,6 +44,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
+  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+
   const db = env.DB as D1Database;
 
   // Cascade delete in normalized relational order

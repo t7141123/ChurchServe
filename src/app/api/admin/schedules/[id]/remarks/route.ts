@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireGroupAccess } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
@@ -11,6 +11,12 @@ export async function PUT(
   if (!admin) return jsonError("未授權", 401);
 
   const scheduleId = Number((await params).id);
+
+  const schedule = await (env.DB as D1Database).prepare(
+    "SELECT group_id FROM DutySchedules WHERE id = ? LIMIT 1"
+  ).bind(scheduleId).first<{ group_id: number }>();
+  if (!schedule) return jsonError("找不到排班記錄", 404);
+  if (!requireGroupAccess(admin, schedule.group_id)) return jsonError("無權限操作此小組", 403);
 
   let body: { remarks?: string };
   try {
