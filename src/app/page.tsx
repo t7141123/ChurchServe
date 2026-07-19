@@ -133,6 +133,7 @@ export default function HomePage() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/groups")
@@ -537,75 +538,13 @@ export default function HomePage() {
               </span>
             </button>
             <button
-              onClick={async () => {
-                setMenuOpen(false);
-                const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
-                const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
-                const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
-                try {
-                  const img = new Image();
-                  img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
-                  await img.decode();
-                  const scale = 2;
-                  const canvas = document.createElement("canvas");
-                  canvas.width = img.naturalWidth * scale;
-                  canvas.height = img.naturalHeight * scale;
-                  const ctx = canvas.getContext("2d")!;
-                  ctx.scale(scale, scale);
-                  ctx.drawImage(img, 0, 0);
-                  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
-                  if (!blob) throw new Error();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                } catch {
-                  setErrorMsg("圖片下載失敗");
-                }
-              }}
+              onClick={() => { setMenuOpen(false); setExportOpen(true); }}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
             >
               <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
-              下載服事表圖片
-            </button>
-            <button
-              onClick={async () => {
-                setMenuOpen(false);
-                const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
-                const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
-                const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
-                try {
-                  const svgUrl = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
-                  const img = new Image();
-                  img.src = svgUrl;
-                  await img.decode();
-                  const pdfScale = 2;
-                  const canvas = document.createElement("canvas");
-                  canvas.width = img.naturalWidth * pdfScale;
-                  canvas.height = img.naturalHeight * pdfScale;
-                  const ctx = canvas.getContext("2d")!;
-                  ctx.scale(pdfScale, pdfScale);
-                  ctx.drawImage(img, 0, 0);
-                  const { default: jsPDF } = await import("jspdf");
-                  const doc = new jsPDF({ orientation: "landscape", unit: "px" });
-                  const pdfW = doc.internal.pageSize.getWidth();
-                  const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
-                  doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
-                  doc.save(`服事表_${startMonth}-${startMonth + 1}月.pdf`);
-                } catch {
-                  setErrorMsg("PDF 匯出失敗");
-                }
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
-            >
-              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M6 9V3h12v6M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM6 13v4h12v-4" />
-              </svg>
-              匯出 PDF
+              匯出
             </button>
             <Link
               href="/admin/login"
@@ -1075,6 +1014,104 @@ export default function HomePage() {
               >
                 確認登記
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export modal */}
+      {exportOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={() => setExportOpen(false)} />
+          <div className="relative w-full sm:max-w-sm bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden">
+            <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
+            <div className="flex items-center justify-between px-6 pt-4 pb-3">
+              <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">匯出</h3>
+              <button onClick={() => setExportOpen(false)} aria-label="關閉" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 pb-6 space-y-3">
+              <button
+                onClick={async () => {
+                  setExportOpen(false);
+                  const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+                  const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+                  const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+                  try {
+                    const img = new Image();
+                    img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
+                    await img.decode();
+                    const scale = 2;
+                    const canvas = document.createElement("canvas");
+                    canvas.width = img.naturalWidth * scale;
+                    canvas.height = img.naturalHeight * scale;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(img, 0, 0);
+                    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
+                    if (!blob) throw new Error();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  } catch { setErrorMsg("匯出圖片失敗"); }
+                }}
+                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary-soft)] transition-colors border border-[var(--color-border)] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center text-[var(--color-primary)] group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-semibold text-[var(--color-text)]">圖片 (PNG)</div>
+                  <div className="text-xs text-[var(--color-muted)] mt-0.5">下載服事表為高解析度圖片</div>
+                </div>
+              </button>
+              <button
+                onClick={async () => {
+                  setExportOpen(false);
+                  const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+                  const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+                  const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+                  try {
+                    const img = new Image();
+                    img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
+                    await img.decode();
+                    const scale = 2;
+                    const canvas = document.createElement("canvas");
+                    canvas.width = img.naturalWidth * scale;
+                    canvas.height = img.naturalHeight * scale;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(img, 0, 0);
+                    const { default: jsPDF } = await import("jspdf");
+                    const doc = new jsPDF({ orientation: "landscape", unit: "px" });
+                    const pdfW = doc.internal.pageSize.getWidth();
+                    const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
+                    doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
+                    doc.save(`服事表_${startMonth}-${startMonth + 1}月.pdf`);
+                  } catch { setErrorMsg("匯出 PDF 失敗"); }
+                }}
+                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary-soft)] transition-colors border border-[var(--color-border)] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center text-[var(--color-primary)] group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M6 9V3h12v6M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM6 13v4h12v-4" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-semibold text-[var(--color-text)]">文件 (PDF)</div>
+                  <div className="text-xs text-[var(--color-muted)] mt-0.5">匯出服事表為 PDF 文件</div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
