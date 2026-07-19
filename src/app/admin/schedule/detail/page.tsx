@@ -29,10 +29,10 @@ interface ScheduleRow {
 
 function getSaturdaysOfMonth(year: number, month: number): string[] {
   const dates: string[] = [];
-  const d = new Date(year, month, 1);
-  while (d.getMonth() === month) {
+  const d = new Date(year, month - 1, 1);
+  while (d.getMonth() === month - 1) {
     if (d.getDay() === 6) {
-      dates.push(`${year}-${String(month + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+      dates.push(`${year}-${String(month).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
     }
     d.setDate(d.getDate() + 1);
   }
@@ -76,14 +76,19 @@ export default function SchedulePage() {
   const [customName, setCustomName] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
+  const authHeaders = (): Record<string, string> => {
+    const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
+  };
+
   const fetchData = useCallback(async () => {
     const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
     try {
       const [groupRes, schedRes, itemRes, memberRes] = await Promise.all([
-        fetch(`/api/groups/${groupId}`),
-        fetch(`/api/schedules/${groupId}/${ym}`),
-        fetch(`/api/groups/${groupId}/service-items`),
-        fetch(`/api/groups/${groupId}/members`),
+        fetch(`/api/groups/${groupId}`, { headers: authHeaders() }),
+        fetch(`/api/schedules/${groupId}/${ym}`, { headers: authHeaders() }),
+        fetch(`/api/groups/${groupId}/service-items`, { headers: authHeaders() }),
+        fetch(`/api/groups/${groupId}/members`, { headers: authHeaders() }),
       ]);
       if (!groupRes.ok || !schedRes.ok || !itemRes.ok || !memberRes.ok) throw new Error("載入失敗");
       const groupData = await groupRes.json();

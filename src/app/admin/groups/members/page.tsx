@@ -32,7 +32,7 @@ export default function MembersPage() {
   };
 
   const refetch = useCallback(() => {
-    fetch(`/api/groups/${groupId}/members`)
+    fetch(`/api/groups/${groupId}/members`, { headers: authHeaders() })
       .then((res) => { if (!res.ok) throw new Error("載入失敗"); return res.json(); })
       .then((d) => setMembers(d))
       .catch(() => setErrorMsg("載入成員列表失敗"))
@@ -134,7 +134,7 @@ export default function MembersPage() {
           <div>
             <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">成員管理</h1>
             <p className="text-sm text-[var(--color-muted)]">
-              {activeMembers.length} 位啟用 · {inactiveMembers.length} 位停用
+              {activeMembers.length} 位可服事 · {inactiveMembers.length} 位不可服事
             </p>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function MembersPage() {
                         : "text-[var(--color-muted)] bg-[var(--color-border-light)] hover:bg-[var(--color-border)]"
                     }`}
                   >
-                    {member.is_active ? "啟用" : "停用"}
+                    {member.is_active ? "可服事" : "不可服事"}
                   </button>
                   <button
                     onClick={() => { setEditingId(member.id); setEditName(member.name); }}

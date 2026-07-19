@@ -2,6 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function SidebarLink({
   href,
@@ -34,12 +35,8 @@ function SidebarLink({
   );
 }
 
-function getToken(): string | null {
+function getAuthToken(): string | null {
   try { return localStorage.getItem("admin_token"); } catch { return null; }
-}
-
-function getPath(): string {
-  try { return window.location.pathname; } catch { return "/"; }
 }
 
 function CalendarIcon() {
@@ -81,7 +78,7 @@ function DashboardIcon() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [pathname, setPathname] = useState("/");
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -89,17 +86,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     startTransition(() => {
       setMounted(true);
     });
-    const p = getPath();
-    startTransition(() => {
-      setPathname(p);
-    });
-    const t = getToken();
+    const t = getAuthToken();
     if (!t) {
-      if (p !== "/admin/login") {
+      if (pathname !== "/admin/login") {
         window.location.replace("/admin/login");
       }
     }
-  }, []);
+  }, [pathname]);
 
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -111,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const token = getToken();
+  const token = getAuthToken();
   if (!token) {
     return <>{children}</>;
   }
@@ -210,27 +203,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-          onClick={closeSidebar}
-        />
-      )}
+      <div className="md:flex md:flex-1">
+        {/* Sidebar — solid earth green brand panel */}
+        <aside
+          className={`fixed md:sticky md:top-0 md:h-screen z-50 w-60 flex-shrink-0 admin-sidebar border-r border-black/10 transition-transform duration-300 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
+        >
+          <div className="flex flex-col h-full p-4">
+            {nav}
+          </div>
+        </aside>
 
-      {/* Sidebar — solid earth green brand panel */}
-      <aside
-        className={`fixed md:sticky md:top-0 md:h-screen z-50 w-60 flex-shrink-0 admin-sidebar border-r border-black/10 transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
-      >
-        <div className="flex flex-col h-full p-4">
-          {nav}
-        </div>
-      </aside>
+        {sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            onClick={closeSidebar}
+          />
+        )}
 
-      <main className="md:ml-60 min-h-[calc(100vh-3.5rem)] md:min-h-screen page-enter">
-        <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">{children}</div>
-      </main>
+        <main className="md:flex-1 page-enter">
+          <div className="max-w-6xl mx-auto px-4 pt-4 pb-8 sm:pt-5 sm:pb-10">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

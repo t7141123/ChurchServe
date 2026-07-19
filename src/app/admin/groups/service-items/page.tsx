@@ -32,7 +32,7 @@ export default function ServiceItemsPage() {
   };
 
   const refetch = useCallback(() => {
-    fetch(`/api/groups/${groupId}/service-items`)
+    fetch(`/api/groups/${groupId}/service-items`, { headers: authHeaders() })
       .then((res) => { if (!res.ok) throw new Error("載入失敗"); return res.json(); })
       .then((d) => setItems(d))
       .catch(() => setErrorMsg("載入服事項目失敗"))

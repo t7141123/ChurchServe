@@ -4,6 +4,18 @@ import { groupSchema, validateInput } from "@/lib/validate";
 import { getAuthAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { env } = await getCloudflareContext({ async: true });
+
+  const groupId = Number((await params).id);
+  const group = await (env.DB as D1Database).prepare(
+    "SELECT id, name FROM Groups WHERE id = ?"
+  ).bind(groupId).first();
+
+  if (!group) return jsonError("小組不存在", 404);
+  return json(group);
+}
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);

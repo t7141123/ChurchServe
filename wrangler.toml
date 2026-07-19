@@ -6,6 +6,9 @@ account_id = "2a33489fabfdde7dbde620858343ae91"
 
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
+[vars]
+JWT_SECRET = "JqlP7BjfAEYh4dyA+qDAx5nMZaDNkejwbQAJCwKsmJU="
+
 [[d1_databases]]
 binding = "DB"
 database_name = "church-serve-db"

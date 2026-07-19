@@ -6,8 +6,6 @@ import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = await getCloudflareContext({ async: true });
-  const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
-  if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
   const items = await (env.DB as D1Database).prepare(

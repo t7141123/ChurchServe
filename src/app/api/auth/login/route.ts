@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
     
     if (!env.DB) {
-      return jsonError("資料庫未綁定，請在 Cloudflare Pages 設定中關聯 D1 資料庫", 500);
+      return jsonError("資料庫未綁定，請在 Cloudflare Pages 設定中關聯 D1 資料庫", 400);
     }
 
     const rateCheck = await checkD1RateLimit(env.DB as D1Database, `login:${clientIp}`, 5, 60000);
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     await resetD1RateLimit(env.DB as D1Database, `login:${clientIp}`);
 
     if (!env.JWT_SECRET) {
-      return jsonError("JWT_SECRET 環境變數未設定，請在 Cloudflare Pages 中新增設定", 500);
+      return jsonError("JWT_SECRET 環境變數未設定，請在 Cloudflare Pages 中新增設定", 400);
     }
 
     const token = await createToken(
@@ -54,6 +54,6 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "未知錯誤";
-    return jsonError(`登入系統異常: ${msg}`, 500);
+    return jsonError(`登入系統異常: ${msg}`, 400);
   }
 }

@@ -5,8 +5,6 @@ import { getMemberScheduleAssignments } from "@/lib/db";
 
 export async function GET(request: Request, { params }: { params: Promise<{ groupId: string; yearMonth: string }> }) {
   const { env } = await getCloudflareContext({ async: true });
-  const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
-  if (!admin) return jsonError("未授權", 401);
 
   const { groupId: groupIdStr, yearMonth } = await params;
   const groupId = Number(groupIdStr);
