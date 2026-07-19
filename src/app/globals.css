@@ -11,9 +11,9 @@
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
 
   /* Light theme — warm, grounded, readable */
-  --color-bg: #FCFAF6;
-  --color-bg-soft: #F5EFEB;
-  --color-surface: #FFFFFF;
+  --color-bg: #F8F4EC;
+  --color-bg-soft: #EFE7DA;
+  --color-surface: #FCFAF5;
   --color-surface-raised: #FFFFFF;
 
   --color-primary: #A2724F;
@@ -32,8 +32,8 @@
   --color-text: #453A31;
   --color-text-light: #7A6C5E;
   --color-muted: #A39384;
-  --color-border: #E8DFD7;
-  --color-border-light: #F6F1EC;
+  --color-border: #E5DACF;
+  --color-border-light: #F3EAE0;
 
   --color-danger: #EA580C;
   --color-danger-dark: #C2410C;
@@ -41,17 +41,17 @@
   --color-success: #A2724F;
   --color-warning: #E28647;
 
-  --color-header: #FCFAF6;
+  --color-header: #F8F4EC;
   --color-header-text: #453A31;
-  --color-table-head: #F5EFEB;
+  --color-table-head: #EFE7DA;
   --color-table-head-text: #7A6C5E;
-  --color-locked-bg: #F0E9E2;
-  --color-locked-stripe: #DCD2C6;
+  --color-locked-bg: #ECE3D7;
+  --color-locked-stripe: #D4C6B5;
   --color-special-bg: #E28647;
   --color-special-text: #FFFFFF;
 
-  --color-glass-bg: rgba(255, 255, 255, 0.9);
-  --color-glass-border: rgba(232, 223, 215, 0.85);
+  --color-glass-bg: rgba(252, 250, 245, 0.9);
+  --color-glass-border: rgba(229, 218, 207, 0.85);
   --color-glass-shadow: rgba(162, 114, 79, 0.04);
 
   --shadow-card: 0 1px 3px rgba(69, 58, 49, 0.04), 0 1px 2px rgba(162, 114, 79, 0.02);
@@ -228,7 +228,7 @@ a:hover {
 
 /* Admin sidebar solid brand panel */
 .admin-sidebar {
-  background: linear-gradient(180deg, #FCFAF6 0%, #F5EFEB 55%, #E8DFD7 100%);
+  background: linear-gradient(180deg, #F8F4EC 0%, #EFE7DA 55%, #E5DACF 100%);
   color: var(--color-text);
 }
 
