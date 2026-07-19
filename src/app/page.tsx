@@ -1113,7 +1113,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <footer className="mt-auto py-5 text-center border-t border-[var(--color-border)] bg-[var(--color-surface)]/50">
+      <footer className="mt-auto py-3 text-center border-t border-[var(--color-border)] bg-[var(--color-surface)]/50">
         <p className="text-sm text-[var(--color-muted)] flex items-center justify-center gap-1.5 flex-wrap">
           <span>ChurchServe</span>
           <span className="text-[var(--color-border)]">|</span>
