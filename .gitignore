@@ -148,3 +148,6 @@ vite.config.ts.timestamp-*
 
 # Next.js generated files
 next-env.d.ts
+
+# Pages temporary deployment folder
+out-pages/
