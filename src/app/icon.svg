@@ -1,5 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#3D5A45"/>
-  <path d="M32 14v36M14 32h36" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="2" fill="#E08E45"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Define gradients and shadows -->
+  <defs>
+    <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#557A5F" />
+      <stop offset="100%" stop-color="#3D5A45" />
+    </linearGradient>
+    <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4A259" />
+      <stop offset="100%" stop-color="#E08E45" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#2F4636" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Rounded container background -->
+  <rect width="512" height="512" rx="128" fill="url(#grad-green)" filter="url(#shadow)"/>
+  
+  <!-- Church dome shape watermark -->
+  <path d="M256 90 L390 280 A12 12 0 0 1 380 295 L132 295 A12 12 0 0 1 122 280 Z" fill="rgba(255, 255, 255, 0.08)" />
+  
+  <!-- Left wing/leaf representing service growth -->
+  <path d="M190 230 C190 140, 256 120, 256 120 C256 120, 270 180, 240 250 C210 320, 190 380, 190 380 C190 380, 160 300, 190 230 Z" fill="rgba(255, 255, 255, 0.15)" />
+  
+  <!-- Right wing/leaf representing warm serving spirit -->
+  <path d="M322 230 C322 140, 256 120, 256 120 C256 120, 242 180, 272 250 C302 320, 322 380, 322 380 C322 380, 352 300, 322 230 Z" fill="url(#grad-accent)" opacity="0.9" />
+
+  <!-- Sacred Cross in center (rounded, modern geometry) -->
+  <g transform="translate(256, 235)">
+    <!-- Horizontal beam -->
+    <rect x="-70" y="-14" width="140" height="28" rx="14" fill="#FFFFFF" />
+    <!-- Vertical beam -->
+    <rect x="-14" y="-85" width="28" height="180" rx="14" fill="#FFFFFF" />
+    <!-- Golden Core representing grace -->
+    <circle cx="0" cy="0" r="10" fill="#E08E45" stroke="#FFFFFF" stroke-width="4" />
+  </g>
+  
+  <!-- Supporting hands shape at the bottom -->
+  <path d="M140 400 C200 430, 312 430, 372 400" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.3" />
 </svg>
