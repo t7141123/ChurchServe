@@ -674,7 +674,7 @@ export default function HomePage() {
                               )}
                             </div>
                           </td>
-                          <td colSpan={serviceItems.length + 1} className="px-5 py-7 text-center stripe-locked">
+                          <td colSpan={serviceItems.length + 1} className="px-5 py-4 text-center stripe-locked">
                             <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -819,7 +819,7 @@ export default function HomePage() {
                           </span>
                         )}
                       </div>
-                      <div className="px-4 py-8 text-center">
+                      <div className="px-4 py-3.5 text-center">
                         <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
                           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <rect x="3" y="11" width="18" height="11" rx="2" />
