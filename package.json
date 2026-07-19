@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "npx wrangler pages dev ./out",
     "lint": "eslint",
-    "pages:deploy": "next build && npx wrangler pages deploy ./out"
+    "pages:deploy": "next build && node deploy-pages.mjs"
   },
   "dependencies": {
     "dompurify": "^3.4.12",
