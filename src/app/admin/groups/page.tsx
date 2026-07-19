@@ -8,6 +8,7 @@ export default function GroupsPage() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [newName, setNewName] = useState("");
   const [newDistrictId, setNewDistrictId] = useState("");
+  const [newDistrictName, setNewDistrictName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editDistrictId, setEditDistrictId] = useState("");
@@ -78,6 +79,23 @@ export default function GroupsPage() {
     }
   };
 
+  const handleCreateDistrict = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDistrictName.trim()) return;
+    try {
+      const res = await fetch("/api/districts", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newDistrictName.trim() }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "建立失敗"); }
+      setNewDistrictName("");
+      fetchGroups();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "建立失敗");
+    }
+  };
+
   const openEdit = (group: Group) => {
     setEditingId(group.id);
     setEditName(group.name);
@@ -138,6 +156,26 @@ export default function GroupsPage() {
       )}
 
       {/* Create form */}
+      <form onSubmit={handleCreateDistrict} className="glass rounded-2xl p-5 mb-4 animate-slideUp">
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增分區</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newDistrictName}
+            onChange={(e) => setNewDistrictName(e.target.value)}
+            placeholder="輸入分區名稱..."
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+          />
+          <button
+            type="submit"
+            disabled={!newDistrictName.trim()}
+            className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            新增
+          </button>
+        </div>
+      </form>
+
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增小組</label>
         <div className="flex gap-2 mb-3">

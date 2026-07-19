@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
-import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
+import { getAuthAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET() {
@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
-  if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
+  if (!admin || admin.role === "group_leader") return jsonError("未授權", 401);
 
   let body: { name?: string };
   try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
