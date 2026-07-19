@@ -179,13 +179,18 @@ export default function HomePage() {
     if (!selectedGroup) return;
     setScheduleLoading(true);
     try {
-      const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-      const [schedRes, itemRes, memberRes] = await Promise.all([
-        fetch(`/api/schedules/${selectedGroup}/${ym}`),
+      const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+      const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+      const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+
+      const [schedRes1, schedRes2, itemRes, memberRes] = await Promise.all([
+        fetch(`/api/schedules/${selectedGroup}/${ym1}`),
+        fetch(`/api/schedules/${selectedGroup}/${ym2}`),
         fetch(`/api/groups/${selectedGroup}/service-items`),
         fetch(`/api/groups/${selectedGroup}/members`),
       ]);
-      const schedData = await schedRes.json();
+      const schedData1 = await schedRes1.json();
+      const schedData2 = await schedRes2.json();
       const itemData = await itemRes.json();
       const memberData = await memberRes.json();
 
@@ -195,8 +200,12 @@ export default function HomePage() {
       if (memberData.success) setMembers(memberData.data.filter((m: Member & { is_active: number }) => m.is_active === 1));
       else if (Array.isArray(memberData)) setMembers(memberData.filter((m: Member & { is_active: number }) => m.is_active === 1));
 
-      const dates = getSaturdaysOfMonth(currentYear, currentMonth);
-      const apiSchedules = schedData.success ? schedData.data : (Array.isArray(schedData) ? schedData : []);
+      const dates1 = getSaturdaysOfMonth(currentYear, startMonth);
+      const dates2 = getSaturdaysOfMonth(currentYear, startMonth + 1);
+      const dates = [...dates1, ...dates2];
+      const apiSchedules1 = schedData1.success ? schedData1.data : (Array.isArray(schedData1) ? schedData1 : []);
+      const apiSchedules2 = schedData2.success ? schedData2.data : (Array.isArray(schedData2) ? schedData2 : []);
+      const apiSchedules = [...apiSchedules1, ...apiSchedules2];
 
       const enriched: ScheduleDate[] = dates.map((dateStr) => {
         const existing = apiSchedules.find((s: { date: string }) => s.date === dateStr);
@@ -392,7 +401,8 @@ export default function HomePage() {
     (showCustomInput && customName.trim().length > 0) ||
     (typeof selectedMemberId === "number");
 
-  const currentLabel = `${currentYear} 年 ${currentMonth} 月`;
+  const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+  const currentLabel = `${currentYear} 年 ${startMonth} - ${startMonth + 1} 月`;
   const selectedGroupName = groups.find((g) => g.id === selectedGroup)?.name || "選擇小組";
 
   const serviceItemGroups = useMemo(() => {
@@ -414,12 +424,22 @@ export default function HomePage() {
   const modalItemName = serviceItems.find((i) => i.id === modalItemId)?.name || "";
 
   const prevMonth = () => {
-    if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); }
-    else setCurrentMonth(currentMonth - 1);
+    const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+    if (startMonth === 1) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(startMonth - 2);
+    }
   };
   const nextMonth = () => {
-    if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); }
-    else setCurrentMonth(currentMonth + 1);
+    const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+    if (startMonth === 11) {
+      setCurrentMonth(1);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(startMonth + 2);
+    }
   };
 
   return (

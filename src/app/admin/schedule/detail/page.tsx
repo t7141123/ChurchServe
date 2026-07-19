@@ -101,17 +101,21 @@ export default function SchedulePage() {
   };
 
   const fetchData = useCallback(async () => {
-    const ym = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+    const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+    const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+    const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
     try {
-      const [groupRes, schedRes, itemRes, memberRes] = await Promise.all([
+      const [groupRes, schedRes1, schedRes2, itemRes, memberRes] = await Promise.all([
         fetch(`/api/groups/${groupId}`, { headers: authHeaders() }),
-        fetch(`/api/schedules/${groupId}/${ym}`, { headers: authHeaders() }),
+        fetch(`/api/schedules/${groupId}/${ym1}`, { headers: authHeaders() }),
+        fetch(`/api/schedules/${groupId}/${ym2}`, { headers: authHeaders() }),
         fetch(`/api/groups/${groupId}/service-items`, { headers: authHeaders() }),
         fetch(`/api/groups/${groupId}/members`, { headers: authHeaders() }),
       ]);
-      if (!groupRes.ok || !schedRes.ok || !itemRes.ok || !memberRes.ok) throw new Error("載入失敗");
+      if (!groupRes.ok || !schedRes1.ok || !schedRes2.ok || !itemRes.ok || !memberRes.ok) throw new Error("載入失敗");
       const groupData = await groupRes.json();
-      const schedData = await schedRes.json();
+      const schedData1 = await schedRes1.json();
+      const schedData2 = await schedRes2.json();
       const itemData = await itemRes.json();
       const memberData = await memberRes.json();
 
@@ -119,8 +123,10 @@ export default function SchedulePage() {
       setServiceItems(itemData);
       setMembers(memberData);
 
-      const saturdays = getSaturdaysOfMonth(currentYear, currentMonth);
-      const apiSchedules = schedData;
+      const saturdays1 = getSaturdaysOfMonth(currentYear, startMonth);
+      const saturdays2 = getSaturdaysOfMonth(currentYear, startMonth + 1);
+      const saturdays = [...saturdays1, ...saturdays2];
+      const apiSchedules = [...(schedData1 || []), ...(schedData2 || [])];
 
       const enriched: ScheduleRow[] = [];
       const seenDates = new Set<string>();
@@ -300,18 +306,39 @@ export default function SchedulePage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(currentYear - 1); } else setCurrentMonth(currentMonth - 1); }}
-            aria-label="上一個月"
+            onClick={() => {
+              const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+              if (startMonth === 1) {
+                setCurrentMonth(11);
+                setCurrentYear(currentYear - 1);
+              } else {
+                setCurrentMonth(startMonth - 2);
+              }
+            }}
+            aria-label="上兩個月"
             className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <span className="font-medium min-w-[120px] text-center text-sm">{currentYear} 年 {currentMonth} 月</span>
+          <span className="font-medium min-w-[140px] text-center text-sm">
+            {(() => {
+              const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+              return `${currentYear} 年 ${startMonth} - ${startMonth + 1} 月`;
+            })()}
+          </span>
           <button
-            onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(currentYear + 1); } else setCurrentMonth(currentMonth + 1); }}
-            aria-label="下一個月"
+            onClick={() => {
+              const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+              if (startMonth === 11) {
+                setCurrentMonth(1);
+                setCurrentYear(currentYear + 1);
+              } else {
+                setCurrentMonth(startMonth + 2);
+              }
+            }}
+            aria-label="下兩個月"
             className="w-9 h-9 rounded-xl bg-[var(--color-border-light)] flex items-center justify-center hover:bg-[var(--color-border)] transition-all"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
