@@ -71,6 +71,15 @@ export interface Icebreaker {
   created_at?: string;
 }
 
+export interface ManagedAdmin {
+  id: number;
+  username: string;
+  must_change_password: number;
+  role: string;
+  managed_group_id: number | null;
+  created_at: string;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
