@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, startTransition } from "react";
+import { useState, useEffect, useCallback, useMemo, startTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Select } from "@/lib/components/ui/Select";
 
 interface ServiceItem {
   id: number;
   name: string;
+  category: string;
   display_order: number;
 }
 
@@ -52,6 +54,23 @@ export default function SchedulePage() {
   const [rows, setRows] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const serviceItemGroups = useMemo(() => {
+    const groups: { category: string | null; items: ServiceItem[] }[] = [];
+    let currentCat: string | null = null;
+    let currentItems: ServiceItem[] = [];
+    for (const item of serviceItems) {
+      const cat = item.category || null;
+      if (cat !== currentCat) {
+        if (currentItems.length > 0) groups.push({ category: currentCat, items: currentItems });
+        currentCat = cat;
+        currentItems = [];
+      }
+      currentItems.push(item);
+    }
+    if (currentItems.length > 0) groups.push({ category: currentCat, items: currentItems });
+    return groups;
+  }, [serviceItems]);
 
   useEffect(() => {
     if (errorMsg) {
@@ -352,13 +371,62 @@ export default function SchedulePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
               <thead>
+                {/* First row header */}
                 <tr>
-                  <th className="sticky top-0 px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap">日期</th>
-                  {serviceItems.map((item) => (
-                    <th key={item.id} className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap">{item.name}</th>
-                  ))}
-                  <th className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap min-w-[80px]">備註</th>
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-white/10"
+                  >
+                    日期
+                  </th>
+                  {serviceItemGroups.map((group) => {
+                    if (group.category) {
+                      return (
+                        <th
+                          key={group.category}
+                          colSpan={group.items.length}
+                          className="sticky top-0 px-3 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] border-b border-white/10"
+                        >
+                          {group.category}
+                        </th>
+                      );
+                    }
+                    return group.items.map((item) => (
+                      <th
+                        key={item.id}
+                        rowSpan={2}
+                        className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-white/10"
+                      >
+                        {item.name}
+                      </th>
+                    ));
+                  })}
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap min-w-[80px] align-middle border-b border-white/10"
+                  >
+                    備註
+                  </th>
                 </tr>
+                
+                {/* Second row header for categorized sub-items */}
+                {serviceItemGroups.some((g) => g.category) && (
+                  <tr>
+                    {serviceItemGroups.map((group) => {
+                      if (group.category) {
+                        return group.items.map((item) => (
+                          <th
+                            key={item.id}
+                            className="sticky top-[38px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap border-b border-white/10"
+                          >
+                            {item.name}
+                          </th>
+                        ));
+                      }
+                      return null;
+                    })}
+                  </tr>
+                )}
               </thead>
               <tbody>
                 {rows.map((row, idx) => (
@@ -461,14 +529,16 @@ export default function SchedulePage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setLockModal(false)} />
           <div className="relative glass rounded-2xl p-6 w-full max-w-md shadow-modal animate-scaleIn">
             <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">鎖定日期</h3>
-            <select
+            <Select
               value={lockDate}
-              onChange={(e) => setLockDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-            >
-              <option value="">選擇日期</option>
-              {rows.map((r) => <option key={r.date} value={r.date}>{r.date}</option>)}
-            </select>
+              onChange={setLockDate}
+              options={[
+                { value: "", label: "選擇日期" },
+                ...rows.map((r) => ({ value: r.date, label: r.date })),
+              ]}
+              className="w-full mb-3"
+              triggerClassName="bg-[var(--color-input-bg)] border-[var(--color-glass-border)]"
+            />
             <input
               type="text"
               value={lockMessage}
