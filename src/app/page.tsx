@@ -100,6 +100,14 @@ function SkeletonCard() {
   );
 }
 
+const serviceDescriptions: Record<string, string> = {
+  "破冰": "喜樂，盡情地玩。\n• 可以有懲罰、獎品",
+  "敬拜讚美": "朝見神\n• 1–2 首，2 首的話要注意時間\n• 選歌要好唱的\n• 提前將歌曲傳到群組\n• 提前預備禱告、要講的話，歌曲和帶領方向要一致",
+  "見證": "分享各自的經歷、經歷神\n• 先找莊腳",
+  "信息分享": "小組長針對小組的牧養時刻\n• 信息結束後，有回應信息的禱告（小組長帶）\n• 分組禱告（代禱事項）：人太多會很難了解全部人情況，小小組比較好聊",
+  "報告": "• 跟小組長確認是否有事項需要報告\n• 報告教會的事項\n• 如果有活動需要，可以在小組當下跟大家確認時間、並放在記事本裡面",
+};
+
 export default function HomePage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<number>(0);
@@ -134,6 +142,8 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [serviceDescTitle, setServiceDescTitle] = useState("");
+  const [serviceDescOpen, setServiceDescOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/groups")
@@ -601,7 +611,7 @@ export default function HomePage() {
                         );
                       }
                       return group.items.map((item) => (
-                        <th key={item.id} rowSpan={2} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                        <th key={item.id} rowSpan={2} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { setServiceDescTitle(item.name); setServiceDescOpen(true); }}>
                           {item.name}
                         </th>
                       ));
@@ -613,7 +623,7 @@ export default function HomePage() {
                       {serviceItemGroups.map((group) => {
                         if (group.category) {
                           return group.items.map((item) => (
-                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { setServiceDescTitle(item.name); setServiceDescOpen(true); }}>
                               {item.name}
                             </th>
                           ));
@@ -1112,6 +1122,29 @@ export default function HomePage() {
                   <div className="text-xs text-[var(--color-muted)] mt-0.5">匯出服事表為 PDF 文件</div>
                 </div>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service description modal */}
+      {serviceDescOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={() => setServiceDescOpen(false)} />
+          <div className="relative w-full sm:max-w-lg bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden">
+            <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
+            <div className="flex items-center justify-between px-6 pt-4 pb-3">
+              <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">{serviceDescTitle}</h3>
+              <button onClick={() => setServiceDescOpen(false)} aria-label="關閉" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 pb-6">
+              <div className="bg-[var(--color-bg-soft)] rounded-2xl p-5 text-sm text-[var(--color-text)] leading-relaxed whitespace-pre-line">
+                {serviceDescriptions[serviceDescTitle] || "尚無說明"}
+              </div>
             </div>
           </div>
         </div>
