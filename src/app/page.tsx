@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, startTransition } from "react";
+import { useState, useEffect, useCallback, useRef, startTransition } from "react";
 import Link from "next/link";
 import { Card } from "@/lib/components/ui/Card";
 import { Button } from "@/lib/components/ui/Button";
@@ -157,6 +157,9 @@ export default function HomePage() {
   const [remarksText, setRemarksText] = useState("");
   const [remarksSubmitting, setRemarksSubmitting] = useState(false);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetch("/api/groups")
       .then((r) => r.json())
@@ -232,6 +235,23 @@ export default function HomePage() {
   useEffect(() => {
     startTransition(() => { fetchSchedules(); });
   }, [fetchSchedules]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener("mousedown", handler);
+      const onScroll = () => setMenuOpen(false);
+      window.addEventListener("scroll", onScroll, { once: true });
+      return () => {
+        document.removeEventListener("mousedown", handler);
+        window.removeEventListener("scroll", onScroll);
+      };
+    }
+  }, [menuOpen]);
 
   const openModal = (
     scheduleId: number,
@@ -391,14 +411,14 @@ export default function HomePage() {
           {/* Top row: logo + group + admin */}
           <div className="flex items-center justify-between gap-3 py-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
-                <SproutIcon className="w-5 h-5 text-white" />
+              <span className="w-9 h-9 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
+                <SproutIcon className="w-5 h-5 text-[var(--color-primary)]" />
               </span>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate">
+                <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate text-[var(--color-text)]">
                   ChurchServe
                 </h1>
-                <p className="text-[11px] sm:text-xs text-white/70 leading-tight hidden sm:block">
+                <p className="text-[11px] sm:text-xs text-[var(--color-text-light)] leading-tight hidden sm:block">
                   小組服事報名
                 </p>
               </div>
@@ -410,7 +430,7 @@ export default function HomePage() {
                   value={selectedGroup}
                   onChange={(e) => setSelectedGroup(Number(e.target.value))}
                   aria-label="選擇小組"
-                  className="appearance-none pl-3 pr-9 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/40 transition-all max-w-[140px] sm:max-w-[200px]"
+                  className="appearance-none pl-3 pr-9 py-2.5 rounded-xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-border-light)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 transition-all max-w-[140px] sm:max-w-[200px]"
                 >
                   {groups.length === 0 && <option value={0}>尚無小組</option>}
                   {groups.map((g) => (
@@ -419,73 +439,107 @@ export default function HomePage() {
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </div>
-              <Link
-                href="/admin/login"
-                className="hidden sm:inline-flex items-center px-3 py-2 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                管理
-              </Link>
             </div>
           </div>
 
           {/* Month switcher — centered primary control */}
           <div className="flex items-center justify-center gap-1 pb-3">
-            <button
-              onClick={prevMonth}
-              aria-label="上一個月"
-              className="w-11 h-11 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/90 transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
-              <span className="text-base sm:text-lg font-semibold tracking-wide">{currentLabel}</span>
-              {selectedGroupName && groups.length > 0 && (
-                <p className="text-[11px] text-white/65 mt-0.5 truncate">{selectedGroupName}</p>
-              )}
-            </div>
-            <button
-              onClick={nextMonth}
-              aria-label="下一個月"
-              className="w-11 h-11 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/90 transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
+              <button
+                onClick={prevMonth}
+                aria-label="上一個月"
+                className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
+                <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+                {selectedGroupName && groups.length > 0 && (
+                  <p className="text-[11px] text-[var(--color-muted)] mt-0.5 truncate">{selectedGroupName}</p>
+                )}
+              </div>
+              <button
+                onClick={nextMonth}
+                aria-label="下一個月"
+                className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
           </div>
         </div>
       </header>
 
       {/* Secondary toolbar */}
       <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <p className="text-xs sm:text-sm text-[var(--color-muted)]">
-            點擊格子即可報名服事 · 無需登入
+            - 點擊格子即可報名服事
           </p>
-          <button
-            onClick={() => {
-              setIcebreakerOpen(true);
-              setIcebreakerLoading(true);
-              fetch("/api/icebreakers")
-                .then((r) => r.json())
-                .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
-                .finally(() => setIcebreakerLoading(false));
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--color-accent-dark)] bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40 transition-all flex-shrink-0 min-h-[40px]"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
-              <path d="M8 21h8" />
-            </svg>
-            破冰遊戲
-          </button>
         </div>
+      </div>
+
+      {/* Floating hamburger menu */}
+      <div ref={menuRef} className="fixed top-20 right-3 sm:right-4 z-50">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="選單"
+          className="w-12 h-12 rounded-full bg-[var(--color-primary)] text-white shadow-lg flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+        >
+          {menuOpen ? (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+
+        {menuOpen && (
+          <div
+            className="absolute right-0 top-full mt-2 w-48 origin-top-right animate-fade-in"
+            style={{ animation: "fadeIn 0.15s ease-out" }}
+          >
+            <div className="bg-white rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  setIcebreakerOpen(true);
+                  setIcebreakerLoading(true);
+                  fetch("/api/icebreakers")
+                    .then((r) => r.json())
+                    .then((d) => { if (Array.isArray(d)) setIcebreakers(d); })
+                    .finally(() => setIcebreakerLoading(false));
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+              >
+                <svg className="w-5 h-5 text-[var(--color-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5V11h2v2h-2v2h2v2h-6v-2h2v-2H10v-2h2V9.5A4 4 0 0112 2z" />
+                  <path d="M8 21h8" />
+                </svg>
+                破冰遊戲
+              </button>
+              <Link
+                href="/admin/login"
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors"
+              >
+                <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
+                </svg>
+                登入後台
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Schedule content */}
@@ -525,7 +579,7 @@ export default function HomePage() {
                         {item.name}
                       </th>
                     ))}
-                      <th className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)] whitespace-nowrap min-w-[80px]">備註</th>
+                    <th className="px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)] whitespace-nowrap min-w-[80px]">備註</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -628,24 +682,24 @@ export default function HomePage() {
                             </td>
                           );
                         })}
-                          <td
-                            role="button"
-                            tabIndex={0}
-                            className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
-                            onClick={() => openRemarksModal(schedule)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                openRemarksModal(schedule);
-                              }
-                            }}
-                          >
-                            {schedule.remarks ? (
-                              <span className="text-[var(--color-muted)] line-clamp-2 max-w-[120px] mx-auto">{schedule.remarks}</span>
-                            ) : (
-                              <span className="text-[var(--color-accent)] opacity-60 hover:opacity-100 transition-opacity text-xs font-medium">+ 備註</span>
-                            )}
-                          </td>
+                        <td
+                          role="button"
+                          tabIndex={0}
+                          className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
+                          onClick={() => openRemarksModal(schedule)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openRemarksModal(schedule);
+                            }
+                          }}
+                        >
+                          {schedule.remarks ? (
+                            <span className="text-[var(--color-muted)] line-clamp-2 max-w-[120px] mx-auto">{schedule.remarks}</span>
+                          ) : (
+                            <span className="text-[var(--color-accent)] opacity-60 hover:opacity-100 transition-opacity text-xs font-medium">+ 備註</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -810,11 +864,10 @@ export default function HomePage() {
                         setShowCustomInput(false);
                         setCustomName("");
                       }}
-                      className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border ${
-                        isSelected
+                      className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border ${isSelected
                           ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
                           : "bg-[var(--color-bg-soft)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary-soft)]"
-                      }`}
+                        }`}
                     >
                       {member.name}
                     </button>
@@ -828,11 +881,10 @@ export default function HomePage() {
                     setShowCustomInput(true);
                     setSelectedMemberId(undefined);
                   }}
-                  className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border col-span-2 sm:col-span-1 ${
-                    showCustomInput
+                  className={`min-h-[52px] px-3 py-3 rounded-xl text-sm font-medium transition-all border col-span-2 sm:col-span-1 ${showCustomInput
                       ? "bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-sm"
                       : "bg-[var(--color-accent-soft)] text-[var(--color-accent-dark)] border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50"
-                  }`}
+                    }`}
                 >
                   其他…
                 </button>
