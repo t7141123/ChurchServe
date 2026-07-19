@@ -418,7 +418,7 @@ export default function HomePage() {
                 <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate text-[var(--color-text)]">
                   ChurchServe
                 </h1>
-                <p className="text-[11px] sm:text-xs text-[var(--color-text-light)] leading-tight hidden sm:block">
+                <p className="text-[11px] sm:text-xs text-[var(--color-header-text)]/75 leading-tight hidden sm:block">
                   小組服事報名
                 </p>
               </div>
