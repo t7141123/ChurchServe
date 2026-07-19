@@ -1,6 +1,14 @@
 export interface Group {
   id: number;
   name: string;
+  is_active: number;
+  district_id: number | null;
+  created_at: string;
+}
+
+export interface District {
+  id: number;
+  name: string;
   created_at: string;
 }
 

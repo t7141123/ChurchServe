@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import type { Group } from "@/types";
 
+function authHeaders(): Record<string, string> {
+  const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
 export default function ScheduleListPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +23,7 @@ export default function ScheduleListPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/groups");
+        const res = await fetch("/api/admin/groups", { headers: authHeaders() });
         if (!res.ok) throw new Error("載入失敗");
         const d = await res.json();
         setGroups(d);

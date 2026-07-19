@@ -17,7 +17,7 @@ export async function PUT(
     "SELECT group_id FROM DutySchedules WHERE id = ? LIMIT 1"
   ).bind(scheduleId).first<{ group_id: number }>();
   if (!schedule) return jsonError("找不到排班記錄", 404);
-  if (!requireGroupAccess(admin, schedule.group_id)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, schedule.group_id, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: { is_locked?: number; lock_message?: string | null };
   try {

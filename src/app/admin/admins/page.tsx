@@ -1,33 +1,52 @@
 "use client";
 
 import { useState, useEffect, useCallback, startTransition } from "react";
-import type { ManagedAdmin } from "@/types";
+import type { ManagedAdmin, District } from "@/types";
 
-function decodeRole(): string | null {
+function decodeJwt(): { role: string; username: string } | null {
   try {
     const token = localStorage.getItem("admin_token");
     if (!token) return null;
-    return JSON.parse(atob(token.split(".")[1])).role;
+    return JSON.parse(atob(token.split(".")[1]));
   } catch { return null; }
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  group_leader: "小組長",
+  district_leader: "區長",
+  super_admin: "超級管理員",
+};
+
+const ROLE_STYLES: Record<string, string> = {
+  group_leader: "bg-blue-100 text-blue-800",
+  district_leader: "bg-purple-100 text-purple-800",
+  super_admin: "bg-amber-100 text-amber-800",
+};
+
 export default function AdminsPage() {
   const [admins, setAdmins] = useState<ManagedAdmin[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const me = decodeJwt();
+
+  // Add modal
   const [showAdd, setShowAdd] = useState(false);
   const [addUsername, setAddUsername] = useState("");
   const [addPassword, setAddPassword] = useState("");
-  const [addRole, setAddRole] = useState("admin");
-  const [addManagedGroupId, setAddManagedGroupId] = useState("");
+  const [addRole, setAddRole] = useState("group_leader");
+  const [addManagedId, setAddManagedId] = useState("");
 
+  // Edit modal
   const [editing, setEditing] = useState<ManagedAdmin | null>(null);
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
-  const [editRole, setEditRole] = useState("admin");
-  const [editManagedGroupId, setEditManagedGroupId] = useState("");
+  const [editRole, setEditRole] = useState("group_leader");
+  const [editManagedId, setEditManagedId] = useState("");
 
+  // Delete modal
   const [deleting, setDeleting] = useState<ManagedAdmin | null>(null);
 
   useEffect(() => {
@@ -39,35 +58,53 @@ export default function AdminsPage() {
     return t ? { "Content-Type": "application/json", Authorization: `Bearer ${t}` } : { "Content-Type": "application/json" };
   };
 
+  const loadMeta = useCallback(async () => {
+    const [dRes, gRes] = await Promise.all([
+      fetch("/api/districts"),
+      fetch("/api/admin/groups", { headers: authHeaders() }),
+    ]);
+    if (dRes.ok) setDistricts(await dRes.json());
+    if (gRes.ok) setGroups(await gRes.json());
+  }, []);
+
   const refetch = useCallback(() => {
     setLoading(true);
-    fetch("/api/admin/admins", { headers: authHeaders() })
-      .then((res) => { if (!res.ok) throw new Error("載入失敗"); return res.json(); })
-      .then(setAdmins)
+    Promise.all([
+      fetch("/api/admin/admins", { headers: authHeaders() }).then((r) => { if (!r.ok) throw new Error(); return r.json(); }),
+      loadMeta(),
+    ]).then(([a]) => setAdmins(a))
       .catch(() => setErrorMsg("載入失敗"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [loadMeta]);
 
   useEffect(() => { startTransition(() => { refetch(); }); }, [refetch]);
 
-  const roleName = (r: string) => r === "super_admin" ? "超級管理員" : "管理員";
+  const managedLabel = (a: ManagedAdmin): string => {
+    if (a.role === "district_leader" && a.managed_group_id) {
+      const d = districts.find((x) => x.id === a.managed_group_id);
+      return d ? `分區：${d.name}` : `分區 #${a.managed_group_id}`;
+    }
+    if (a.role === "group_leader" && a.managed_group_id) {
+      const g = groups.find((x) => x.id === a.managed_group_id);
+      return g ? `小組：${g.name}` : `小組 #${a.managed_group_id}`;
+    }
+    return "—";
+  };
 
   const handleCreate = async () => {
     if (!addUsername.trim() || !addPassword.trim()) { setErrorMsg("帳號與密碼為必填"); return; }
     if (addPassword.length < 6) { setErrorMsg("密碼至少 6 碼"); return; }
     try {
-      const res = await fetch("/api/admin/admins", {
-        method: "POST", headers: authHeaders(),
-        body: JSON.stringify({
-          username: addUsername.trim(),
-          password: addPassword,
-          role: addRole,
-          managed_group_id: addManagedGroupId ? Number(addManagedGroupId) : null,
-        }),
-      });
+      const body: Record<string, unknown> = {
+        username: addUsername.trim(),
+        password: addPassword,
+        role: addRole,
+        managed_group_id: addRole === "super_admin" ? null : (addManagedId ? Number(addManagedId) : null),
+      };
+      const res = await fetch("/api/admin/admins", { method: "POST", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "新增失敗"); }
       setShowAdd(false);
-      setAddUsername(""); setAddPassword(""); setAddRole("admin"); setAddManagedGroupId("");
+      setAddUsername(""); setAddPassword(""); setAddRole("group_leader"); setAddManagedId("");
       refetch();
     } catch (e) { setErrorMsg(e instanceof Error ? e.message : "新增失敗"); }
   };
@@ -77,7 +114,7 @@ export default function AdminsPage() {
     setEditUsername(a.username);
     setEditPassword("");
     setEditRole(a.role);
-    setEditManagedGroupId(a.managed_group_id?.toString() ?? "");
+    setEditManagedId(a.managed_group_id?.toString() ?? "");
   };
 
   const handleUpdate = async () => {
@@ -87,11 +124,8 @@ export default function AdminsPage() {
     try {
       const body: Record<string, unknown> = { username: editUsername.trim(), role: editRole };
       if (editPassword) body.password = editPassword;
-      body.managed_group_id = editManagedGroupId ? Number(editManagedGroupId) : null;
-      const res = await fetch(`/api/admin/admins/${editing.id}`, {
-        method: "PUT", headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
+      body.managed_group_id = editRole === "super_admin" ? null : (editManagedId ? Number(editManagedId) : null);
+      const res = await fetch(`/api/admin/admins/${editing.id}`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "更新失敗"); }
       setEditing(null);
       refetch();
@@ -101,16 +135,14 @@ export default function AdminsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/admins/${deleting.id}`, {
-        method: "DELETE", headers: authHeaders(),
-      });
+      const res = await fetch(`/api/admin/admins/${deleting.id}`, { method: "DELETE", headers: authHeaders() });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "刪除失敗"); }
       setDeleting(null);
       refetch();
     } catch (e) { setErrorMsg(e instanceof Error ? e.message : "刪除失敗"); }
   };
 
-  const isSuperAdmin = decodeRole() === "super_admin";
+  const isSuperAdmin = me?.role === "super_admin";
 
   if (!isSuperAdmin) {
     return (
@@ -120,16 +152,54 @@ export default function AdminsPage() {
     );
   }
 
+  const roleSelect = (value: string, onChange: (v: string) => void, username?: string) => {
+    const isAdminAcct = username === "admin";
+    return (
+      <div>
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">角色</label>
+        <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+          <option value="group_leader">小組長</option>
+          <option value="district_leader">區長</option>
+          {isAdminAcct && <option value="super_admin">超級管理員</option>}
+        </select>
+        {!isAdminAcct && value === "super_admin" && (
+          <p className="text-xs text-amber-600 mt-1.5">僅 admin 帳號可設為超級管理員</p>
+        )}
+      </div>
+    );
+  };
+
+  const managedIdSelector = (value: string, onChange: (v: string) => void, role: string) => {
+    if (role === "super_admin") return null;
+
+    if (role === "district_leader") {
+      return (
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理分區</label>
+          <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+            <option value="">請選擇分區</option>
+            {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組</label>
+        <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+          <option value="">請選擇小組</option>
+          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </select>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold font-serif text-[var(--color-text)]">後台帳號管理</h1>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="px-5 py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm"
-        >
-          新增帳號
-        </button>
+        <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">新增帳號</button>
       </div>
 
       {errorMsg && (
@@ -141,45 +211,31 @@ export default function AdminsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
-                <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">ID</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">帳號</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">角色</th>
-                <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">管理小組</th>
+                <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">管理範圍</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-[var(--color-text)]">建立時間</th>
                 <th className="text-right px-5 py-3.5 font-semibold text-[var(--color-text)]">操作</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-[var(--color-muted)]">載入中…</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-[var(--color-muted)]">載入中…</td></tr>
               ) : admins.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-[var(--color-muted)]">尚無管理帳號</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-[var(--color-muted)]">尚無管理帳號</td></tr>
               ) : admins.map((a) => (
                 <tr key={a.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors">
-                  <td className="px-5 py-3.5 text-[var(--color-muted)]">{a.id}</td>
                   <td className="px-5 py-3.5 font-medium text-[var(--color-text)]">{a.username}</td>
                   <td className="px-5 py-3.5">
-                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${
-                      a.role === "super_admin" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"
-                    }`}>
-                      {roleName(a.role)}
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${ROLE_STYLES[a.role] || "bg-gray-100 text-gray-800"}`}>
+                      {ROLE_LABELS[a.role] || a.role}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-[var(--color-text-light)]">{a.managed_group_id ?? "—"}</td>
+                  <td className="px-5 py-3.5 text-[var(--color-text-light)] text-xs">{managedLabel(a)}</td>
                   <td className="px-5 py-3.5 text-[var(--color-muted)] text-xs">{a.created_at}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <button
-                      onClick={() => openEdit(a)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
-                    >
-                      編輯
-                    </button>
-                    <button
-                      onClick={() => setDeleting(a)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 transition-colors ml-1"
-                    >
-                      刪除
-                    </button>
+                    <button onClick={() => openEdit(a)} className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors">編輯</button>
+                    <button onClick={() => setDeleting(a)} className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 transition-colors ml-1">刪除</button>
                   </td>
                 </tr>
               ))}
@@ -209,17 +265,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">密碼</label>
                 <input type="password" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">角色</label>
-                <select value={addRole} onChange={(e) => setAddRole(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-                  <option value="admin">管理員</option>
-                  <option value="super_admin">超級管理員</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組 ID（選填）</label>
-                <input type="number" value={addManagedGroupId} onChange={(e) => setAddManagedGroupId(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="留空則可管理所有小組" />
-              </div>
+              {roleSelect(addRole, setAddRole)}
+              {managedIdSelector(addManagedId, setAddManagedId, addRole)}
               <button onClick={handleCreate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">建立帳號</button>
             </div>
           </div>
@@ -247,17 +294,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">新密碼（留空則不變）</label>
                 <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">角色</label>
-                <select value={editRole} onChange={(e) => setEditRole(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-                  <option value="admin">管理員</option>
-                  <option value="super_admin">超級管理員</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組 ID（選填）</label>
-                <input type="number" value={editManagedGroupId} onChange={(e) => setEditManagedGroupId(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="留空則可管理所有小組" />
-              </div>
+              {roleSelect(editRole, setEditRole, editing.username)}
+              {managedIdSelector(editManagedId, setEditManagedId, editRole)}
               <button onClick={handleUpdate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">儲存變更</button>
             </div>
           </div>

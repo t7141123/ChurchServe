@@ -93,3 +93,10 @@ CREATE TABLE IF NOT EXISTS AssignmentAudit (
 );
 
 CREATE INDEX IF NOT EXISTS idx_assignment_audit_schedule ON AssignmentAudit(schedule_id, service_item_id);
+
+-- Districts for role-based group management
+CREATE TABLE IF NOT EXISTS Districts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, startTransition } from "react";
-import type { Group } from "@/types";
+import type { Group, District } from "@/types";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
   const [newName, setNewName] = useState("");
+  const [newDistrictId, setNewDistrictId] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [editDistrictId, setEditDistrictId] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -25,18 +28,34 @@ export default function GroupsPage() {
 
   const fetchGroups = async () => {
     try {
-      const res = await fetch("/api/groups");
-      if (!res.ok) throw new Error("載入失敗");
-      const d = await res.json();
-      setGroups(d);
+      const [gRes, dRes] = await Promise.all([
+        fetch("/api/admin/groups", { headers: authHeaders() }),
+        fetch("/api/districts"),
+      ]);
+      if (gRes.ok) setGroups(await gRes.json());
+      if (dRes.ok) setDistricts(await dRes.json());
     } catch {
-      setErrorMsg("載入小組列表失敗");
+      setErrorMsg("載入失敗");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { startTransition(() => { fetchGroups(); }); }, []);
+  useEffect(() => {
+    startTransition(() => {
+      (async () => {
+        try {
+          const [gRes, dRes] = await Promise.all([
+            fetch("/api/admin/groups", { headers: authHeaders() }),
+            fetch("/api/districts"),
+          ]);
+          if (gRes.ok) setGroups(await gRes.json());
+          if (dRes.ok) setDistricts(await dRes.json());
+        } catch { setErrorMsg("載入失敗"); }
+        finally { setLoading(false); }
+      })();
+    });
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,26 +64,35 @@ export default function GroupsPage() {
       const res = await fetch("/api/groups", {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name: newName.trim(), district_id: newDistrictId ? Number(newDistrictId) : null }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "建立失敗");
       }
       setNewName("");
+      setNewDistrictId("");
       fetchGroups();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "建立失敗");
     }
   };
 
+  const openEdit = (group: Group) => {
+    setEditingId(group.id);
+    setEditName(group.name);
+    setEditDistrictId(group.district_id?.toString() ?? "");
+  };
+
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
     try {
+      const body: Record<string, unknown> = { name: editName.trim() };
+      if (editDistrictId !== undefined) body.district_id = editDistrictId ? Number(editDistrictId) : null;
       const res = await fetch(`/api/groups/${id}`, {
         method: "PUT",
         headers: authHeaders(),
-        body: JSON.stringify({ name: editName.trim() }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -91,6 +119,11 @@ export default function GroupsPage() {
     }
   };
 
+  const districtName = (id: number | null) => {
+    if (!id) return "";
+    return districts.find((d) => d.id === id)?.name ?? "";
+  };
+
   return (
     <>
       <div className="mb-8 animate-fadeIn">
@@ -107,7 +140,7 @@ export default function GroupsPage() {
       {/* Create form */}
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增小組</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-3">
           <input
             type="text"
             value={newName}
@@ -123,6 +156,14 @@ export default function GroupsPage() {
             新增
           </button>
         </div>
+        <select
+          value={newDistrictId}
+          onChange={(e) => setNewDistrictId(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+        >
+          <option value="">不分區</option>
+          {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
       </form>
 
       {loading ? (
@@ -156,35 +197,46 @@ export default function GroupsPage() {
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               {editingId === group.id ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handleUpdate(group.id)}
-                    className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md"
-                  >
-                    儲存
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="px-4 py-2 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]"
-                  >
-                    取消
-                  </button>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleUpdate(group.id)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md"
+                    >
+                      儲存
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-4 py-2 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]"
+                    >
+                      取消
+                    </button>
+                  </div>
+                  <select value={editDistrictId} onChange={(e) => setEditDistrictId(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20">
+                    <option value="">不分區</option>
+                    {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
                 </div>
               ) : (
                 <>
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-[var(--color-primary)]/20 flex-shrink-0">
                     {group.name.charAt(0)}
                   </div>
-                  <span className="flex-1 font-medium text-[var(--color-text)]">{group.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-[var(--color-text)]">{group.name}</span>
+                    {districtName(group.district_id) && (
+                      <span className="ml-2 text-xs text-[var(--color-muted)]">{districtName(group.district_id)}</span>
+                    )}
+                  </div>
                   <button
-                    onClick={() => { setEditingId(group.id); setEditName(group.name); }}
+                    onClick={() => openEdit(group)}
                     className="px-4 py-2 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)] hover:shadow-sm"
                   >
                     編輯

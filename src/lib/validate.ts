@@ -11,6 +11,7 @@ export const changePasswordSchema = z.object({
 
 export const groupSchema = z.object({
   name: z.string().min(1, "小組名稱不可為空").max(100),
+  district_id: z.number().nullable().optional(),
 });
 
 export const memberSchema = z.object({

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   const parsed = validateInput(specialEventSchema, body);
   if (!parsed.success) return jsonError(parsed.error, 400);
 
-  if (!requireGroupAccess(admin, parsed.data.group_id)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, parsed.data.group_id, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   const result = await (env.DB as D1Database).prepare(
     `INSERT INTO DutySchedules (group_id, date, is_special_event, event_title)

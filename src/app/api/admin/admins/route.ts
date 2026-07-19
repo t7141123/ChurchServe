@@ -32,7 +32,12 @@ export async function POST(request: Request) {
   if (existing) return jsonError("帳號名稱已存在", 409);
 
   const password_hash = await hashPassword(body.password);
-  const role = body.role === "super_admin" ? "super_admin" : "admin";
+  const role = body.role === "super_admin" ? "super_admin" : body.role === "district_leader" ? "district_leader" : "group_leader";
+
+  if (role === "super_admin" && body.username.trim() !== "admin") {
+    return jsonError("僅 admin 帳號可設為超級管理員", 403);
+  }
+
   const managed_group_id = body.managed_group_id ?? null;
 
   await (env.DB as D1Database).prepare(

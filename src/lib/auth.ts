@@ -12,8 +12,19 @@ export function requireSuperAdmin(payload: JwtPayload | null): boolean {
   return payload?.role === "super_admin";
 }
 
-export function requireGroupAccess(payload: JwtPayload | null, groupId: number): boolean {
+export async function requireGroupAccess(
+  payload: JwtPayload | null,
+  groupId: number,
+  db?: D1Database
+): Promise<boolean> {
   if (!payload) return false;
   if (payload.role === "super_admin" || payload.role === "admin") return true;
-  return payload.managedGroupId === groupId;
+  if (payload.role === "group_leader") return payload.managedGroupId === groupId;
+  if (payload.role === "district_leader" && payload.managedGroupId && db) {
+    const row = await db.prepare(
+      "SELECT id FROM Groups WHERE id = ? AND district_id = ? LIMIT 1"
+    ).bind(groupId, payload.managedGroupId).first();
+    return !!row;
+  }
+  return false;
 }

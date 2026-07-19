@@ -24,7 +24,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ grou
   const groupId = Number(groupIdStr);
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
   const db = env.DB as D1Database;
 
   let body: { service_item_id?: number; member_id?: number | null; custom_member_name?: string | null };

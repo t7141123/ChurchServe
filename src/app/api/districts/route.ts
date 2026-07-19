@@ -1,15 +1,14 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
-import { groupSchema, validateInput } from "@/lib/validate";
 import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET() {
   const { env } = await getCloudflareContext({ async: true });
-  const groups = await (env.DB as D1Database).prepare(
-    "SELECT id, name, is_active, district_id FROM Groups ORDER BY id ASC"
+  const districts = await (env.DB as D1Database).prepare(
+    "SELECT id, name FROM Districts ORDER BY id ASC"
   ).all();
-  return json(groups.results);
+  return json(districts.results);
 }
 
 export async function POST(request: Request) {
@@ -17,16 +16,13 @@ export async function POST(request: Request) {
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
 
-  let body: unknown;
-  try { body = await request.json(); }
-  catch { return jsonError("無效的請求格式", 400); }
-
-  const parsed = validateInput(groupSchema, body);
-  if (!parsed.success) return jsonError(parsed.error, 400);
+  let body: { name?: string };
+  try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
+  if (!body.name?.trim()) return jsonError("分區名稱為必填", 400);
 
   const result = await (env.DB as D1Database).prepare(
-    "INSERT INTO Groups (name, district_id) VALUES (?, ?)"
-  ).bind(sanitize(parsed.data.name), parsed.data.district_id ?? null).run();
+    "INSERT INTO Districts (name) VALUES (?)"
+  ).bind(sanitize(body.name.trim())).run();
 
   return json({ id: result.meta.last_row_id }, 201);
 }

@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: unknown;
   try { body = await request.json(); }
@@ -43,7 +43,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: Record<string, unknown>;
   try { body = await request.json(); }
@@ -85,7 +85,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: Record<string, unknown> = {};
   try { body = await request.json(); }

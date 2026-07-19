@@ -27,7 +27,7 @@ export async function POST(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: unknown;
   try {
@@ -55,7 +55,7 @@ export async function PUT(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: { memberId?: number; name?: string };
   try { body = await request.json(); }
@@ -78,7 +78,7 @@ export async function PATCH(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: { memberId?: number; is_active?: number };
   try { body = await request.json(); }
@@ -101,7 +101,7 @@ export async function DELETE(
   if (!admin) return jsonError("未授權", 401);
 
   const groupId = Number((await params).id);
-  if (!requireGroupAccess(admin, groupId)) return jsonError("無權限操作此小組", 403);
+  if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
   let body: { memberId?: number };
   try { body = await request.json(); }

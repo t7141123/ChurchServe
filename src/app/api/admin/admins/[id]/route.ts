@@ -43,7 +43,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   if (body.role !== undefined) {
-    if (!["super_admin", "admin"].includes(body.role)) return jsonError("無效的角色", 400);
+    if (!["super_admin", "district_leader", "group_leader"].includes(body.role)) return jsonError("無效的角色", 400);
+    if (body.role === "super_admin") {
+      const target = await (env.DB as D1Database).prepare("SELECT username FROM Admins WHERE id = ? LIMIT 1").bind(adminId).first() as { username: string } | null;
+      if (!target || target.username !== "admin") return jsonError("僅 admin 帳號可設為超級管理員", 403);
+    }
     updates.push("role = ?");
     binds.push(body.role);
   }
