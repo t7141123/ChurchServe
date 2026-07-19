@@ -1,41 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Define gradients and shadows -->
   <defs>
+    <!-- Dark warm sienna gradient for high contrast at small sizes -->
     <linearGradient id="grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#A56E47" />
-      <stop offset="100%" stop-color="#6B3F21" />
+      <stop offset="0%" stop-color="#8E5A36" />
+      <stop offset="100%" stop-color="#4C2812" />
     </linearGradient>
+    <!-- Bright warm sunburst/halo gradient representing light and grace -->
     <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FDBA74" />
-      <stop offset="100%" stop-color="#D97736" />
+      <stop offset="100%" stop-color="#E28647" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#3E2718" flood-opacity="0.15" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#2C1B10" flood-opacity="0.25" />
     </filter>
   </defs>
 
-  <!-- Rounded container background -->
+  <!-- Background rounded rectangle -->
   <rect width="512" height="512" rx="128" fill="url(#grad-primary)" filter="url(#shadow)"/>
   
-  <!-- Church dome shape watermark -->
-  <path d="M256 90 L390 280 A12 12 0 0 1 380 295 L132 295 A12 12 0 0 1 122 280 Z" fill="rgba(255, 255, 255, 0.08)" />
-  
-  <!-- Left wing/leaf representing service growth -->
-  <path d="M190 230 C190 140, 256 120, 256 120 C256 120, 270 180, 240 250 C210 320, 190 380, 190 380 C190 380, 160 300, 190 230 Z" fill="rgba(255, 255, 255, 0.15)" />
-  
-  <!-- Right wing/leaf representing warm serving spirit -->
-  <path d="M322 230 C322 140, 256 120, 256 120 C256 120, 242 180, 272 250 C302 320, 322 380, 322 380 C322 380, 352 300, 322 230 Z" fill="url(#grad-accent)" opacity="0.9" />
+  <!-- Sacred Halo (Warm radiant background glow behind the cross) -->
+  <circle cx="256" cy="220" r="140" fill="url(#grad-accent)" opacity="0.25" />
+  <circle cx="256" cy="220" r="90" fill="url(#grad-accent)" opacity="0.4" />
 
-  <!-- Sacred Cross in center (rounded, modern geometry) -->
-  <g transform="translate(256, 235)">
-    <!-- Horizontal beam -->
-    <rect x="-70" y="-14" width="140" height="28" rx="14" fill="#FFFFFF" />
-    <!-- Vertical beam -->
-    <rect x="-14" y="-85" width="28" height="180" rx="14" fill="#FFFFFF" />
-    <!-- Golden Core representing grace -->
-    <circle cx="0" cy="0" r="10" fill="#D97736" stroke="#FFFFFF" stroke-width="4" />
+  <!-- Sacred Cross as the absolute main subject -->
+  <g id="main-cross">
+    <!-- Horizontal Beam -->
+    <rect x="136" y="200" width="240" height="40" rx="20" fill="#FFFFFF" />
+    <!-- Vertical Beam -->
+    <rect x="236" y="80" width="40" height="300" rx="20" fill="#FFFFFF" />
+    <!-- Golden Core representing grace and presence -->
+    <circle cx="256" cy="220" r="14" fill="#E28647" stroke="#FFFFFF" stroke-width="5" />
   </g>
   
-  <!-- Supporting hands shape at the bottom -->
-  <path d="M140 400 C200 430, 312 430, 372 400" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.3" />
+  <!-- Supporting modern bottom arch representing hands/community -->
+  <path d="M120 410 C180 440, 332 440, 392 410" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.2" />
 </svg>
