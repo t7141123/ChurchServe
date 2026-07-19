@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "npx wrangler pages dev ./out",
     "lint": "eslint",
-    "pages:deploy": "npx opennextjs-cloudflare build && node deploy-pages.mjs"
+    "pages:deploy": "npx @opennextjs/cloudflare build && node deploy-pages.mjs"
   },
   "dependencies": {
     "dompurify": "^3.4.12",
