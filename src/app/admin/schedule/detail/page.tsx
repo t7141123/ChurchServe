@@ -237,6 +237,23 @@ export default function SchedulePage() {
     }
   };
 
+  const handleQuickPause = async (date: string, scheduleId: number | null) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      if (scheduleId) {
+        const res = await fetch(`/api/admin/schedules/${scheduleId}/lock`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ is_locked: 1, lock_message: "小組暫停" }),
+        });
+        if (!res.ok) throw new Error("暫停失敗");
+        fetchData();
+      }
+    } catch {
+      setErrorMsg("暫停失敗");
+    }
+  };
+
   const handleSpecialEvent = async () => {
     if (!specialDate || !specialTitle.trim()) return;
     try {
@@ -402,7 +419,7 @@ export default function SchedulePage() {
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
+                    className="sticky top-0 px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
                   >
                     日期
                   </th>
@@ -412,7 +429,7 @@ export default function SchedulePage() {
                         <th
                           key={group.category}
                           colSpan={group.items.length}
-                          className="sticky top-0 px-3 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] border-b border-r border-white/15"
+                          className="sticky top-0 px-3 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-[var(--color-primary)] border-b border-r border-white/15"
                         >
                           {group.category}
                         </th>
@@ -422,7 +439,7 @@ export default function SchedulePage() {
                       <th
                         key={item.id}
                         rowSpan={2}
-                        className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
+                        className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-[var(--color-primary)] whitespace-nowrap align-middle border-b border-r border-white/15"
                       >
                         {item.name}
                       </th>
@@ -430,7 +447,7 @@ export default function SchedulePage() {
                   })}
                   <th
                     rowSpan={2}
-                    className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap min-w-[80px] align-middle border-b border-white/10"
+                    className="sticky top-0 px-3 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider bg-[var(--color-primary)] whitespace-nowrap min-w-[80px] align-middle border-b border-white/10"
                   >
                     備註
                   </th>
@@ -444,7 +461,7 @@ export default function SchedulePage() {
                         return group.items.map((item) => (
                           <th
                             key={item.id}
-                            className="sticky top-[38px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] whitespace-nowrap border-b border-r border-white/15"
+                            className="sticky top-[32px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider bg-[var(--color-primary)] whitespace-nowrap border-b border-r border-white/15"
                           >
                             {item.name}
                           </th>
@@ -476,7 +493,15 @@ export default function SchedulePage() {
                     ) : (
                       <>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-[var(--color-text)]">{row.date.replace(/^\d{4}-/, "")}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-[var(--color-text)]">{row.date.replace(/^\d{4}-/, "")}</span>
+                            <button
+                              onClick={() => handleQuickPause(row.date, row.scheduleId)}
+                              className="px-2 py-0.5 rounded-lg text-[10px] font-medium text-[var(--color-danger)] bg-[var(--color-danger)]/10 hover:bg-[var(--color-danger)]/20 transition-all"
+                            >
+                              暫停
+                            </button>
+                          </div>
                           <div className="text-xs text-[var(--color-muted)]">週{DAY_NAMES[new Date(row.date + "T00:00:00").getDay()]}</div>
                         </td>
                         {serviceItems.map((item) => {
