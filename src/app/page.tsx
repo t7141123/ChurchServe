@@ -492,9 +492,6 @@ export default function HomePage() {
             </button>
             <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
               <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
-              {selectedGroupName && groups.length > 0 && (
-                <p className="text-xs sm:text-sm text-[var(--color-text-light)] mt-0.5 truncate">{selectedGroupName}</p>
-              )}
             </div>
             <button
               onClick={nextMonth}
