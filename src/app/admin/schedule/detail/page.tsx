@@ -357,7 +357,7 @@ export default function SchedulePage() {
               </thead>
               <tbody>
                 {rows.map((row, idx) => (
-                  <tr key={row.date} className={`transition-colors ${idx % 2 === 0 ? "bg-white/40" : "bg-white/10"} hover:bg-[var(--color-primary)]/5`}>
+                  <tr key={row.date} className={`transition-colors ${idx % 2 === 0 ? "bg-[var(--color-row-even)]" : "bg-[var(--color-row-odd)]"} hover:bg-[var(--color-primary)]/5`}>
                     {row.isLocked ? (
                       <td colSpan={serviceItems.length + 2} className="px-4 py-4">
                         <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-muted)]">
@@ -404,7 +404,7 @@ export default function SchedulePage() {
                                 type="text"
                                 value={editingRemarks.value}
                                 onChange={(e) => setEditingRemarks({ ...editingRemarks, value: e.target.value })}
-                                className="w-20 px-2 py-1.5 rounded-lg border border-[var(--color-glass-border)] bg-white/60 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                                className="w-20 px-2 py-1.5 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                                 autoFocus
                                   onKeyDown={async (e) => {
                                     if (e.key === "Enter") {
@@ -459,7 +459,7 @@ export default function SchedulePage() {
             <select
               value={lockDate}
               onChange={(e) => setLockDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
             >
               <option value="">選擇日期</option>
               {rows.map((r) => <option key={r.date} value={r.date}>{r.date}</option>)}
@@ -469,7 +469,7 @@ export default function SchedulePage() {
               value={lockMessage}
               onChange={(e) => setLockMessage(e.target.value)}
               placeholder="鎖定訊息（選填）"
-              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
             />
             <div className="flex gap-3">
               <button onClick={() => setLockModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
@@ -488,14 +488,14 @@ export default function SchedulePage() {
               type="date"
               value={specialDate}
               onChange={(e) => setSpecialDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
             />
             <input
               type="text"
               value={specialTitle}
               onChange={(e) => setSpecialTitle(e.target.value)}
               placeholder="活動名稱"
-              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
             />
             <div className="flex gap-3">
               <button onClick={() => setSpecialModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
@@ -510,9 +510,9 @@ export default function SchedulePage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setAssignModal(false)} />
           <div
             className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl"
-            style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}
+            style={{ background: "var(--color-modal-bg)" }}
           >
-            <div className="sticky top-0 px-6 pt-4 pb-2 border-b border-[var(--color-glass-border)]" style={{ background: "linear-gradient(145deg, #FDF8F3 0%, #F8F0E8 50%, #F5EDE3 100%)" }}>
+            <div className="sticky top-0 px-6 pt-4 pb-2 border-b border-[var(--color-glass-border)]" style={{ background: "var(--color-modal-bg)" }}>
               <div className="w-10 h-1 bg-[var(--color-glass-border)] rounded-full mx-auto mb-3" />
               <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)]">指派服事人員</h3>
               <p className="text-sm text-[var(--color-muted)]">{serviceItems.find((i) => i.id === assignItemId)?.name}</p>
@@ -532,7 +532,7 @@ export default function SchedulePage() {
                     className={`w-full px-4 py-3 rounded-xl text-left text-sm transition-all ${
                       assignCurrentValue?.member_id === m.id
                         ? "bg-[var(--color-secondary)]/15 font-medium text-[var(--color-secondary-dark)]"
-                        : "hover:bg-white/60"
+                        : "hover:bg-[var(--color-hover-bg)]"
                     }`}
                   >
                     <span className="flex items-center gap-3">
@@ -553,7 +553,7 @@ export default function SchedulePage() {
                 {!showCustomInput ? (
                   <button
                     onClick={() => setShowCustomInput(true)}
-                    className="w-full px-4 py-3 rounded-xl text-left text-sm text-[var(--color-accent)] hover:bg-white/60 transition-all"
+                    className="w-full px-4 py-3 rounded-xl text-left text-sm text-[var(--color-accent)] hover:bg-[var(--color-hover-bg)] transition-all"
                   >
                     <span className="flex items-center gap-2">
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -570,7 +570,7 @@ export default function SchedulePage() {
                       onChange={(e) => setCustomName(e.target.value)}
                       placeholder="輸入姓名..."
                       maxLength={50}
-                      className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                       autoFocus
                     />
                     <div className="flex gap-2">

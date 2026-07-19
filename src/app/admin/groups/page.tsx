@@ -118,7 +118,7 @@ export default function GroupsPage() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="輸入小組名稱..."
-            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
           />
           <button
             type="submit"
@@ -166,7 +166,7 @@ export default function GroupsPage() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                     autoFocus
                   />
                   <button

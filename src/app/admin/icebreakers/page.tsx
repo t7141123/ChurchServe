@@ -161,19 +161,19 @@ export default function IcebreakersPage() {
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-3">新增破冰遊戲</label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="遊戲名稱 *" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="類別（如：自我介紹、團隊合作）" list="category-list" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="遊戲名稱 *" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="類別（如：自我介紹、團隊合作）" list="category-list" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
           <datalist id="category-list">
             {categories.map((c) => <option key={c} value={c} />)}
           </datalist>
-          <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="所需時間（如：5-10 分鐘）" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+          <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="所需時間（如：5-10 分鐘）" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
           <div className="flex gap-2">
-            <input type="number" value={peopleMin} onChange={(e) => setPeopleMin(Number(e.target.value))} placeholder="最少人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-            <input type="number" value={peopleMax} onChange={(e) => setPeopleMax(Number(e.target.value))} placeholder="最多人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+            <input type="number" value={peopleMin} onChange={(e) => setPeopleMin(Number(e.target.value))} placeholder="最少人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+            <input type="number" value={peopleMax} onChange={(e) => setPeopleMax(Number(e.target.value))} placeholder="最多人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
           </div>
         </div>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="遊戲說明" rows={2} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-        <input type="text" value={materials} onChange={(e) => setMaterials(e.target.value)} placeholder="所需器材" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="遊戲說明" rows={2} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+        <input type="text" value={materials} onChange={(e) => setMaterials(e.target.value)} placeholder="所需器材" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
         <button type="submit" disabled={!name.trim()} className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg hover:translate-y-[-1px] disabled:opacity-50 disabled:cursor-not-allowed">
           新增
         </button>
@@ -204,16 +204,16 @@ export default function IcebreakersPage() {
               {editingId === item.id ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-                    <input type="text" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-                    <input type="text" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                    <input type="text" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                    <input type="text" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
                     <div className="flex gap-2">
-                      <input type="number" value={editPeopleMin} onChange={(e) => setEditPeopleMin(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-                      <input type="number" value={editPeopleMax} onChange={(e) => setEditPeopleMax(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                      <input type="number" value={editPeopleMin} onChange={(e) => setEditPeopleMin(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                      <input type="number" value={editPeopleMax} onChange={(e) => setEditPeopleMax(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
                     </div>
                   </div>
-                  <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-                  <input type="text" value={editMaterials} onChange={(e) => setEditMaterials(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                  <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                  <input type="text" value={editMaterials} onChange={(e) => setEditMaterials(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
                   <div className="flex gap-2">
                     <button onClick={() => handleUpdate(item.id)} className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md">儲存</button>
                     <button onClick={() => setEditingId(null)} className="px-4 py-2 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
