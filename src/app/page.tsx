@@ -539,9 +539,12 @@ export default function HomePage() {
             <button
               onClick={() => {
                 setMenuOpen(false);
+                const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+                const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+                const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
                 const a = document.createElement("a");
-                a.href = `/api/schedules/${selectedGroup}/${currentYear}-${String(currentMonth + 1).padStart(2, "0")}/image`;
-                a.download = `服事表_${currentYear}-${String(currentMonth + 1).padStart(2, "0")}.svg`;
+                a.href = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
+                a.download = `服事表_${startMonth}-${startMonth + 1}月.svg`;
                 a.click();
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
@@ -552,39 +555,37 @@ export default function HomePage() {
               下載服事表圖片
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setMenuOpen(false);
-                const ym = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
-                const groupName = groups.find(g => g.id === selectedGroup)?.name ?? "小組";
-                const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
-                const rows = schedules.map(s => {
-                  const d = new Date(s.date + "T00:00:00");
-                  const dayName = DAY_NAMES[d.getDay()];
-                  const cells = sortedItems.map(item => {
-                    const a = s.assignments[item.display_order];
-                    return a?.member_name ?? a?.custom_member_name ?? "";
-                  });
-                  return { label: `${s.date.slice(5)} (${dayName})`, cells, isSpecial: s.isSpecialEvent };
-                });
-                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>服事表</title><style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:40px;color:#1a202c;}
-h1{font-size:20px;text-align:center;margin-bottom:24px;}table{width:100%;border-collapse:collapse;}
-th,td{border:1px solid #e2e8f0;padding:8px 10px;font-size:13px;text-align:center;}
-th{background:#f0f4f8;font-weight:600;position:sticky;top:0;}
-.special{color:#d97706;font-weight:500;}</style></head><body>
-<h1>${groupName} ${ym.replace("-", "年")}月服事表</h1>
-<table><thead><tr><th style="min-width:80px">日期</th>${sortedItems.map(i => `<th>${i.name}</th>`).join("")}</tr></thead>
-<tbody>${rows.map(r => `<tr${r.isSpecial ? ' class="special"' : ""}><td>${r.label}</td>${r.cells.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>
-<script>window.onload=function(){window.print();}<\/script></body></html>`;
-                const w = window.open("", "_blank");
-                if (w) { w.document.write(html); w.document.close(); }
+                const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
+                const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
+                const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+                try {
+                  const svgUrl = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
+                  const img = new Image();
+                  img.src = svgUrl;
+                  await img.decode();
+                  const canvas = document.createElement("canvas");
+                  canvas.width = img.naturalWidth;
+                  canvas.height = img.naturalHeight;
+                  const ctx = canvas.getContext("2d")!;
+                  ctx.drawImage(img, 0, 0);
+                  const { default: jsPDF } = await import("jspdf");
+                  const doc = new jsPDF({ orientation: "landscape", unit: "px" });
+                  const pdfW = doc.internal.pageSize.getWidth();
+                  const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
+                  doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
+                  doc.save(`服事表_${startMonth}-${startMonth + 1}月.pdf`);
+                } catch {
+                  setErrorMsg("PDF 匯出失敗");
+                }
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
             >
               <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M6 9V3h12v6M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM6 13v4h12v-4" />
               </svg>
-              列印 / 匯出 PDF
+              匯出 PDF
             </button>
             <Link
               href="/admin/login"

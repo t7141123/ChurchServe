@@ -9,12 +9,17 @@ function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function formatYm(ym: string): string {
+  const [y, m] = ym.split("-");
+  return `${y}年${Number(m)}月`;
+}
+
 function generateScheduleSvg(
-  schedule: Array<{ date: string; is_special_event: number; event_title: string | null }>,
-  assignments: Array<{ schedule_id: number; member_name: string | null; custom_member_name: string | null }>,
+  schedule: Array<{ id: number; date: string; is_special_event: number; event_title: string | null }>,
+  assignments: Array<{ schedule_id: number; service_item_id: number; member_name: string | null; custom_member_name: string | null }>,
   serviceItems: Array<{ id: number; name: string; category: string; display_order: number }>,
   groupName: string,
-  yearMonth: string
+  months: string[]
 ): string {
   const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
   const colWidth = 140;
@@ -31,7 +36,7 @@ function generateScheduleSvg(
 
   const assoc = new Map<string, string | null>();
   for (const a of assignments) {
-    assoc.set(`${a.schedule_id}|${0}`, a.member_name ?? a.custom_member_name ?? null);
+    assoc.set(`${a.schedule_id}|${a.service_item_id}`, a.member_name ?? a.custom_member_name ?? null);
   }
 
   const lines: string[] = [];
@@ -39,14 +44,15 @@ function generateScheduleSvg(
   lines.push(`<defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}</style></defs>`);
   lines.push(`<rect width="${w}" height="${h}" rx="16" fill="#ffffff"/>`);
 
-  const [year, month] = yearMonth.split("-");
-  lines.push(`<text x="${w / 2}" y="${oy + 38}" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a2e">${escapeXml(groupName)} ${year}年${Number(month)}月服事表</text>`);
+  const title = months.length > 1
+    ? `${escapeXml(groupName)} ${formatYm(months[0])}-${formatYm(months[1])}服事表`
+    : `${escapeXml(groupName)} ${formatYm(months[0])}服事表`;
+  lines.push(`<text x="${w / 2}" y="${oy + 38}" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a2e">${title}</text>`);
 
   const x0 = ox;
   const y0 = oy + titleH;
 
   lines.push(`<rect x="${x0}" y="${y0}" width="${tableW}" height="${headerH}" rx="8" fill="#f0f4f8"/>`);
-
   lines.push(`<text x="${x0 + labelW / 2}" y="${y0 + headerH / 2 + 1}" text-anchor="middle" font-size="13" font-weight="600" fill="#4a5568" dominant-baseline="middle">日期</text>`);
   sortedItems.forEach((item, ci) => {
     const cx = x0 + labelW + ci * colWidth + colWidth / 2;
@@ -68,7 +74,7 @@ function generateScheduleSvg(
 
     sortedItems.forEach((item, ci) => {
       const cx = x0 + labelW + ci * colWidth + colWidth / 2;
-      const key = `${row.date}|${item.id}`;
+      const key = `${row.id}|${item.id}`;
       const memberName = assoc.get(key);
       if (memberName) {
         lines.push(`<text x="${cx}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="12" fill="#2d3748" dominant-baseline="middle">${escapeXml(memberName)}</text>`);
@@ -99,20 +105,27 @@ export async function GET(
   const groupId = Number(groupIdStr);
   const db = env.DB as D1Database;
 
+  const url = new URL(request.url);
+  const month2 = url.searchParams.get("month2");
+  const months = month2 ? [yearMonth, month2] : [yearMonth];
+
   const group = await db.prepare("SELECT name FROM Groups WHERE id = ?").bind(groupId).first<{ name: string }>();
   if (!group) {
     return new Response("小組不存在", { status: 404 });
   }
 
   try {
-    const schedulesResult = await db.prepare(
-      `SELECT id, date, is_special_event, event_title
-       FROM DutySchedules
-       WHERE group_id = ? AND date LIKE ?
-       ORDER BY date ASC`
-    ).bind(groupId, `${yearMonth}%`).all<{ id: number; date: string; is_special_event: number; event_title: string | null }>();
-
-    const schedule = schedulesResult.results;
+    const scheduleResults = await Promise.all(
+      months.map((m) =>
+        db.prepare(
+          `SELECT id, date, is_special_event, event_title
+           FROM DutySchedules
+           WHERE group_id = ? AND date LIKE ?
+           ORDER BY date ASC`
+        ).bind(groupId, `${m}%`).all<{ id: number; date: string; is_special_event: number; event_title: string | null }>()
+      )
+    );
+    const schedule = scheduleResults.flatMap((r) => r.results);
 
     if (schedule.length === 0) {
       return new Response("該月尚無服事表", { status: 404 });
@@ -149,9 +162,7 @@ export async function GET(
       member_name: string | null;
     }>();
 
-    const assignments = assignmentsResult.results;
-
-    const svg = generateScheduleSvg(schedule, assignments, serviceItems, group.name, yearMonth);
+    const svg = generateScheduleSvg(schedule, assignmentsResult.results, serviceItems, group.name, months);
     return new Response(svg, {
       headers: {
         "Content-Type": "image/svg+xml",
