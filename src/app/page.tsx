@@ -1015,7 +1015,19 @@ export default function HomePage() {
       )}
 
       <footer className="mt-auto py-5 text-center border-t border-[var(--color-border)] bg-[var(--color-surface)]/50">
-        <p className="text-sm text-[var(--color-muted)]">ChurchServe — 開源教會小組服事排班系統</p>
+        <p className="text-sm text-[var(--color-muted)] flex items-center justify-center gap-1.5 flex-wrap">
+          <span>ChurchServe</span>
+          <span className="text-[var(--color-border)]">|</span>
+          <span>Copyright ©</span>
+          <a
+            href="https://david-liu.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--color-primary)] underline decoration-dotted transition-colors"
+          >
+            David Liu
+          </a>
+        </p>
         <Link href="/admin/login" className="sm:hidden inline-block mt-2 text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)]">
           管理後台
         </Link>
