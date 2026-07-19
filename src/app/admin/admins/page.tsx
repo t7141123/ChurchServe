@@ -38,6 +38,7 @@ export default function AdminsPage() {
   const [addPassword, setAddPassword] = useState("");
   const [addRole, setAddRole] = useState("group_leader");
   const [addManagedId, setAddManagedId] = useState("");
+  const [addDistrictFilter, setAddDistrictFilter] = useState("");
 
   // Edit modal
   const [editing, setEditing] = useState<ManagedAdmin | null>(null);
@@ -45,6 +46,7 @@ export default function AdminsPage() {
   const [editPassword, setEditPassword] = useState("");
   const [editRole, setEditRole] = useState("group_leader");
   const [editManagedId, setEditManagedId] = useState("");
+  const [editDistrictFilter, setEditDistrictFilter] = useState("");
 
   // Delete modal
   const [deleting, setDeleting] = useState<ManagedAdmin | null>(null);
@@ -104,7 +106,7 @@ export default function AdminsPage() {
       const res = await fetch("/api/admin/admins", { method: "POST", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "新增失敗"); }
       setShowAdd(false);
-      setAddUsername(""); setAddPassword(""); setAddRole("group_leader"); setAddManagedId("");
+      setAddUsername(""); setAddPassword(""); setAddRole("group_leader"); setAddManagedId(""); setAddDistrictFilter("");
       refetch();
     } catch (e) { setErrorMsg(e instanceof Error ? e.message : "新增失敗"); }
   };
@@ -115,6 +117,12 @@ export default function AdminsPage() {
     setEditPassword("");
     setEditRole(a.role);
     setEditManagedId(a.managed_group_id?.toString() ?? "");
+    if (a.role === "group_leader" && a.managed_group_id) {
+      const g = groups.find((x) => x.id === a.managed_group_id);
+      setEditDistrictFilter(g?.district_id?.toString() ?? "");
+    } else {
+      setEditDistrictFilter("");
+    }
   };
 
   const handleUpdate = async () => {
@@ -169,7 +177,7 @@ export default function AdminsPage() {
     );
   };
 
-  const managedIdSelector = (value: string, onChange: (v: string) => void, role: string) => {
+  const managedIdSelector = (value: string, onChange: (v: string) => void, role: string, districtFilter: string, onDistrictFilter: (v: string) => void) => {
     if (role === "super_admin") return null;
 
     if (role === "district_leader") {
@@ -184,13 +192,28 @@ export default function AdminsPage() {
       );
     }
 
+    const filteredGroups = districtFilter
+      ? groups.filter((g) => g.district_id === Number(districtFilter))
+      : [];
+
     return (
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組</label>
-        <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-          <option value="">請選擇小組</option>
-          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分區</label>
+          <select value={districtFilter} onChange={(e) => { onDistrictFilter(e.target.value); onChange(""); }} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+            <option value="">請選擇分區</option>
+            {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+        {districtFilter && (
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組</label>
+            <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+              <option value="">請選擇小組</option>
+              {filteredGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+        )}
       </div>
     );
   };
@@ -265,8 +288,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">密碼</label>
                 <input type="password" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
               </div>
-              {roleSelect(addRole, setAddRole)}
-              {managedIdSelector(addManagedId, setAddManagedId, addRole)}
+              {roleSelect(addRole, (v) => { setAddRole(v); setAddDistrictFilter(""); setAddManagedId(""); })}
+              {managedIdSelector(addManagedId, setAddManagedId, addRole, addDistrictFilter, setAddDistrictFilter)}
               <button onClick={handleCreate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">建立帳號</button>
             </div>
           </div>
@@ -294,8 +317,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">新密碼（留空則不變）</label>
                 <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 6 碼" />
               </div>
-              {roleSelect(editRole, setEditRole, editing.username)}
-              {managedIdSelector(editManagedId, setEditManagedId, editRole)}
+              {roleSelect(editRole, (v) => { setEditRole(v); setEditDistrictFilter(""); setEditManagedId(""); }, editing.username)}
+              {managedIdSelector(editManagedId, setEditManagedId, editRole, editDistrictFilter, setEditDistrictFilter)}
               <button onClick={handleUpdate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">儲存變更</button>
             </div>
           </div>
