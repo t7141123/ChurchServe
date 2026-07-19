@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx @opennextjs/cloudflare build && npx wrangler pages dev .open-next --d1 DB",
+    "dev": "npx @opennextjs/cloudflare build && node deploy-pages.mjs --no-deploy && npx wrangler pages dev out-pages --d1 DB",
     "db:pull": "CLOUDFLARE_ACCOUNT_ID=2a33489fabfdde7dbde620858343ae91 npx wrangler d1 export church-serve-db --remote --output=remote_db.sql && npx wrangler d1 execute church-serve-db --local --command=\"DROP TABLE IF EXISTS DutyAssignments; DROP TABLE IF EXISTS DutySchedules; DROP TABLE IF EXISTS ServiceItems; DROP TABLE IF EXISTS Members; DROP TABLE IF EXISTS Groups; DROP TABLE IF EXISTS LoginAttempts; DROP TABLE IF EXISTS Admins; DROP TABLE IF EXISTS Icebreakers;\" && npx wrangler d1 execute church-serve-db --local --file=remote_db.sql && rm remote_db.sql",
     "build": "next build",
     "start": "npx wrangler pages dev ./out",

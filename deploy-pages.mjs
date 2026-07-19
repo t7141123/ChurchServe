@@ -94,6 +94,11 @@ function copyRecursiveSync(src, dest) {
 console.log("Assets and _worker.js prepared successfully.");
 
 // 5. Deploy using wrangler
+if (process.argv.includes("--no-deploy")) {
+  console.log("=== Build preparation complete (deploy skipped) ===");
+  process.exit(0);
+}
+
 console.log("Deploying to Cloudflare Pages...");
 try {
   execSync(
