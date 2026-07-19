@@ -8,11 +8,10 @@ const outPagesDir = path.join(rootDir, "out-pages");
 
 console.log("=== Preparing Cloudflare Pages deployment ===");
 
-// 1. Clean and create out-pages directory
-if (fs.existsSync(outPagesDir)) {
-  fs.rmSync(outPagesDir, { recursive: true, force: true });
+// 1. Prepare out-pages directory (keep old assets to prevent cache 404s)
+if (!fs.existsSync(outPagesDir)) {
+  fs.mkdirSync(outPagesDir, { recursive: true });
 }
-fs.mkdirSync(outPagesDir, { recursive: true });
 
 // 2. Copy static assets
 console.log("Copying assets...");
