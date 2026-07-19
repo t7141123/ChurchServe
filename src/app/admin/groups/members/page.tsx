@@ -134,7 +134,7 @@ export default function MembersPage() {
           <div>
             <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">成員管理</h1>
             <p className="text-sm text-[var(--color-muted)]">
-              {activeMembers.length} 位可服事 · {inactiveMembers.length} 位不可服事
+              {activeMembers.length} 位可服事 · {inactiveMembers.length} 位暫不服事
             </p>
           </div>
         </div>
@@ -192,9 +192,8 @@ export default function MembersPage() {
           {members.map((member, idx) => (
             <div
               key={member.id}
-              className={`glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-slideUp ${
-                !member.is_active ? "opacity-50" : ""
-              }`}
+              className={`glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-slideUp ${!member.is_active ? "opacity-50" : ""
+                }`}
               style={{ animationDelay: `${idx * 40}ms` }}
             >
               {editingId === member.id ? (
@@ -222,22 +221,20 @@ export default function MembersPage() {
               ) : (
                 <>
                   <div
-                    className={`w-5 h-5 rounded-full flex-shrink-0 ${
-                      member.is_active ? "bg-[var(--color-secondary)]" : "bg-[var(--color-border)]"
-                    }`}
+                    className={`w-5 h-5 rounded-full flex-shrink-0 ${member.is_active ? "bg-[var(--color-secondary)]" : "bg-[var(--color-border)]"
+                      }`}
                   />
                   <span className={`flex-1 font-medium ${!member.is_active ? "text-[var(--color-muted)] line-through" : "text-[var(--color-text)]"}`}>
                     {member.name}
                   </span>
                   <button
                     onClick={() => handleToggleActive(member)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                      member.is_active
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${member.is_active
                         ? "text-[var(--color-secondary-dark)] bg-[var(--color-secondary)]/10 hover:bg-[var(--color-secondary)]/20"
                         : "text-[var(--color-muted)] bg-[var(--color-border-light)] hover:bg-[var(--color-border)]"
-                    }`}
+                      }`}
                   >
-                    {member.is_active ? "可服事" : "不可服事"}
+                    {member.is_active ? "可服事" : "暫不服事"}
                   </button>
                   <button
                     onClick={() => { setEditingId(member.id); setEditName(member.name); }}

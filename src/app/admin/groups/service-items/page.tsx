@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 interface ServiceItem {
   id: number;
   name: string;
+  category: string;
   display_order: number;
 }
 
@@ -14,8 +15,10 @@ export default function ServiceItemsPage() {
   const groupId = searchParams.get("id");
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -48,13 +51,14 @@ export default function ServiceItemsPage() {
       const res = await fetch(`/api/groups/${groupId}/service-items`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name: newName.trim(), category: newCategory.trim() }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "建立失敗");
       }
       setNewName("");
+      setNewCategory("");
       refetch();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "建立失敗");
@@ -67,7 +71,7 @@ export default function ServiceItemsPage() {
       const res = await fetch(`/api/groups/${groupId}/service-items`, {
         method: "PUT",
         headers: authHeaders(),
-        body: JSON.stringify({ itemId: id, name: editName.trim() }),
+        body: JSON.stringify({ itemId: id, name: editName.trim(), category: editCategory.trim() }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -174,7 +178,7 @@ export default function ServiceItemsPage() {
 
       <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增服事項目</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           <input
             type="text"
             value={newName}
@@ -190,6 +194,13 @@ export default function ServiceItemsPage() {
             新增
           </button>
         </div>
+        <input
+          type="text"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          placeholder="分類（選填，例如：敬拜讚美(遇見神)）"
+          className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+        />
       </form>
 
       {loading ? (
@@ -227,24 +238,39 @@ export default function ServiceItemsPage() {
             >
               <span className="w-6 text-center text-sm font-bold text-[var(--color-muted)]">{idx + 1}</span>
               {editingId === item.id ? (
-                <div className="flex-1 flex items-center gap-2">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleUpdate(item.id)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md"
+                    >
+                      儲存
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                    autoFocus
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    placeholder="分類（選填）"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
                   />
-                  <button
-                    onClick={() => handleUpdate(item.id)}
-                    className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-dark)] shadow-sm transition-all hover:shadow-md"
-                  >
-                    儲存
-                  </button>
                 </div>
               ) : (
                 <>
-                  <span className="flex-1 font-medium text-[var(--color-text)]">{item.name}</span>
+                  <span className="flex-1 font-medium text-[var(--color-text)]">{item.name}
+                    {item.category && (
+                      <span className="ml-2 inline-block px-2 py-0.5 rounded-md text-xs bg-[var(--color-primary-soft)] text-[var(--color-primary)] font-medium">
+                        {item.category}
+                      </span>
+                    )}
+                  </span>
                   <button
                     onClick={() => handleMoveUp(item)}
                     disabled={idx === 0}
@@ -266,7 +292,7 @@ export default function ServiceItemsPage() {
                     </svg>
                   </button>
                   <button
-                    onClick={() => { setEditingId(item.id); setEditName(item.name); }}
+                    onClick={() => { setEditingId(item.id); setEditName(item.name); setEditCategory(item.category || ""); }}
                     className="px-3 py-1.5 rounded-xl text-xs border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]"
                   >
                     編輯

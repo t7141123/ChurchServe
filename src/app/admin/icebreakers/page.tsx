@@ -140,15 +140,28 @@ export default function IcebreakersPage() {
   };
 
   const categories = [...new Set(items.map((i) => i.category).filter(Boolean))];
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const handleCreateClick = (e: React.FormEvent) => {
+    handleCreate(e).then(() => setShowCreateModal(false));
+  };
 
   return (
     <>
       <div className="mb-8 animate-fadeIn">
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center justify-between gap-3 mb-1">
           <div>
             <h1 className="text-2xl font-bold font-serif text-[var(--color-primary-dark)]">破冰遊戲管理</h1>
             <p className="text-sm text-[var(--color-muted)]">{items.length} 個遊戲</p>
           </div>
+          <button onClick={() => setShowCreateModal(true)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg hover:translate-y-[-1px]">
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              新增破冰遊戲
+            </span>
+          </button>
         </div>
       </div>
 
@@ -158,26 +171,34 @@ export default function IcebreakersPage() {
         </div>
       )}
 
-      <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
-        <label className="block text-sm font-medium text-[var(--color-text)] mb-3">新增破冰遊戲</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="遊戲名稱 *" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="類別（如：自我介紹、團隊合作）" list="category-list" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-          <datalist id="category-list">
-            {categories.map((c) => <option key={c} value={c} />)}
-          </datalist>
-          <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="所需時間（如：5-10 分鐘）" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-          <div className="flex gap-2">
-            <input type="number" value={peopleMin} onChange={(e) => setPeopleMin(Number(e.target.value))} placeholder="最少人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-            <input type="number" value={peopleMax} onChange={(e) => setPeopleMax(Number(e.target.value))} placeholder="最多人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+          <div className="relative glass rounded-2xl p-6 w-full max-w-lg shadow-modal animate-scaleIn max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold font-serif text-[var(--color-primary-dark)] mb-4">新增破冰遊戲</h3>
+            <form onSubmit={handleCreateClick}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="遊戲名稱 *" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="類別（如：自我介紹、團隊合作）" list="category-list" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                <datalist id="category-list">
+                  {categories.map((c) => <option key={c} value={c} />)}
+                </datalist>
+                <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="所需時間（如：5-10 分鐘）" className="px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                <div className="flex gap-2">
+                  <input type="number" value={peopleMin} onChange={(e) => setPeopleMin(Number(e.target.value))} placeholder="最少人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                  <input type="number" value={peopleMax} onChange={(e) => setPeopleMax(Number(e.target.value))} placeholder="最多人數" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+                </div>
+              </div>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="遊戲說明" rows={3} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+              <input type="text" value={materials} onChange={(e) => setMaterials(e.target.value)} placeholder="所需器材" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--color-glass-border)] transition-all hover:bg-[var(--color-border-light)]">取消</button>
+                <button type="submit" disabled={!name.trim()} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-sm transition-all disabled:opacity-50">新增</button>
+              </div>
+            </form>
           </div>
         </div>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="遊戲說明" rows={2} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-        <input type="text" value={materials} onChange={(e) => setMaterials(e.target.value)} placeholder="所需器材" className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20" />
-        <button type="submit" disabled={!name.trim()} className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg hover:translate-y-[-1px] disabled:opacity-50 disabled:cursor-not-allowed">
-          新增
-        </button>
-      </form>
+      )}
 
       {loading ? (
         <div className="space-y-2">
@@ -229,7 +250,7 @@ export default function IcebreakersPage() {
                       )}
                       {!item.is_active && <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-border-light)] text-[var(--color-muted)]">停用</span>}
                     </div>
-                    {item.description && <p className="text-sm text-[var(--color-text-light)] mb-1">{item.description}</p>}
+                    {item.description && <p className="text-sm text-[var(--color-text-light)] mb-1 whitespace-pre-line">{item.description}</p>}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-muted)]">
                       {item.duration && <span>⏱ {item.duration}</span>}
                       {(item.people_min > 0 || item.people_max > 0) && (

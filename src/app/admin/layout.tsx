@@ -81,6 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     startTransition(() => {
@@ -161,10 +162,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           返回前台
         </Link>
         <button
-          onClick={() => {
-            localStorage.removeItem("admin_token");
-            window.location.href = "/admin/login";
-          }}
+          onClick={() => setShowLogoutModal(true)}
           aria-label="登出"
           className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-500/5 transition-all text-left min-h-[48px] w-full"
           style={{ color: "#DC2626" }}
@@ -179,6 +177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
+    <>
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Mobile top bar */}
       <div className="md:hidden sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-text)] shadow-[var(--shadow-header)]">
@@ -228,5 +227,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
     </div>
+
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-modal-title"
+        >
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLogoutModal(false)} />
+          <div className="relative bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] w-full max-w-sm animate-fadeIn overflow-hidden">
+            <div className="pt-8 pb-6 px-7 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-50 text-[#DC2626] mb-4">
+                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                </svg>
+              </div>
+              <h2 id="logout-modal-title" className="text-lg font-bold font-serif text-[var(--color-text)] mb-2">
+                確認登出
+              </h2>
+              <p className="text-sm text-[var(--color-muted)]">
+                您確定要登出管理後台嗎？
+              </p>
+            </div>
+            <div className="flex gap-3 px-7 pb-7">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-text-light)] bg-[var(--color-bg)] hover:bg-[var(--color-border-light)] transition-all"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  localStorage.removeItem("admin_token");
+                  window.location.href = "/admin/login";
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-[#DC2626] hover:bg-[#B91C1C] transition-all"
+              >
+                確認登出
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -476,20 +476,28 @@ export default function SchedulePage() {
                 {rows.map((row, idx) => (
                   <tr key={row.date} className={`transition-colors ${idx % 2 === 0 ? "bg-[var(--color-row-even)]" : "bg-[var(--color-row-odd)]"} hover:bg-[var(--color-primary)]/5`}>
                     {row.isLocked ? (
-                      <td colSpan={serviceItems.length + 2} className="px-4 py-4">
-                        <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-muted)]">
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0110 0v4" />
-                          </svg>
-                          <span>{row.lockMessage || "暫停聚會"}</span>
-                          {row.scheduleId != null && (
-                            <button onClick={() => handleUnlock(row.scheduleId!)} className="ml-2 px-3 py-1 rounded-lg text-xs font-medium text-[var(--color-secondary-dark)] bg-[var(--color-secondary)]/10 hover:bg-[var(--color-secondary)]/20 transition-all">
-                              解鎖
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-[var(--color-text)]">{row.date.replace(/^\d{4}-/, "")}</span>
+                          </div>
+                          <div className="text-xs text-[var(--color-muted)]">週{DAY_NAMES[new Date(row.date + "T00:00:00").getDay()]}</div>
+                        </td>
+                        <td colSpan={serviceItems.length + 1} className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-muted)]">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                              <path d="M7 11V7a5 5 0 0110 0v4" />
+                            </svg>
+                            <span>{row.lockMessage || "暫停聚會"}</span>
+                            {row.scheduleId != null && (
+                              <button onClick={() => handleUnlock(row.scheduleId!)} className="ml-2 px-3 py-1 rounded-lg text-xs font-medium text-[var(--color-secondary-dark)] bg-[var(--color-secondary)]/10 hover:bg-[var(--color-secondary)]/20 transition-all">
+                                解鎖
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </>
                     ) : (
                       <>
                         <td className="px-4 py-3 whitespace-nowrap">

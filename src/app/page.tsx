@@ -153,6 +153,7 @@ export default function HomePage() {
   const [icebreakers, setIcebreakers] = useState<Icebreaker[]>([]);
   const [icebreakerOpen, setIcebreakerOpen] = useState(false);
   const [icebreakerLoading, setIcebreakerLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   const [remarksModalOpen, setRemarksModalOpen] = useState(false);
   const [remarksScheduleId, setRemarksScheduleId] = useState<number | null>(null);
@@ -505,6 +506,42 @@ export default function HomePage() {
               </svg>
             </button>
           </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center justify-center gap-1 pb-2">
+            <div className="inline-flex items-center rounded-xl bg-[var(--color-bg-soft)] p-0.5 border border-[var(--color-border)] shadow-sm">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all ${
+                  viewMode === "table"
+                    ? "bg-white text-[var(--color-text)] shadow-sm"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+                表格
+              </button>
+              <button
+                onClick={() => setViewMode("card")}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all ${
+                  viewMode === "card"
+                    ? "bg-white text-[var(--color-text)] shadow-sm"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                單日
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -591,7 +628,7 @@ export default function HomePage() {
         ) : (
           <div className={`space-y-4 page-enter ${scheduleLoading ? "opacity-60 pointer-events-none" : ""}`}>
             {/* Desktop table */}
-            <div className="hidden md:block overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] bg-[var(--color-surface)]">
+            <div className={`${viewMode === "table" ? "block" : "hidden"} overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] bg-[var(--color-surface)]`}>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-table-head)]">
@@ -637,7 +674,27 @@ export default function HomePage() {
                     if (schedule.isLocked) {
                       return (
                         <tr key={schedule.date}>
-                          <td colSpan={colCount} className="px-5 py-7 text-center stripe-locked">
+                          <td
+                            className={
+                              "py-4 font-semibold text-center whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
+                              (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")
+                            }
+                          >
+                            <div className="flex flex-col items-center justify-center gap-0.5 text-center">
+                              <span className="text-sm">
+                                {formatDate(schedule.date)}
+                                <span className="text-[var(--color-muted)] text-xs font-normal ml-1.5">
+                                  ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                                </span>
+                              </span>
+                              {isCurrent && (
+                                <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-accent-dark)]">
+                                  本週
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td colSpan={serviceItems.length + 1} className="px-5 py-7 text-center stripe-locked">
                             <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -755,13 +812,33 @@ export default function HomePage() {
             </div>
 
             {/* Mobile card stream */}
-            <div className="md:hidden space-y-3">
+            <div className={`${viewMode === "card" ? "block" : "hidden"} space-y-3`}>
               {schedules.map((schedule) => {
                 const isCurrent = isCurrentWeek(schedule.date);
 
                 if (schedule.isLocked) {
                   return (
                     <div key={schedule.date} className="rounded-2xl overflow-hidden border border-[var(--color-border)] stripe-locked">
+                      <div
+                        className={
+                          "py-3.5 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)] flex items-center justify-between" +
+                          (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-4" : " px-4")
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[var(--color-primary)] text-base">
+                            {formatDate(schedule.date)}
+                          </span>
+                          <span className="text-xs text-[var(--color-muted)]">
+                            ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
+                          </span>
+                        </div>
+                        {isCurrent && (
+                          <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[var(--color-accent)] text-white">
+                            本週
+                          </span>
+                        )}
+                      </div>
                       <div className="px-4 py-8 text-center">
                         <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
                           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

@@ -1,21 +1,12 @@
 name = "church-serve"
-main = ".open-next/worker.js"
+pages_build_output_dir = ".open-next"
 compatibility_date = "2025-07-18"
 compatibility_flags = ["nodejs_compat"]
-account_id = "2a33489fabfdde7dbde620858343ae91"
-
-assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
 [vars]
 JWT_SECRET = "JqlP7BjfAEYh4dyA+qDAx5nMZaDNkejwbQAJCwKsmJU="
 
 [[d1_databases]]
-binding = "DB"
-database_name = "church-serve-db"
-database_id = "2f004b0a-07a3-4c6e-b049-d8facc1a3b1e"
-
-[env.production]
-[[env.production.d1_databases]]
 binding = "DB"
 database_name = "church-serve-db"
 database_id = "2f004b0a-07a3-4c6e-b049-d8facc1a3b1e"

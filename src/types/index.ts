@@ -15,6 +15,7 @@ export interface ServiceItem {
   id: number;
   group_id: number;
   name: string;
+  category: string;
   display_order: number;
   is_active: number;
 }

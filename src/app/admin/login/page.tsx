@@ -130,11 +130,7 @@ export default function AdminLoginPage() {
                 error={error || undefined}
                 className={error ? "border-[var(--color-danger)]" : ""}
               />
-              {!error && (
-                <p className="mt-2 text-xs text-[var(--color-muted)]">
-                  初次登入請使用預設帳密
-                </p>
-              )}
+
             </div>
 
             <Button

@@ -20,6 +20,7 @@ export const memberSchema = z.object({
 
 export const serviceItemSchema = z.object({
   name: z.string().min(1, "項目名稱不可為空").max(100),
+  category: z.string().max(50).default(""),
   display_order: z.number().min(0),
 });
 

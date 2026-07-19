@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "npx @opennextjs/cloudflare build && npx wrangler pages dev .open-next --d1 DB --remote",
     "build": "next build",
     "start": "npx wrangler pages dev ./out",
     "lint": "eslint",
