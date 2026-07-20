@@ -4,7 +4,8 @@ import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("無權限", 403);
@@ -67,10 +68,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   ).bind(...binds).run();
 
   return json({ success: true });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("無權限", 403);
@@ -90,4 +95,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   ).bind(adminId).run();
 
   return json({ success: true });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

@@ -5,7 +5,8 @@ import { hashPassword } from "@/lib/password";
 import { getAuthAdmin } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -23,4 +24,7 @@ export async function POST(request: Request) {
   ).bind(hashed, Number(admin.sub)).run();
 
   return json({ message: "密碼已更新" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

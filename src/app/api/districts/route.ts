@@ -1,20 +1,25 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET() {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const districts = await (env.DB as D1Database).prepare(
     "SELECT id, name FROM Districts ORDER BY id ASC"
   ).all();
   return json(districts.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
-  if (!admin || admin.role === "group_leader") return jsonError("未授權", 401);
+  if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
 
   let body: { name?: string };
   try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
@@ -25,4 +30,7 @@ export async function POST(request: Request) {
   ).bind(sanitize(body.name.trim())).run();
 
   return json({ id: result.meta.last_row_id }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

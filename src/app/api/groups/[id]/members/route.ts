@@ -8,21 +8,26 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
 
-  const groupId = Number((await params).id);
-  const members = await (env.DB as D1Database).prepare(
-    "SELECT id, name, is_active FROM Members WHERE group_id = ? ORDER BY id ASC"
-  ).bind(groupId).all();
+    const groupId = Number((await params).id);
+    const members = await (env.DB as D1Database).prepare(
+      "SELECT id, name, is_active FROM Members WHERE group_id = ? ORDER BY id ASC"
+    ).bind(groupId).all();
 
-  return json(members.results);
+    return json(members.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -44,13 +49,17 @@ export async function POST(
   ).bind(groupId, sanitize(parsed.data.name)).run();
 
   return json({ id: result.meta.last_row_id }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -67,13 +76,17 @@ export async function PUT(
   ).bind(sanitize(body.name.trim()), body.memberId, groupId).run();
 
   return json({ message: "已更新" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -90,13 +103,17 @@ export async function PATCH(
   ).bind(body.is_active, body.memberId, groupId).run();
 
   return json({ message: "已更新" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -117,4 +134,7 @@ export async function DELETE(
   ).bind(body.memberId, groupId).run();
 
   return json({ message: "已刪除" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

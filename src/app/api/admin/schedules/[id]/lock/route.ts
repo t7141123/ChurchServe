@@ -7,7 +7,8 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -34,4 +35,7 @@ export async function PUT(
   ).bind(parsed.data.is_locked, parsed.data.lock_message ?? null, scheduleId).run();
 
   return json({ message: parsed.data.is_locked ? "已鎖定" : "已解鎖" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

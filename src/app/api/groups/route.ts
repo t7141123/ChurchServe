@@ -5,15 +5,20 @@ import { getAuthAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET() {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const groups = await (env.DB as D1Database).prepare(
     "SELECT id, name, is_active, district_id FROM Groups ORDER BY id ASC"
   ).all();
   return json(groups.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
   if (admin.role === "group_leader") return jsonError("無權限", 403);
@@ -35,4 +40,7 @@ export async function POST(request: Request) {
   ).bind(sanitize(parsed.data.name), districtId).run();
 
   return json({ id: result.meta.last_row_id }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

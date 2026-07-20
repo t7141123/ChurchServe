@@ -5,7 +5,8 @@ import { getAuthAdmin, requireGroupAccess } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -17,10 +18,14 @@ export async function GET(request: Request) {
   ).all();
 
   return json(events.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -44,4 +49,7 @@ export async function POST(request: Request) {
   ).bind(parsed.data.group_id, parsed.data.date, sanitize(parsed.data.event_title)).run();
 
   return json({ id: result.meta.last_row_id }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

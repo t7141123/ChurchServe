@@ -19,7 +19,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ grou
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ groupId: string; yearMonth: string }> }) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const { groupId: groupIdStr, yearMonth } = await params;
   const groupId = Number(groupIdStr);
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
@@ -73,4 +74,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ grou
   }
 
   return json({ message: "已更新" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

@@ -22,10 +22,14 @@ async function buildGroupsQuery(admin: JwtPayload, db: D1Database) {
 }
 
 export async function GET(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
   const result = await buildGroupsQuery(admin, env.DB as D1Database);
   return json(result.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

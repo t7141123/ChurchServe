@@ -4,7 +4,8 @@ import { getAuthAdmin, requireGroupAccess, requireSuperAdmin } from "@/lib/auth"
 import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
 
   const groupId = Number((await params).id);
   const group = await (env.DB as D1Database).prepare(
@@ -13,10 +14,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   if (!group) return jsonError("小組不存在", 404);
   return json(group);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -51,10 +56,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   ).bind(...binds).run();
 
   return json({ message: "已更新" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -71,4 +80,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   await db.prepare("DELETE FROM Groups WHERE id = ?").bind(groupId).run();
 
   return json({ message: "已刪除" });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

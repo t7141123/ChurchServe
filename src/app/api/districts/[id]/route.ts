@@ -4,7 +4,8 @@ import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
@@ -21,10 +22,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   ).bind(sanitize(body.name.trim()), districtId).run();
 
   return json({ success: true });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
@@ -37,8 +42,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   ).bind(districtId).run();
 
   await (env.DB as D1Database).prepare(
+    "UPDATE Admins SET managed_group_id = NULL WHERE role = 'district_leader' AND managed_group_id = ?"
+  ).bind(districtId).run();
+
+  await (env.DB as D1Database).prepare(
     "DELETE FROM Districts WHERE id = ?"
   ).bind(districtId).run();
 
   return json({ success: true });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

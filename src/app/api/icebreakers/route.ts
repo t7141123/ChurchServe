@@ -2,9 +2,11 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
 import { icebreakerSchema, validateInput } from "@/lib/validate";
 import { getAuthAdmin } from "@/lib/auth";
+import { sanitize } from "@/lib/sanitize";
 
 export async function GET(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const { searchParams } = new URL(request.url);
   const all = searchParams.get("all") === "1";
 
@@ -16,10 +18,14 @@ export async function GET(request: Request) {
   }
 
   return json(rows.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin) return jsonError("未授權", 401);
 
@@ -33,7 +39,10 @@ export async function POST(request: Request) {
   const { name, description, category, duration, people_min, people_max, materials } = parsed.data;
   const result = await env.DB.prepare(
     "INSERT INTO Icebreakers (name, description, category, duration, people_min, people_max, materials) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).bind(name, description, category, duration, people_min, people_max, materials).run();
+  ).bind(sanitize(name), sanitize(description), sanitize(category), sanitize(duration), people_min, people_max, sanitize(materials)).run();
 
   return json({ id: result.meta.last_row_id }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }

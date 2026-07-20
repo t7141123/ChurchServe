@@ -4,7 +4,8 @@ import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 
 export async function GET(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("無權限", 403);
 
@@ -13,10 +14,14 @@ export async function GET(request: Request) {
   ).all();
 
   return json(rows.results);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
 
 export async function POST(request: Request) {
-  const { env } = await getCloudflareContext({ async: true });
+  try {
+    const { env } = await getCloudflareContext({ async: true });
   const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
   if (!admin || !requireSuperAdmin(admin)) return jsonError("無權限", 403);
 
@@ -47,4 +52,7 @@ export async function POST(request: Request) {
   ).bind(body.username.trim(), password_hash, role, managed_group_id).run();
 
   return json({ success: true }, 201);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
 }
