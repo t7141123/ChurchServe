@@ -131,6 +131,7 @@ export default function HomePage() {
   const [customName, setCustomName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
   const [icebreakers, setIcebreakers] = useState<Icebreaker[]>([]);
   const [icebreakerOpen, setIcebreakerOpen] = useState(false);
   const [icebreakerLoading, setIcebreakerLoading] = useState(false);
@@ -262,6 +263,7 @@ export default function HomePage() {
     setSelectedMemberId(currentValue?.member_id ?? undefined);
     setCustomName(currentValue?.custom_name || "");
     setShowCustomInput(Boolean(currentValue?.custom_name));
+    setMemberSearch("");
     setModalOpen(true);
   };
 
@@ -430,63 +432,73 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       {/* Brand header — solid earth green */}
       <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-text)] shadow-[var(--shadow-header)]">
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Top row: logo + group + admin */}
-          <div className="flex items-center justify-between gap-3 py-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-9 h-9 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
-                <SproutIcon className="w-5 h-5 text-[var(--color-primary)]" />
+        <div className="max-w-6xl mx-auto px-3 sm:px-4">
+          {/* Mobile: single compact row */}
+          <div className="flex sm:hidden items-center justify-between gap-1 py-1.5">
+            <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
+              <span className="w-6 h-6 rounded-lg bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
+                <SproutIcon className="w-3.5 h-3.5 text-[var(--color-primary)]" />
               </span>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate text-[var(--color-text)]">
-                  ChurchServe
-                </h1>
-                <p className="text-[11px] sm:text-xs text-[var(--color-header-text)]/75 leading-tight hidden sm:block">
-                  小組服事表
-                </p>
+              <h1 className="text-sm font-bold font-serif tracking-wide text-[var(--color-text)]">
+                ChurchServe
+              </h1>
+            </div>
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              <button onClick={prevMonth} aria-label="上一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <span className="min-w-[90px] text-center text-xs font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+              <button onClick={nextMonth} aria-label="下一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+              </button>
+            </div>
+            <Select
+              value={String(selectedGroup)}
+              onChange={(v) => setSelectedGroup(Number(v))}
+              options={groups.length === 0 ? [{ value: "0", label: "尚無小組" }] : groups.map((g) => ({ value: String(g.id), label: g.name }))}
+              ariaLabel="選擇小組"
+              className="max-w-[110px]"
+            />
+          </div>
+
+          {/* Desktop: two-row layout */}
+          <div className="hidden sm:block">
+            <div className="flex items-center justify-between gap-3 py-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-9 h-9 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
+                  <SproutIcon className="w-5 h-5 text-[var(--color-primary)]" />
+                </span>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold font-serif tracking-wide truncate text-[var(--color-text)]">
+                    ChurchServe
+                  </h1>
+                  <p className="text-[11px] sm:text-xs text-[var(--color-header-text)]/75 leading-tight hidden sm:block">
+                    小組服事表
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Select
+                  value={String(selectedGroup)}
+                  onChange={(v) => setSelectedGroup(Number(v))}
+                  options={groups.length === 0 ? [{ value: "0", label: "尚無小組" }] : groups.map((g) => ({ value: String(g.id), label: g.name }))}
+                  ariaLabel="選擇小組"
+                  className="max-w-[140px] sm:max-w-[200px]"
+                />
               </div>
             </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Select
-                value={String(selectedGroup)}
-                onChange={(v) => setSelectedGroup(Number(v))}
-                options={
-                  groups.length === 0
-                    ? [{ value: "0", label: "尚無小組" }]
-                    : groups.map((g) => ({ value: String(g.id), label: g.name }))
-                }
-                ariaLabel="選擇小組"
-                className="max-w-[140px] sm:max-w-[200px]"
-              />
+            <div className="flex items-center justify-center gap-1 pb-3">
+              <button onClick={prevMonth} aria-label="上一個月" className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
+                <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+              </div>
+              <button onClick={nextMonth} aria-label="下一個月" className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+              </button>
             </div>
           </div>
-
-          {/* Month switcher — centered primary control */}
-          <div className="flex items-center justify-center gap-1 pb-3">
-            <button
-              onClick={prevMonth}
-              aria-label="上一個月"
-              className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <div className="min-w-[160px] sm:min-w-[180px] text-center px-2">
-              <span className="text-base sm:text-lg font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
-            </div>
-            <button
-              onClick={nextMonth}
-              aria-label="下一個月"
-              className="w-11 h-11 rounded-xl hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-
         </div>
       </header>
 
@@ -877,7 +889,7 @@ export default function HomePage() {
                           >
                             <span className="text-sm font-medium text-[var(--color-text-light)]">{item.name}</span>
                             {name ? (
-                              <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMemberChipClass(name)}`}>
+                              <span className={`text-sm font-medium px-3 py-1 rounded-full border whitespace-nowrap truncate max-w-[140px] ${getMemberChipClass(name)}`}>
                                 {name}
                               </span>
                             ) : (
@@ -911,7 +923,7 @@ export default function HomePage() {
 
       {/* Error toast */}
       {errorMsg && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white text-sm shadow-lg animate-slide-up max-w-[90vw]" role="alert">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl bg-[var(--color-danger)] text-white text-sm shadow-lg animate-slide-up max-w-[90vw]" role="alert">
           {errorMsg}
         </div>
       )}
@@ -944,9 +956,23 @@ export default function HomePage() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4">
+              {/* Member search */}
+              <div className="relative mb-3">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input
+                  type="text"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  placeholder="搜尋成員…"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] text-sm text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-all"
+                />
+              </div>
               {/* Member button grid */}
               <div className="grid grid-cols-2 gap-2.5">
-                {members.map((member) => {
+                {members.filter((m) => memberSearch === "" || m.name.includes(memberSearch)).map((member) => {
                   const isSelected = !showCustomInput && selectedMemberId === member.id;
                   return (
                     <button
@@ -1052,25 +1078,16 @@ export default function HomePage() {
                   const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
                   const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
                   const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+                  const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
-                    const img = new Image();
-                    img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
-                    await img.decode();
-                    const scale = 2;
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.naturalWidth * scale;
-                    canvas.height = img.naturalHeight * scale;
-                    const ctx = canvas.getContext("2d")!;
-                    ctx.scale(scale, scale);
-                    ctx.drawImage(img, 0, 0);
-                    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
-                    if (!blob) throw new Error();
-                    const url = URL.createObjectURL(blob);
+                    const res = await fetch(url);
+                    const blob = await res.blob();
+                    const blobUrl = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url;
+                    a.href = blobUrl;
                     a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
                     a.click();
-                    URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(blobUrl);
                   } catch { setErrorMsg("匯出圖片失敗"); }
                 }}
                 className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary-soft)] transition-colors border border-[var(--color-border)] group"
@@ -1093,22 +1110,17 @@ export default function HomePage() {
                   const startMonth = currentMonth % 2 === 1 ? currentMonth : currentMonth - 1;
                   const ym1 = `${currentYear}-${String(startMonth).padStart(2, "0")}`;
                   const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
+                  const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
-                    const img = new Image();
-                    img.src = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
-                    await img.decode();
-                    const scale = 2;
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.naturalWidth * scale;
-                    canvas.height = img.naturalHeight * scale;
-                    const ctx = canvas.getContext("2d")!;
-                    ctx.scale(scale, scale);
-                    ctx.drawImage(img, 0, 0);
+                    const res = await fetch(url);
+                    const blob = await res.blob();
+                    const dataUrl = await new Promise<string>((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob); });
+                    const img = await new Promise<HTMLImageElement>((r, reject) => { const i = new Image(); i.onload = () => r(i); i.onerror = reject; i.src = dataUrl; });
                     const { default: jsPDF } = await import("jspdf");
                     const doc = new jsPDF({ orientation: "landscape", unit: "px" });
                     const pdfW = doc.internal.pageSize.getWidth();
                     const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
-                    doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
+                    doc.addImage(dataUrl, "PNG", 0, 0, pdfW, pdfH);
                     doc.save(`服事表_${startMonth}-${startMonth + 1}月.pdf`);
                   } catch { setErrorMsg("匯出 PDF 失敗"); }
                 }}

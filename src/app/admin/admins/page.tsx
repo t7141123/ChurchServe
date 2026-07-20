@@ -227,7 +227,33 @@ export default function AdminsPage() {
       )}
 
       <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile: card list */}
+        <div className="sm:hidden divide-y divide-[var(--color-border)]">
+          {loading ? (
+            <div className="text-center py-12 text-[var(--color-muted)] text-sm">載入中…</div>
+          ) : admins.length === 0 ? (
+            <div className="text-center py-12 text-[var(--color-muted)] text-sm">尚無管理帳號</div>
+          ) : admins.map((a) => (
+            <div key={a.id} className="px-4 py-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-[var(--color-text)]">{a.username}</span>
+                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${ROLE_STYLES[a.role] || "bg-gray-100 text-gray-800"}`}>
+                  {ROLE_LABELS[a.role] || a.role}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[var(--color-text-light)]">{managedLabel(a)}</span>
+                <span className="text-[var(--color-muted)]">{a.created_at}</span>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={() => openEdit(a)} className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors">編輯</button>
+                <button onClick={() => setDeleting(a)} className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">刪除</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop: table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
