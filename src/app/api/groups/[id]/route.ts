@@ -9,7 +9,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const groupId = Number((await params).id);
   const group = await (env.DB as D1Database).prepare(
-    "SELECT id, name, district_id FROM Groups WHERE id = ?"
+    "SELECT id, name, zone_id FROM Groups WHERE id = ?"
   ).bind(groupId).first();
 
   if (!group) return jsonError("小組不存在", 404);
@@ -28,7 +28,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const groupId = Number((await params).id);
   if (!await requireGroupAccess(admin, groupId, env.DB as D1Database)) return jsonError("無權限操作此小組", 403);
 
-  let body: { name?: string; district_id?: number | null };
+  let body: { name?: string; zone_id?: number | null };
   try { body = await request.json(); }
   catch { return jsonError("無效的請求格式", 400); }
 
@@ -41,11 +41,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     binds.push(sanitize(body.name.trim()));
   }
 
-  if (body.district_id !== undefined) {
+  if (body.zone_id !== undefined) {
     const isSuper = requireSuperAdmin(admin);
-    if (!isSuper) return jsonError("僅超級管理員可變更分區", 403);
-    updates.push("district_id = ?");
-    binds.push(body.district_id ?? null);
+    if (!isSuper) return jsonError("僅超級管理員可變更小區", 403);
+    updates.push("zone_id = ?");
+    binds.push(body.zone_id ?? null);
   }
 
   if (updates.length === 0) return json({ message: "無變更" });
@@ -72,7 +72,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   const db = env.DB as D1Database;
 
-  // Cascade delete in normalized relational order
   await db.prepare("DELETE FROM DutyAssignments WHERE schedule_id IN (SELECT id FROM DutySchedules WHERE group_id = ?)").bind(groupId).run();
   await db.prepare("DELETE FROM DutySchedules WHERE group_id = ?").bind(groupId).run();
   await db.prepare("DELETE FROM ServiceItems WHERE group_id = ?").bind(groupId).run();

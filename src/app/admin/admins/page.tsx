@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, startTransition } from "react";
-import type { ManagedAdmin, District } from "@/types";
+import type { ManagedAdmin, Campus, District, Zone } from "@/types";
 import { Select } from "@/lib/components/ui/Select";
 
 function decodeJwt(): { role: string; username: string } | null {
@@ -14,20 +14,26 @@ function decodeJwt(): { role: string; username: string } | null {
 
 const ROLE_LABELS: Record<string, string> = {
   group_leader: "小組長",
-  district_leader: "區長",
+  zone_leader: "小區長",
+  district_leader: "牧區長",
+  campus_leader: "分堂長",
   super_admin: "超級管理員",
 };
 
 const ROLE_STYLES: Record<string, string> = {
   group_leader: "bg-blue-100 text-blue-800",
+  zone_leader: "bg-teal-100 text-teal-800",
   district_leader: "bg-purple-100 text-purple-800",
+  campus_leader: "bg-indigo-100 text-indigo-800",
   super_admin: "bg-amber-100 text-amber-800",
 };
 
 export default function AdminsPage() {
   const [admins, setAdmins] = useState<ManagedAdmin[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<{ id: number; name: string; district_id: number | null }[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [groups, setGroups] = useState<{ id: number; name: string; zone_id: number | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -39,7 +45,9 @@ export default function AdminsPage() {
   const [addPassword, setAddPassword] = useState("");
   const [addRole, setAddRole] = useState("group_leader");
   const [addManagedId, setAddManagedId] = useState("");
+  const [addCampusFilter, setAddCampusFilter] = useState("");
   const [addDistrictFilter, setAddDistrictFilter] = useState("");
+  const [addZoneFilter, setAddZoneFilter] = useState("");
 
   // Edit modal
   const [editing, setEditing] = useState<ManagedAdmin | null>(null);
@@ -47,7 +55,9 @@ export default function AdminsPage() {
   const [editPassword, setEditPassword] = useState("");
   const [editRole, setEditRole] = useState("group_leader");
   const [editManagedId, setEditManagedId] = useState("");
+  const [editCampusFilter, setEditCampusFilter] = useState("");
   const [editDistrictFilter, setEditDistrictFilter] = useState("");
+  const [editZoneFilter, setEditZoneFilter] = useState("");
 
   // Delete modal
   const [deleting, setDeleting] = useState<ManagedAdmin | null>(null);
@@ -62,11 +72,15 @@ export default function AdminsPage() {
   };
 
   const loadMeta = useCallback(async () => {
-    const [dRes, gRes] = await Promise.all([
+    const [cRes, dRes, zRes, gRes] = await Promise.all([
+      fetch("/api/campuses"),
       fetch("/api/districts"),
+      fetch("/api/zones"),
       fetch("/api/admin/groups", { headers: authHeaders() }),
     ]);
+    if (cRes.ok) setCampuses(await cRes.json());
     if (dRes.ok) setDistricts(await dRes.json());
+    if (zRes.ok) setZones(await zRes.json());
     if (gRes.ok) setGroups(await gRes.json());
   }, []);
 
@@ -83,9 +97,17 @@ export default function AdminsPage() {
   useEffect(() => { startTransition(() => { refetch(); }); }, [refetch]);
 
   const managedLabel = (a: ManagedAdmin): string => {
+    if (a.role === "campus_leader" && a.managed_campus_id) {
+      const c = campuses.find((x) => x.id === a.managed_campus_id);
+      return c ? `分堂：${c.name}` : `分堂 #${a.managed_campus_id}`;
+    }
     if (a.role === "district_leader" && a.managed_group_id) {
       const d = districts.find((x) => x.id === a.managed_group_id);
-      return d ? `分區：${d.name}` : `分區 #${a.managed_group_id}`;
+      return d ? `牧區：${d.name}` : `牧區 #${a.managed_group_id}`;
+    }
+    if (a.role === "zone_leader" && a.managed_group_id) {
+      const z = zones.find((x) => x.id === a.managed_group_id);
+      return z ? `小區：${z.name}` : `小區 #${a.managed_group_id}`;
     }
     if (a.role === "group_leader" && a.managed_group_id) {
       const g = groups.find((x) => x.id === a.managed_group_id);
@@ -104,12 +126,19 @@ export default function AdminsPage() {
         username: addUsername.trim(),
         password: addPassword,
         role: addRole,
-        managed_group_id: addRole === "super_admin" ? null : (addManagedId ? Number(addManagedId) : null),
       };
+      if (addRole === "campus_leader") {
+        body.managed_campus_id = addManagedId ? Number(addManagedId) : null;
+        body.managed_group_id = null;
+      } else {
+        body.managed_group_id = addRole === "super_admin" ? null : (addManagedId ? Number(addManagedId) : null);
+        body.managed_campus_id = null;
+      }
       const res = await fetch("/api/admin/admins", { method: "POST", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "新增失敗"); }
       setShowAdd(false);
-      setAddUsername(""); setAddPassword(""); setAddRole("group_leader"); setAddManagedId(""); setAddDistrictFilter("");
+      setAddUsername(""); setAddPassword(""); setAddRole("group_leader"); setAddManagedId("");
+      setAddCampusFilter(""); setAddDistrictFilter(""); setAddZoneFilter("");
       refetch();
     } catch (e) { setErrorMsg(e instanceof Error ? e.message : "新增失敗"); }
   };
@@ -120,11 +149,23 @@ export default function AdminsPage() {
     setEditPassword("");
     setEditRole(a.role);
     setEditManagedId(a.managed_group_id?.toString() ?? "");
+    setEditCampusFilter("");
+    setEditDistrictFilter("");
+    setEditZoneFilter("");
+    if (a.role === "campus_leader" && a.managed_campus_id) {
+      setEditManagedId(a.managed_campus_id.toString());
+    }
     if (a.role === "group_leader" && a.managed_group_id) {
       const g = groups.find((x) => x.id === a.managed_group_id);
-      setEditDistrictFilter(g?.district_id?.toString() ?? "");
-    } else {
-      setEditDistrictFilter("");
+      setEditZoneFilter(g?.zone_id?.toString() ?? "");
+    }
+    if (a.role === "zone_leader" && a.managed_group_id) {
+      const z = zones.find((x) => x.id === a.managed_group_id);
+      setEditDistrictFilter(z?.district_id?.toString() ?? "");
+    }
+    if (a.role === "district_leader" && a.managed_group_id) {
+      const d = districts.find((x) => x.id === a.managed_group_id);
+      setEditCampusFilter(d?.campus_id?.toString() ?? "");
     }
   };
 
@@ -137,7 +178,13 @@ export default function AdminsPage() {
     try {
       const body: Record<string, unknown> = { username: editUsername.trim(), role: editRole };
       if (editPassword) body.password = editPassword;
-      body.managed_group_id = editRole === "super_admin" ? null : (editManagedId ? Number(editManagedId) : null);
+      if (editRole === "campus_leader") {
+        body.managed_campus_id = editManagedId ? Number(editManagedId) : null;
+        body.managed_group_id = null;
+      } else {
+        body.managed_group_id = editRole === "super_admin" ? null : (editManagedId ? Number(editManagedId) : null);
+        body.managed_campus_id = null;
+      }
       const res = await fetch(`/api/admin/admins/${editing.id}`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "更新失敗"); }
       setEditing(null);
@@ -167,15 +214,17 @@ export default function AdminsPage() {
 
   const roleSelect = (value: string, onChange: (v: string) => void, username?: string) => {
     const isAdminAcct = username === "admin";
-    const opts = [
+    const baseOpts = [
       { value: "group_leader", label: "小組長" },
-      { value: "district_leader", label: "區長" },
+      { value: "zone_leader", label: "小區長" },
+      { value: "district_leader", label: "牧區長" },
+      { value: "campus_leader", label: "分堂長" },
       ...(isAdminAcct ? [{ value: "super_admin", label: "超級管理員" }] : []),
     ];
     return (
       <div>
         <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">角色</label>
-        <Select value={value} onChange={onChange} options={opts} />
+        <Select value={value} onChange={onChange} options={baseOpts} />
         {!isAdminAcct && value === "super_admin" && (
           <p className="text-xs text-amber-600 mt-1.5">僅 admin 帳號可設為超級管理員</p>
         )}
@@ -183,32 +232,100 @@ export default function AdminsPage() {
     );
   };
 
-  const managedIdSelector = (value: string, onChange: (v: string) => void, role: string, districtFilter: string, onDistrictFilter: (v: string) => void) => {
+  const managedIdSelector = (
+    value: string,
+    onChange: (v: string) => void,
+    role: string,
+    campusFilter: string,
+    onCampusFilter: (v: string) => void,
+    districtFilter: string,
+    onDistrictFilter: (v: string) => void,
+    zoneFilter: string,
+    onZoneFilter: (v: string) => void,
+  ) => {
     if (role === "super_admin") return null;
 
-    if (role === "district_leader") {
+    if (role === "campus_leader") {
       return (
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理分區</label>
-          <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]} />
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理分堂</label>
+          <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇分堂" }, ...campuses.map((c) => ({ value: String(c.id), label: c.name }))]} />
         </div>
       );
     }
 
-    const filteredGroups = districtFilter
-      ? groups.filter((g) => g.district_id === Number(districtFilter))
-      : [];
+    if (role === "district_leader") {
+      const filtered = campusFilter
+        ? districts.filter((d) => d.campus_id === Number(campusFilter))
+        : districts;
+      return (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分堂（選填）</label>
+            <Select value={campusFilter} onChange={(v) => { onCampusFilter(v); onChange(""); }} options={[{ value: "", label: "全部" }, ...campuses.map((c) => ({ value: String(c.id), label: c.name }))]} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理牧區</label>
+            <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇牧區" }, ...filtered.map((d) => ({ value: String(d.id), label: d.name }))]} />
+          </div>
+        </div>
+      );
+    }
 
+    if (role === "zone_leader") {
+      const filteredD = campusFilter
+        ? districts.filter((d) => d.campus_id === Number(campusFilter))
+        : districts;
+      const filteredZ = districtFilter
+        ? zones.filter((z) => z.district_id === Number(districtFilter))
+        : zones;
+      return (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分堂（選填）</label>
+            <Select value={campusFilter} onChange={(v) => { onCampusFilter(v); onDistrictFilter(""); onChange(""); }} options={[{ value: "", label: "全部" }, ...campuses.map((c) => ({ value: String(c.id), label: c.name }))]} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇牧區</label>
+            <Select value={districtFilter} onChange={(v) => { onDistrictFilter(v); onChange(""); }} options={[{ value: "", label: "請選擇牧區" }, ...filteredD.map((d) => ({ value: String(d.id), label: d.name }))]} />
+          </div>
+          {districtFilter && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小區</label>
+              <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇小區" }, ...filteredZ.map((z) => ({ value: String(z.id), label: z.name }))]} />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // group_leader
+    const filteredZ = districtFilter
+      ? zones.filter((z) => z.district_id === Number(districtFilter))
+      : zones;
+    const filteredG = zoneFilter
+      ? groups.filter((g) => g.zone_id === Number(zoneFilter))
+      : [];
     return (
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分區</label>
-          <Select value={districtFilter} onChange={(v) => { onDistrictFilter(v); onChange(""); }} options={[{ value: "", label: "請選擇分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]} />
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇分堂（選填）</label>
+          <Select value={campusFilter} onChange={(v) => { onCampusFilter(v); onDistrictFilter(""); onZoneFilter(""); onChange(""); }} options={[{ value: "", label: "全部" }, ...campuses.map((c) => ({ value: String(c.id), label: c.name }))]} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇牧區</label>
+          <Select value={districtFilter} onChange={(v) => { onDistrictFilter(v); onZoneFilter(""); onChange(""); }} options={[{ value: "", label: "請選擇牧區" }, ...(campusFilter ? districts.filter((d) => d.campus_id === Number(campusFilter)) : districts).map((d) => ({ value: String(d.id), label: d.name }))]} />
         </div>
         {districtFilter && (
           <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">選擇小區</label>
+            <Select value={zoneFilter} onChange={(v) => { onZoneFilter(v); onChange(""); }} options={[{ value: "", label: "請選擇小區" }, ...filteredZ.map((z) => ({ value: String(z.id), label: z.name }))]} />
+          </div>
+        )}
+        {zoneFilter && (
+          <div>
             <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">管理小組</label>
-            <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇小組" }, ...filteredGroups.map((g) => ({ value: String(g.id), label: g.name }))]} />
+            <Select value={value} onChange={onChange} options={[{ value: "", label: "請選擇小組" }, ...filteredG.map((g) => ({ value: String(g.id), label: g.name }))]} />
           </div>
         )}
       </div>
@@ -311,8 +428,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">密碼</label>
                 <input type="password" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 8 碼，含英文與數字" />
               </div>
-              {roleSelect(addRole, (v) => { setAddRole(v); setAddDistrictFilter(""); setAddManagedId(""); })}
-              {managedIdSelector(addManagedId, setAddManagedId, addRole, addDistrictFilter, setAddDistrictFilter)}
+              {roleSelect(addRole, (v) => { setAddRole(v); setAddCampusFilter(""); setAddDistrictFilter(""); setAddZoneFilter(""); setAddManagedId(""); })}
+              {managedIdSelector(addManagedId, setAddManagedId, addRole, addCampusFilter, setAddCampusFilter, addDistrictFilter, setAddDistrictFilter, addZoneFilter, setAddZoneFilter)}
               <button onClick={handleCreate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">建立帳號</button>
             </div>
           </div>
@@ -340,8 +457,8 @@ export default function AdminsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">新密碼（留空則不變）</label>
                 <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="至少 8 碼，含英文與數字" />
               </div>
-              {roleSelect(editRole, (v) => { setEditRole(v); setEditDistrictFilter(""); setEditManagedId(""); }, editing.username)}
-              {managedIdSelector(editManagedId, setEditManagedId, editRole, editDistrictFilter, setEditDistrictFilter)}
+              {roleSelect(editRole, (v) => { setEditRole(v); setEditCampusFilter(""); setEditDistrictFilter(""); setEditZoneFilter(""); setEditManagedId(""); }, editing.username)}
+              {managedIdSelector(editManagedId, setEditManagedId, editRole, editCampusFilter, setEditCampusFilter, editDistrictFilter, setEditDistrictFilter, editZoneFilter, setEditZoneFilter)}
               <button onClick={handleUpdate} className="w-full py-2.5 rounded-xl bg-[var(--color-primary)] text-white text-sm font-semibold hover:brightness-110 transition-all shadow-sm">儲存變更</button>
             </div>
           </div>

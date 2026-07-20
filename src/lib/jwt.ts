@@ -8,6 +8,7 @@ interface Admin {
   must_change_password: number;
   role: string;
   managed_group_id: number | null;
+  managed_campus_id: number | null;
 }
 
 export async function createToken(admin: Admin, secret: string): Promise<string> {
@@ -20,6 +21,7 @@ export async function createToken(admin: Admin, secret: string): Promise<string>
     mustChangePassword: admin.must_change_password,
     role: admin.role,
     managedGroupId: admin.managed_group_id,
+    managedCampusId: admin.managed_campus_id,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -33,6 +35,7 @@ export interface JwtPayload {
   mustChangePassword: number;
   role: string;
   managedGroupId: number | null;
+  managedCampusId: number | null;
 }
 
 export async function verifyToken(
@@ -49,6 +52,7 @@ export async function verifyToken(
       mustChangePassword: payload.mustChangePassword as number,
       role: payload.role as string,
       managedGroupId: (payload.managedGroupId as number) ?? null,
+      managedCampusId: (payload.managedCampusId as number) ?? null,
     };
   } catch {
     return null;

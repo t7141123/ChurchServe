@@ -18,7 +18,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   ).bind(adminId).first();
   if (!existing) return jsonError("帳號不存在", 404);
 
-  let body: { username?: string; password?: string; role?: string; managed_group_id?: number | null };
+  let body: { username?: string; password?: string; role?: string; managed_group_id?: number | null; managed_campus_id?: number | null };
   try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
 
   const updates: string[] = [];
@@ -46,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   if (body.role !== undefined) {
-    if (!["super_admin", "district_leader", "group_leader"].includes(body.role)) return jsonError("無效的角色", 400);
+    if (!["super_admin", "campus_leader", "district_leader", "zone_leader", "group_leader"].includes(body.role)) return jsonError("無效的角色", 400);
     if (body.role === "super_admin") {
       const target = await (env.DB as D1Database).prepare("SELECT username FROM Admins WHERE id = ? LIMIT 1").bind(adminId).first() as { username: string } | null;
       if (!target || target.username !== "admin") return jsonError("僅 admin 帳號可設為超級管理員", 403);
@@ -58,6 +58,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (body.managed_group_id !== undefined) {
     updates.push("managed_group_id = ?");
     binds.push(body.managed_group_id ?? null);
+  }
+
+  if (body.managed_campus_id !== undefined) {
+    updates.push("managed_campus_id = ?");
+    binds.push(body.managed_campus_id ?? null);
   }
 
   if (updates.length === 0) return json({ success: true });

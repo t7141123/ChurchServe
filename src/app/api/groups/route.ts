@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const { env } = await getCloudflareContext({ async: true });
   const groups = await (env.DB as D1Database).prepare(
-    "SELECT id, name, is_active, district_id FROM Groups ORDER BY id ASC"
+    "SELECT id, name, is_active, zone_id FROM Groups ORDER BY id ASC"
   ).all();
   return json(groups.results);
   } catch (e) {
@@ -30,14 +30,14 @@ export async function POST(request: Request) {
   const parsed = validateInput(groupSchema, body);
   if (!parsed.success) return jsonError(parsed.error, 400);
 
-  let districtId: number | null = parsed.data.district_id ?? null;
-  if (admin.role === "district_leader") {
-    districtId = admin.managedGroupId;
+  let zoneId: number | null = parsed.data.zone_id ?? null;
+  if (admin.role === "zone_leader") {
+    zoneId = admin.managedGroupId;
   }
 
   const result = await (env.DB as D1Database).prepare(
-    "INSERT INTO Groups (name, district_id) VALUES (?, ?)"
-  ).bind(sanitize(parsed.data.name), districtId).run();
+    "INSERT INTO Groups (name, zone_id) VALUES (?, ?)"
+  ).bind(sanitize(parsed.data.name), zoneId).run();
 
   return json({ id: result.meta.last_row_id }, 201);
   } catch (e) {

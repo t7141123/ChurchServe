@@ -20,10 +20,27 @@ export async function requireGroupAccess(
   if (!payload) return false;
   if (payload.role === "super_admin" || payload.role === "admin") return true;
   if (payload.role === "group_leader") return payload.managedGroupId === groupId;
+  if (payload.role === "zone_leader" && payload.managedGroupId && db) {
+    const row = await db.prepare(
+      "SELECT id FROM Groups WHERE id = ? AND zone_id = ? LIMIT 1"
+    ).bind(groupId, payload.managedGroupId).first();
+    return !!row;
+  }
   if (payload.role === "district_leader" && payload.managedGroupId && db) {
     const row = await db.prepare(
-      "SELECT id FROM Groups WHERE id = ? AND district_id = ? LIMIT 1"
+      `SELECT g.id FROM Groups g
+       JOIN Zones z ON g.zone_id = z.id
+       WHERE g.id = ? AND z.district_id = ? LIMIT 1`
     ).bind(groupId, payload.managedGroupId).first();
+    return !!row;
+  }
+  if (payload.role === "campus_leader" && payload.managedCampusId && db) {
+    const row = await db.prepare(
+      `SELECT g.id FROM Groups g
+       JOIN Zones z ON g.zone_id = z.id
+       JOIN Districts d ON z.district_id = d.id
+       WHERE g.id = ? AND d.campus_id = ? LIMIT 1`
+    ).bind(groupId, payload.managedCampusId).first();
     return !!row;
   }
   return false;

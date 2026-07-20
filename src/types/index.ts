@@ -1,14 +1,28 @@
-export interface Group {
+export interface Campus {
   id: number;
   name: string;
-  is_active: number;
-  district_id: number | null;
   created_at: string;
 }
 
 export interface District {
   id: number;
   name: string;
+  campus_id: number | null;
+  created_at: string;
+}
+
+export interface Zone {
+  id: number;
+  name: string;
+  district_id: number | null;
+  created_at: string;
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  is_active: number;
+  zone_id: number | null;
   created_at: string;
 }
 
@@ -55,6 +69,7 @@ export interface Admin {
   must_change_password: number;
   role: string;
   managed_group_id: number | null;
+  managed_campus_id: number | null;
   created_at: string;
 }
 
@@ -85,6 +100,7 @@ export interface ManagedAdmin {
   must_change_password: number;
   role: string;
   managed_group_id: number | null;
+  managed_campus_id: number | null;
   created_at: string;
 }
 

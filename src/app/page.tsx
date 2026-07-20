@@ -151,12 +151,25 @@ export default function HomePage() {
   const [remarksScheduleId, setRemarksScheduleId] = useState<number | null>(null);
   const [remarksText, setRemarksText] = useState("");
   const [remarksSubmitting, setRemarksSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [serviceDescTitle, setServiceDescTitle] = useState("");
   const [serviceDescOpen, setServiceDescOpen] = useState(false);
+  const [adminPayload, setAdminPayload] = useState<{ role: string; username: string; managedGroupId?: number } | null>(null);
+
+  useEffect(() => {
+    startTransition(() => {
+      if (typeof window === "undefined") return;
+      try {
+        const t = localStorage.getItem("admin_token");
+        if (t) { const p = JSON.parse(atob(t.split(".")[1])); if (p?.role) setAdminPayload(p); }
+      } catch { /* ignore */ }
+    });
+  }, []);
 
   useEffect(() => {
     fetch("/api/groups")
@@ -382,6 +395,36 @@ export default function HomePage() {
     setRemarksModalOpen(true);
   };
 
+  useEffect(() => {
+    if (!remarksModalOpen) {
+      document.documentElement.style.setProperty("--kb-h", "0px");
+      return;
+    }
+    const isMobile = "ontouchstart" in window || window.innerWidth < 768;
+    if (!isMobile || typeof visualViewport === "undefined") return;
+    let timer: ReturnType<typeof setTimeout>;
+    const handler = () => {
+      const vv = visualViewport;
+      const diff = window.innerHeight - vv.height;
+      const kb = diff > 80 ? Math.max(0, diff - (vv.offsetTop || 0)) : 0;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        document.documentElement.style.setProperty("--kb-h", kb + "px");
+      }, 80);
+    };
+    vv.addEventListener("resize", handler);
+    vv.addEventListener("scroll", handler);
+    handler();
+    document.documentElement.style.setProperty("touch-action", "none");
+    return () => {
+      vv.removeEventListener("resize", handler);
+      vv.removeEventListener("scroll", handler);
+      clearTimeout(timer);
+      document.documentElement.style.setProperty("--kb-h", "0px");
+      document.documentElement.style.removeProperty("touch-action");
+    };
+  }, [remarksModalOpen]);
+
   const closeRemarksModal = () => {
     setRemarksModalOpen(false);
     setRemarksScheduleId(null);
@@ -390,13 +433,11 @@ export default function HomePage() {
 
   const handleSaveRemarks = async () => {
     if (remarksScheduleId === null) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
-    if (!token) { setErrorMsg("請先登入後再編輯備註"); setTimeout(() => setErrorMsg(""), 3000); return; }
     setRemarksSubmitting(true);
     try {
       const res = await fetch(`/api/remarks/${remarksScheduleId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ remarks: remarksText }),
       });
       if (res.ok) {
@@ -461,6 +502,7 @@ export default function HomePage() {
   };
 
   return (
+    <>
     <div className="min-h-screen flex flex-col">
       {/* Brand header — solid earth green */}
       <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-text)] shadow-[var(--shadow-header)]">
@@ -604,16 +646,50 @@ export default function HomePage() {
               </svg>
               匯出
             </button>
-            <Link
-              href="/admin/login"
-              onClick={() => setMenuOpen(false)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors"
-            >
-              <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
-              </svg>
-              登入後台
-            </Link>
+            {adminPayload ? (
+              <>
+                <div className="px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg-soft)]">
+                  <div className="text-xs font-medium text-[var(--color-text)]">{adminPayload.username}</div>
+                  <div className="text-[10px] text-[var(--color-muted)] mt-0.5">
+                    {adminPayload.role === "super_admin" ? "超級管理員"
+                     : adminPayload.role === "admin" ? "管理員"
+                     : adminPayload.role === "district_leader" ? "區長"
+                     : adminPayload.role === "group_leader" ? "小組長" : adminPayload.role}
+                  </div>
+                </div>
+                <Link href="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors border-b border-[var(--color-border)]"
+                >
+                  <svg className="w-5 h-5 text-[var(--color-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  後台儀表板
+                </Link>
+                <button
+                  onClick={() => { setMenuOpen(false); setShowLogoutModal(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/5 transition-colors"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                  </svg>
+                  登出
+                </button>
+              </>
+            ) : (
+              <Link href="/admin/login"
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-primary-soft)] transition-colors"
+              >
+                <svg className="w-5 h-5 text-[var(--color-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3" />
+                </svg>
+                登入後台
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -1273,12 +1349,14 @@ export default function HomePage() {
 
       {/* Remarks modal */}
       {remarksModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/35 backdrop-blur-sm animate-fade-in" onClick={closeRemarksModal} />
-          <div className="relative w-full bg-[var(--color-surface)] sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden flex flex-col">
+          <div
+            className="relative w-full bg-[var(--color-surface)] sm:max-w-md sm:rounded-2xl sm:mx-4 shadow-[var(--shadow-modal)] flex flex-col overflow-hidden"
+            style={{ paddingBottom: "var(--kb-h, 0px)" }}
+          >
             <div className="flex-shrink-0 border-b border-[var(--color-border)]">
-              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
-              <div className="flex items-start justify-between px-5 sm:px-6 pt-4 pb-4">
+              <div className="flex items-start justify-between px-5 sm:px-6 pt-5 pb-4">
                 <div className="min-w-0 pr-3">
                   <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">編輯備註</h3>
                 </div>
@@ -1294,8 +1372,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="px-5 sm:px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
               <textarea
+                ref={textareaRef}
                 value={remarksText}
                 onChange={(e) => setRemarksText(e.target.value)}
                 placeholder="輸入備註內容…"
@@ -1303,6 +1382,7 @@ export default function HomePage() {
                 rows={4}
                 className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-all resize-none"
                 autoFocus
+                onFocus={(e) => e.target.focus({ preventScroll: true } as FocusOptions)}
               />
               <p className="text-xs text-[var(--color-muted)] mt-1.5 text-right">{remarksText.length}/500</p>
             </div>
@@ -1348,5 +1428,29 @@ export default function HomePage() {
         </p>
       </footer>
     </div>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logout-modal-title">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLogoutModal(false)} />
+          <div className="relative bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] w-full max-w-sm animate-fadeIn overflow-hidden">
+            <div className="pt-8 pb-6 px-7 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-50 text-[#DC2626] mb-4">
+                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+              </div>
+              <h2 id="logout-modal-title" className="text-lg font-bold font-serif text-[var(--color-text)] mb-2">確認登出</h2>
+              <p className="text-sm text-[var(--color-muted)]">您確定要登出嗎？</p>
+            </div>
+            <div className="flex gap-3 px-7 pb-7">
+              <button onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-text-light)] bg-[var(--color-bg)] hover:bg-[var(--color-border-light)] transition-all"
+              >取消</button>
+              <button onClick={() => { setShowLogoutModal(false); localStorage.removeItem("admin_token"); setAdminPayload(null); }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-[#DC2626] hover:bg-[#B91C1C] transition-all"
+              >確認登出</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

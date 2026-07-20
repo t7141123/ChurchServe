@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     if (!parsed.success) return jsonError(parsed.error, 400);
 
     const admin = await (env.DB as D1Database).prepare(
-      "SELECT id, username, password_hash, must_change_password, role, managed_group_id FROM Admins WHERE username = ? LIMIT 1"
-    ).bind(parsed.data.username).first() as { id: number; username: string; password_hash: string; must_change_password: number; role: string; managed_group_id: number | null } | null;
+      "SELECT id, username, password_hash, must_change_password, role, managed_group_id, managed_campus_id FROM Admins WHERE username = ? LIMIT 1"
+    ).bind(parsed.data.username).first() as { id: number; username: string; password_hash: string; must_change_password: number; role: string; managed_group_id: number | null; managed_campus_id: number | null } | null;
 
     if (!admin) return jsonError("帳號或密碼錯誤", 401);
 
@@ -43,14 +43,14 @@ export async function POST(request: Request) {
     }
 
     const token = await createToken(
-      { id: admin.id, username: admin.username, must_change_password: admin.must_change_password, role: admin.role, managed_group_id: admin.managed_group_id },
+      { id: admin.id, username: admin.username, must_change_password: admin.must_change_password, role: admin.role, managed_group_id: admin.managed_group_id, managed_campus_id: admin.managed_campus_id },
       env.JWT_SECRET as string
     );
 
     return json({
       token,
       must_change_password: admin.must_change_password,
-      admin: { id: admin.id, username: admin.username, role: admin.role, managed_group_id: admin.managed_group_id },
+      admin: { id: admin.id, username: admin.username, role: admin.role, managed_group_id: admin.managed_group_id, managed_campus_id: admin.managed_campus_id },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "未知錯誤";

@@ -1,7 +1,28 @@
+CREATE TABLE IF NOT EXISTS Campuses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Districts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  campus_id INTEGER REFERENCES Campuses(id) ON DELETE SET NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Zones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  district_id INTEGER REFERENCES Districts(id) ON DELETE SET NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS Groups (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   is_active INTEGER DEFAULT 1,
+  zone_id INTEGER REFERENCES Zones(id) ON DELETE SET NULL,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -28,6 +49,7 @@ CREATE TABLE IF NOT EXISTS Admins (
   must_change_password INTEGER DEFAULT 1,
   role TEXT NOT NULL DEFAULT 'admin',
   managed_group_id INTEGER,
+  managed_campus_id INTEGER,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -94,9 +116,4 @@ CREATE TABLE IF NOT EXISTS AssignmentAudit (
 
 CREATE INDEX IF NOT EXISTS idx_assignment_audit_schedule ON AssignmentAudit(schedule_id, service_item_id);
 
--- Districts for role-based group management
-CREATE TABLE IF NOT EXISTS Districts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
+

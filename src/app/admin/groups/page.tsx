@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect, startTransition } from "react";
-import type { Group, District } from "@/types";
+import type { Group, Zone } from "@/types";
 import { Select } from "@/lib/components/ui/Select";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [newName, setNewName] = useState("");
-  const [newDistrictId, setNewDistrictId] = useState("");
-  const [newDistrictName, setNewDistrictName] = useState("");
+  const [newZoneId, setNewZoneId] = useState("");
+  const [newZoneName, setNewZoneName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
-  const [editDistrictId, setEditDistrictId] = useState("");
+  const [editZoneId, setEditZoneId] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -30,12 +30,12 @@ export default function GroupsPage() {
 
   const fetchGroups = async () => {
     try {
-      const [gRes, dRes] = await Promise.all([
+      const [gRes, zRes] = await Promise.all([
         fetch("/api/admin/groups", { headers: authHeaders() }),
-        fetch("/api/districts"),
+        fetch("/api/zones"),
       ]);
       if (gRes.ok) setGroups(await gRes.json());
-      if (dRes.ok) setDistricts(await dRes.json());
+      if (zRes.ok) setZones(await zRes.json());
     } catch {
       setErrorMsg("載入失敗");
     } finally {
@@ -47,17 +47,34 @@ export default function GroupsPage() {
     startTransition(() => {
       (async () => {
         try {
-          const [gRes, dRes] = await Promise.all([
+          const [gRes, zRes] = await Promise.all([
             fetch("/api/admin/groups", { headers: authHeaders() }),
-            fetch("/api/districts"),
+            fetch("/api/zones"),
           ]);
           if (gRes.ok) setGroups(await gRes.json());
-          if (dRes.ok) setDistricts(await dRes.json());
+          if (zRes.ok) setZones(await zRes.json());
         } catch { setErrorMsg("載入失敗"); }
         finally { setLoading(false); }
       })();
     });
   }, []);
+
+  const handleCreateZone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newZoneName.trim()) return;
+    try {
+      const res = await fetch("/api/zones", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newZoneName.trim() }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "建立失敗"); }
+      setNewZoneName("");
+      fetchGroups();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "建立失敗");
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,31 +83,14 @@ export default function GroupsPage() {
       const res = await fetch("/api/groups", {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ name: newName.trim(), district_id: newDistrictId ? Number(newDistrictId) : null }),
+        body: JSON.stringify({ name: newName.trim(), zone_id: newZoneId ? Number(newZoneId) : null }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "建立失敗");
       }
       setNewName("");
-      setNewDistrictId("");
-      fetchGroups();
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "建立失敗");
-    }
-  };
-
-  const handleCreateDistrict = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDistrictName.trim()) return;
-    try {
-      const res = await fetch("/api/districts", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: newDistrictName.trim() }),
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "建立失敗"); }
-      setNewDistrictName("");
+      setNewZoneId("");
       fetchGroups();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "建立失敗");
@@ -100,14 +100,14 @@ export default function GroupsPage() {
   const openEdit = (group: Group) => {
     setEditingId(group.id);
     setEditName(group.name);
-    setEditDistrictId(group.district_id?.toString() ?? "");
+    setEditZoneId(group.zone_id?.toString() ?? "");
   };
 
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
     try {
       const body: Record<string, unknown> = { name: editName.trim() };
-      if (editDistrictId !== undefined) body.district_id = editDistrictId ? Number(editDistrictId) : null;
+      if (editZoneId !== undefined) body.zone_id = editZoneId ? Number(editZoneId) : null;
       const res = await fetch(`/api/groups/${id}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -138,9 +138,9 @@ export default function GroupsPage() {
     }
   };
 
-  const districtName = (id: number | null) => {
+  const zoneName = (id: number | null) => {
     if (!id) return "";
-    return districts.find((d) => d.id === id)?.name ?? "";
+    return zones.find((z) => z.id === id)?.name ?? "";
   };
 
   const currentRole = (() => {
@@ -160,21 +160,20 @@ export default function GroupsPage() {
         </div>
       )}
 
-      {/* Create form */}
       {currentRole !== "group_leader" && (
-      <form onSubmit={handleCreateDistrict} className="glass rounded-2xl p-5 mb-4 animate-fadeIn">
-        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增分區</label>
+      <form onSubmit={handleCreateZone} className="glass rounded-2xl p-5 mb-4 animate-fadeIn">
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增小區</label>
         <div className="flex gap-2">
           <input
             type="text"
-            value={newDistrictName}
-            onChange={(e) => setNewDistrictName(e.target.value)}
-            placeholder="輸入分區名稱..."
+            value={newZoneName}
+            onChange={(e) => setNewZoneName(e.target.value)}
+            placeholder="輸入小區名稱..."
             className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
           />
           <button
             type="submit"
-            disabled={!newDistrictName.trim()}
+            disabled={!newZoneName.trim()}
             className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] shadow-md shadow-[var(--color-primary)]/20 transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             新增
@@ -202,9 +201,9 @@ export default function GroupsPage() {
           </button>
         </div>
         <Select
-          value={newDistrictId}
-          onChange={(v) => setNewDistrictId(v)}
-          options={[{ value: "", label: "不分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]}
+          value={newZoneId}
+          onChange={(v) => setNewZoneId(v)}
+          options={[{ value: "", label: "不選小區" }, ...zones.map((z) => ({ value: String(z.id), label: z.name }))]}
           className="mt-3"
         />
       </form>
@@ -263,9 +262,9 @@ export default function GroupsPage() {
                     </button>
                   </div>
                   <Select
-                    value={editDistrictId}
-                    onChange={(v) => setEditDistrictId(v)}
-                    options={[{ value: "", label: "不分區" }, ...districts.map((d) => ({ value: String(d.id), label: d.name }))]}
+                    value={editZoneId}
+                    onChange={(v) => setEditZoneId(v)}
+                    options={[{ value: "", label: "不選小區" }, ...zones.map((z) => ({ value: String(z.id), label: z.name }))]}
                   />
                 </div>
               ) : (
@@ -275,8 +274,8 @@ export default function GroupsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="font-medium text-[var(--color-text)]">{group.name}</span>
-                    {districtName(group.district_id) && (
-                      <span className="ml-2 text-xs text-[var(--color-muted)]">{districtName(group.district_id)}</span>
+                    {zoneName(group.zone_id) && (
+                      <span className="ml-2 text-xs text-[var(--color-muted)]">{zoneName(group.zone_id)}</span>
                     )}
                   </div>
                   <button
