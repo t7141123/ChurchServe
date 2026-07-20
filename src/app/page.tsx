@@ -618,7 +618,7 @@ export default function HomePage() {
                         </th>
                       ));
                     })}
-                    <th rowSpan={2} className="w-full px-3 py-3.5 text-center font-semibold text-sm whitespace-nowrap text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
+                    <th rowSpan={2} className="min-w-[100px] px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
                   </tr>
                   {serviceItemGroups.some((g) => g.category) && (
                     <tr className="bg-[var(--color-table-head)]">
@@ -758,7 +758,7 @@ export default function HomePage() {
                         <td
                           role="button"
                           tabIndex={0}
-                          className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
+                          className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors min-w-[100px]"
                           onClick={() => openRemarksModal(schedule)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
