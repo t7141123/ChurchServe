@@ -22,7 +22,7 @@ function SidebarLink({ href, active, children, icon, onClick }: {
 }) {
   return (
     <Link href={href} onClick={onClick}
-      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 min-h-[48px] ${
+      className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
         active ? "bg-white/15 text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white"
       }`}
     >
@@ -109,7 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0">
+      <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto min-h-0">
         <SidebarLink href="/admin" active={isDashboard} onClick={closeSidebar} icon={<DashboardIcon />}>儀表板</SidebarLink>
         {showSchedule && (
           <SidebarLink href="/admin/schedule" active={isSchedule} onClick={closeSidebar} icon={<CalendarIcon />}>服事排班控制</SidebarLink>
@@ -137,13 +137,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex flex-col gap-1 pt-4 border-t border-white/15 mt-auto">
         <Link href="/" onClick={closeSidebar} aria-label="返回首頁"
-          className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm text-white/65 hover:text-white hover:bg-white/10 transition-all min-h-[48px]"
+          className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-white/65 hover:text-white hover:bg-white/10 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><path d="M9 22V12h6v10" /></svg>
           返回前台
         </Link>
         <button onClick={() => setShowLogoutModal(true)} aria-label="登出"
-          className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-500/5 transition-all text-left min-h-[48px] w-full"
+          className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-500/5 transition-all text-left w-full"
           style={{ color: "#DC2626" }}
         >
           <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{ color: "#DC2626" }}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>
