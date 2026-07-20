@@ -106,7 +106,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {payload && (
         <div className="mb-4 px-3.5 py-2 rounded-xl bg-white/10">
           <div className="text-white/90 text-sm font-medium truncate">{payload.username}</div>
-          <div className="text-white/55 text-[11px] mt-0.5">{ROLE_LABELS[payload.role] ?? payload.role}</div>
         </div>
       )}
 
