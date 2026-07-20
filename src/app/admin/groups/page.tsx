@@ -162,7 +162,7 @@ export default function GroupsPage() {
 
       {/* Create form */}
       {currentRole !== "group_leader" && (
-      <form onSubmit={handleCreateDistrict} className="glass rounded-2xl p-5 mb-4 animate-slideUp">
+      <form onSubmit={handleCreateDistrict} className="glass rounded-2xl p-5 mb-4 animate-fadeIn">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增分區</label>
         <div className="flex gap-2">
           <input
@@ -183,7 +183,7 @@ export default function GroupsPage() {
       </form>
       )}
 
-      <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-slideUp">
+      <form onSubmit={handleCreate} className="glass rounded-2xl p-5 mb-6 animate-fadeIn">
         <label className="block text-sm font-medium text-[var(--color-text)] mb-2">新增小組</label>
         <div className="flex gap-2 mb-3">
           <input
@@ -236,7 +236,7 @@ export default function GroupsPage() {
           {groups.map((group, idx) => (
             <div
               key={group.id}
-              className="glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-slideUp"
+              className="glass rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:shadow-elevated animate-fadeIn"
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               {editingId === group.id ? (

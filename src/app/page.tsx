@@ -231,6 +231,26 @@ export default function HomePage() {
         };
       });
 
+      // Add non-Saturday special events
+      const saturdaySet = new Set(dates);
+      for (const s of apiSchedules) {
+        if (s.is_special_event && !saturdaySet.has(s.date)) {
+          enriched.push({
+            date: s.date,
+            dayOfWeek: DAY_NAMES[new Date(s.date + "T00:00:00").getDay()],
+            scheduleId: s.id || null,
+            isSpecialEvent: 1,
+            eventTitle: s.event_title || null,
+            isLocked: s.is_locked || 0,
+            lockMessage: s.lock_message || null,
+            remarks: s.remarks || null,
+            assignments: {},
+          });
+        }
+      }
+
+      enriched.sort((a, b) => a.date.localeCompare(b.date));
+
       setSchedules(enriched);
     } catch (e) {
       console.error("fetchSchedules error:", e);
