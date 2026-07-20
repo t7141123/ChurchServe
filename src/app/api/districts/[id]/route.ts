@@ -13,13 +13,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const districtId = Number(id);
   if (!Number.isFinite(districtId)) return jsonError("無效的 ID", 400);
 
-  let body: { name?: string };
+  let body: { name?: string; campus_id?: number | null };
   try { body = await request.json(); } catch { return jsonError("無效的請求格式", 400); }
   if (!body.name?.trim()) return jsonError("牧區名稱為必填", 400);
 
   await (env.DB as D1Database).prepare(
-    "UPDATE Districts SET name = ? WHERE id = ?"
-  ).bind(sanitize(body.name.trim()), districtId).run();
+    "UPDATE Districts SET name = ?, campus_id = ? WHERE id = ?"
+  ).bind(sanitize(body.name.trim()), body.campus_id ?? null, districtId).run();
 
   return json({ success: true });
   } catch (e) {
