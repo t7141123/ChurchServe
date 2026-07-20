@@ -664,7 +664,7 @@ export default function HomePage() {
                     const colCount = serviceItems.length + 2;
                     const isCurrent = isCurrentWeek(schedule.date);
                     const isPast = isPastWeek(schedule.date);
-                    const rowPast = isPast ? "opacity-40" : "";
+                    const rowPast = isPast ? "opacity-60" : "";
 
                     if (schedule.isLocked) {
                       return (
@@ -813,7 +813,7 @@ export default function HomePage() {
               {schedules.map((schedule) => {
                 const isCurrent = isCurrentWeek(schedule.date);
                 const isPast = isPastWeek(schedule.date);
-                const pastClass = isPast ? "opacity-40" : "";
+                const pastClass = isPast ? "opacity-60" : "";
 
                 if (schedule.isLocked) {
                   return (
