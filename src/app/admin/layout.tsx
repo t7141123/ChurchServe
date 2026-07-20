@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       </nav>
 
-      <div className="flex flex-col gap-1 pt-4 border-t border-white/15">
+      <div className="flex flex-col gap-1 pt-4 border-t border-white/15 mt-auto">
         <Link href="/" onClick={closeSidebar} aria-label="返回首頁"
           className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm text-white/65 hover:text-white hover:bg-white/10 transition-all min-h-[48px]"
         >
@@ -177,7 +177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       <div className="md:flex md:flex-1">
-        <aside className={`fixed md:sticky md:top-0 md:h-screen z-50 w-60 flex-shrink-0 admin-sidebar border-r border-black/10 transition-transform duration-300 ${
+        <aside className={`fixed md:sticky md:top-0 h-screen z-50 w-60 flex-shrink-0 admin-sidebar border-r border-black/10 transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}>
           <div className="flex flex-col h-full p-4">{nav}</div>

@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { json, jsonError } from "@/lib/response";
-import { getAuthAdmin } from "@/lib/auth";
+import { getAuthAdmin, requireSuperAdmin } from "@/lib/auth";
 import type { JwtPayload } from "@/lib/jwt";
 
 async function getAccessibleGroupIds(admin: JwtPayload, db: D1Database): Promise<number[]> {

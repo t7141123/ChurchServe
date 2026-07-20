@@ -405,6 +405,7 @@ export default function HomePage() {
     let timer: ReturnType<typeof setTimeout>;
     const handler = () => {
       const vv = visualViewport;
+      if (!vv) return;
       const diff = window.innerHeight - vv.height;
       const kb = diff > 80 ? Math.max(0, diff - (vv.offsetTop || 0)) : 0;
       clearTimeout(timer);
@@ -412,13 +413,13 @@ export default function HomePage() {
         document.documentElement.style.setProperty("--kb-h", kb + "px");
       }, 80);
     };
-    vv.addEventListener("resize", handler);
-    vv.addEventListener("scroll", handler);
+    window.visualViewport?.addEventListener("resize", handler);
+    window.visualViewport?.addEventListener("scroll", handler);
     handler();
     document.documentElement.style.setProperty("touch-action", "none");
     return () => {
-      vv.removeEventListener("resize", handler);
-      vv.removeEventListener("scroll", handler);
+      window.visualViewport?.removeEventListener("resize", handler);
+      window.visualViewport?.removeEventListener("scroll", handler);
       clearTimeout(timer);
       document.documentElement.style.setProperty("--kb-h", "0px");
       document.documentElement.style.removeProperty("touch-action");
