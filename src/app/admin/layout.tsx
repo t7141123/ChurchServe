@@ -103,12 +103,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </Link>
 
-      {payload && (
-        <div className="mb-4 px-3.5 py-2 rounded-xl bg-white/10">
-          <div className="text-white/90 text-sm font-medium truncate">{payload.username}</div>
-        </div>
-      )}
-
       <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto min-h-0">
         <SidebarLink href="/admin" active={isDashboard} onClick={closeSidebar} icon={<DashboardIcon />}>儀表板</SidebarLink>
         {showSchedule && (
