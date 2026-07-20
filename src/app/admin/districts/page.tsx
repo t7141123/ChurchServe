@@ -2,6 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import type { District, Zone, Campus } from "@/types";
+import Select from "@/components/Select";
 
 function authHeaders(): Record<string, string> {
   const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
@@ -123,12 +124,9 @@ export default function DistrictsPage() {
             className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-40 transition-all"
           >新增</button>
         </div>
-        <select value={newCampusId} onChange={e => setNewCampusId(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-        >
-          <option value="">不選分堂</option>
-          {campuses.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
-        </select>
+        <Select value={newCampusId} onChange={setNewCampusId} placeholder="不選分堂"
+          options={campuses.map(c => ({ value: String(c.id), label: c.name }))}
+        />
       </form>
 
       {loading ? (
@@ -167,12 +165,9 @@ export default function DistrictsPage() {
                       className="px-3 py-2 rounded-xl text-xs font-medium text-[var(--color-text-light)] hover:bg-[var(--color-border-light)] transition-all"
                     >取消</button>
                   </div>
-                  <select value={editCampusId} onChange={e => setEditCampusId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                  >
-                    <option value="">不選分堂</option>
-                    {campuses.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
-                  </select>
+                  <Select value={editCampusId} onChange={setEditCampusId} placeholder="不選分堂"
+                    options={campuses.map(c => ({ value: String(c.id), label: c.name }))}
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, startTransition } from "react";
 import type { Zone, Group, District } from "@/types";
+import Select from "@/components/Select";
 
 function authHeaders(): Record<string, string> {
   const t = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
@@ -123,12 +124,9 @@ export default function ZonesPage() {
             className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-40 transition-all"
           >新增</button>
         </div>
-        <select value={newDistrictId} onChange={e => setNewDistrictId(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-        >
-          <option value="">不選牧區</option>
-          {districts.map(d => <option key={d.id} value={String(d.id)}>{d.name}</option>)}
-        </select>
+        <Select value={newDistrictId} onChange={setNewDistrictId} placeholder="不選牧區"
+          options={districts.map(d => ({ value: String(d.id), label: d.name }))}
+        />
       </form>
 
       {loading ? (
@@ -167,12 +165,9 @@ export default function ZonesPage() {
                       className="px-3 py-2 rounded-xl text-xs font-medium text-[var(--color-text-light)] hover:bg-[var(--color-border-light)] transition-all"
                     >取消</button>
                   </div>
-                  <select value={editDistrictId} onChange={e => setEditDistrictId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                  >
-                    <option value="">不選牧區</option>
-                    {districts.map(d => <option key={d.id} value={String(d.id)}>{d.name}</option>)}
-                  </select>
+                  <Select value={editDistrictId} onChange={setEditDistrictId} placeholder="不選牧區"
+                    options={districts.map(d => ({ value: String(d.id), label: d.name }))}
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
