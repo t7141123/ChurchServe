@@ -360,11 +360,13 @@ export default function HomePage() {
 
   const handleSaveRemarks = async () => {
     if (remarksScheduleId === null) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    if (!token) { setErrorMsg("請先登入後再編輯備註"); setTimeout(() => setErrorMsg(""), 3000); return; }
     setRemarksSubmitting(true);
     try {
       const res = await fetch(`/api/remarks/${remarksScheduleId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ remarks: remarksText }),
       });
       if (res.ok) {
