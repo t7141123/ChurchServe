@@ -555,7 +555,7 @@ export default function SchedulePage() {
                           ) : (
                             <button
                               onClick={() => row.scheduleId && setEditingRemarks({ scheduleId: row.scheduleId, date: row.date, value: row.remarks || "" })}
-                              className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] max-w-[80px] truncate inline-block transition-all"
+                              className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] max-w-[80px] whitespace-pre-line leading-relaxed inline-block transition-all"
                               title={row.remarks || ""}
                             >
                               {row.remarks || <span className="opacity-40">—</span>}

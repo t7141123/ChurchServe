@@ -768,7 +768,7 @@ export default function HomePage() {
                           }}
                         >
                           {schedule.remarks ? (
-                            <span className="text-[var(--color-muted)] whitespace-nowrap mx-auto">{schedule.remarks}</span>
+                            <span className="text-[var(--color-muted)] whitespace-pre-line mx-auto text-xs leading-relaxed">{schedule.remarks}</span>
                           ) : (
                             <span className="text-[var(--color-accent)] opacity-85 hover:opacity-100 transition-opacity text-sm font-medium">+ 備註</span>
                           )}
@@ -895,7 +895,7 @@ export default function HomePage() {
                       >
                         <span className="text-xs font-medium text-[var(--color-text-light)]">備註</span>
                         {schedule.remarks ? (
-                          <span className="text-xs text-[var(--color-muted)] text-right max-w-[60%] truncate">{schedule.remarks}</span>
+                          <span className="text-xs text-[var(--color-muted)] text-right max-w-[60%] whitespace-pre-line leading-relaxed">{schedule.remarks}</span>
                         ) : (
                           <span className="text-xs text-[var(--color-accent)] font-medium">+ 新增</span>
                         )}
