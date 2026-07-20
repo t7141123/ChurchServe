@@ -66,6 +66,16 @@ function isCurrentWeek(dateStr: string): boolean {
   return target >= startOfWeek && target <= endOfWeek;
 }
 
+function isPastWeek(dateStr: string): boolean {
+  const now = new Date();
+  const day = now.getDay();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + "T00:00:00");
+  return target < startOfWeek;
+}
+
 function getMemberChipClass(name: string): string {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
@@ -653,10 +663,12 @@ export default function HomePage() {
                   {schedules.map((schedule, idx) => {
                     const colCount = serviceItems.length + 2;
                     const isCurrent = isCurrentWeek(schedule.date);
+                    const isPast = isPastWeek(schedule.date);
+                    const rowPast = isPast ? "opacity-40" : "";
 
                     if (schedule.isLocked) {
                       return (
-                        <tr key={schedule.date}>
+                        <tr key={schedule.date} className={rowPast}>
                           <td
                             className={
                               "py-4 font-semibold text-center whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
@@ -692,7 +704,7 @@ export default function HomePage() {
 
                     if (schedule.isSpecialEvent) {
                       return (
-                        <tr key={schedule.date}>
+                        <tr key={schedule.date} className={rowPast}>
                           <td colSpan={colCount} className="px-5 py-7 text-center bg-[var(--color-special-bg)]">
                             <span className="text-[var(--color-special-text)] font-bold text-lg">
                               {schedule.eventTitle}
@@ -707,7 +719,9 @@ export default function HomePage() {
                         key={schedule.date}
                         className={
                           (idx % 2 === 0 ? "bg-[var(--color-surface)] " : "bg-[var(--color-bg-soft)]/60 ") +
-                          "transition-colors hover:bg-[var(--color-primary-soft)]/50"
+                          "transition-colors" +
+                          (isPast ? "" : " hover:bg-[var(--color-primary-soft)]/50") +
+                          " " + rowPast
                         }
                       >
                         <td
@@ -798,10 +812,12 @@ export default function HomePage() {
             <div className={`${viewMode === "card" ? "block" : "hidden"} space-y-3`}>
               {schedules.map((schedule) => {
                 const isCurrent = isCurrentWeek(schedule.date);
+                const isPast = isPastWeek(schedule.date);
+                const pastClass = isPast ? "opacity-40" : "";
 
                 if (schedule.isLocked) {
                   return (
-                    <div key={schedule.date} className="rounded-2xl overflow-hidden border border-[var(--color-border)] stripe-locked">
+                    <div key={schedule.date} className={"rounded-2xl overflow-hidden border border-[var(--color-border)] stripe-locked " + pastClass}>
                       <div
                         className={
                           "py-3.5 bg-[var(--color-primary-soft)] border-b border-[var(--color-border)] flex items-center justify-between" +
@@ -837,7 +853,7 @@ export default function HomePage() {
 
                 if (schedule.isSpecialEvent) {
                   return (
-                    <div key={schedule.date} className="rounded-2xl overflow-hidden bg-[var(--color-special-bg)] shadow-[var(--shadow-card)]">
+                    <div key={schedule.date} className={"rounded-2xl overflow-hidden bg-[var(--color-special-bg)] shadow-[var(--shadow-card)] " + pastClass}>
                       <div className="px-4 py-8 text-center">
                         <span className="text-[var(--color-special-text)] font-bold text-lg">
                           {schedule.eventTitle}
@@ -852,7 +868,7 @@ export default function HomePage() {
                     key={schedule.date}
                     variant="default"
                     padding="none"
-                    className={`overflow-hidden ${isCurrent ? "ring-2 ring-[var(--color-accent)]/40" : ""}`}
+                    className={`overflow-hidden ${isCurrent ? "ring-2 ring-[var(--color-accent)]/40" : ""} ${pastClass}`}
                   >
                     <div
                       className={
