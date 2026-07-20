@@ -103,7 +103,9 @@ function SkeletonCard() {
 const serviceDescriptions: Record<string, string> = {
   "破冰": "營造歡樂氣氛，讓大家敞開心房。\n• 設計簡單有趣的遊戲，鼓勵全員參與\n• 可加入獎品或小懲罰增加趣味性\n• 掌控時間，重點是讓大家開心互動",
   "敬拜讚美": "透過詩歌帶領會眾朝見神。\n• 預備 1–2 首詩歌，若選擇 2 首請留意整體時間\n• 挑選會眾熟悉、容易跟唱的詩歌\n• 提前將詩歌連結或歌詞傳到群組，讓大家先行預備\n• 事先禱告、預備要說的話，確保詩歌選擇與帶領方向一致",
-  "見證": "分享個人經歷，一起看見神的作為。\n• 可事先邀請弟兄姊妹（找莊腳）預備分享內容\n• 由主領掌控節奏，適時 cue 分享者上台",
+  "見證": "分享各自經歷神的見證。\n• 可事先邀請幾位小組員預備分享內容，聚會時輪流分享\n• 由主領掌握時間與節奏，適時 cue 分享者上台",
+  "見證(經歷神)": "分享個人經歷，一起看見神的作為。\n• 可事先邀請弟兄姊妹（找莊腳）預備分享內容\n• 由主領掌控節奏，適時 cue 分享者上台",
+  "見證（經歷神）": "分享個人經歷，一起看見神的作為。\n• 可事先邀請弟兄姊妹（找莊腳）預備分享內容\n• 由主領掌控節奏，適時 cue 分享者上台",
   "信息分享": "小組長針對小組的牧養時刻。\n• 信息結束後，由小組長帶領回應信息的禱告，幫助大家將信息落實在生活中\n• 分組禱告（代禱事項）：人數過多時較難深入關心每個人，建議分成小小組分享代禱，效果更好",
   "報告": "• 聚會前先跟小組長確認是否有事項需要報告\n• 報告教會相關資訊與近期活動\n• 若有活動或聚會需要，可在現場與大家確認時間，並記錄在記事本中以便日後查詢",
 };
@@ -1143,7 +1145,7 @@ export default function HomePage() {
             </div>
             <div className="px-6 pb-6">
               <div className="bg-[var(--color-bg-soft)] rounded-2xl p-5 text-sm text-[var(--color-text)] leading-relaxed whitespace-pre-line">
-                {serviceDescriptions[serviceDescTitle] || "尚無說明"}
+                {serviceDescriptions[serviceDescTitle] || serviceDescriptions[serviceDescTitle.replace(/[（(].*?[）)]/g, "").trim()] || "尚無說明"}
               </div>
             </div>
           </div>
