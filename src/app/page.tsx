@@ -601,31 +601,31 @@ export default function HomePage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-table-head)]">
-                    <th rowSpan={2} className="w-[1%] px-5 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-r border-[var(--color-border)]">
+                    <th rowSpan={2} className="w-[1%] px-1.5 sm:px-3 py-3.5 text-center font-semibold text-xs sm:text-sm text-[var(--color-table-head-text)] whitespace-nowrap border-b border-r border-[var(--color-border)]">
                       日期
                     </th>
                     {serviceItemGroups.map((group) => {
                       if (group.category) {
                         return (
-                          <th key={group.category} colSpan={group.items.length} className="px-3 py-3 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { if (group.category) { setServiceDescTitle(group.category); setServiceDescOpen(true); } }}>
+                          <th key={group.category} colSpan={group.items.length} className="px-1.5 sm:px-3 py-3 text-center font-semibold text-xs sm:text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { if (group.category) { setServiceDescTitle(group.category); setServiceDescOpen(true); } }}>
                             {group.category?.replace(/[（）]/g, (c) => c === "（" ? "(" : ")")}
                           </th>
                         );
                       }
                       return group.items.map((item) => (
-                        <th key={item.id} rowSpan={2} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { setServiceDescTitle(item.name); setServiceDescOpen(true); }}>
+                        <th key={item.id} rowSpan={2} className="whitespace-nowrap px-1.5 sm:px-3 py-3.5 text-center font-semibold text-xs sm:text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { setServiceDescTitle(item.name); setServiceDescOpen(true); }}>
                           {item.name}
                         </th>
                       ));
                     })}
-                    <th rowSpan={2} className="min-w-[100px] px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
+                    <th rowSpan={2} className="min-w-[100px] px-1.5 sm:px-3 py-3.5 text-center font-semibold text-xs sm:text-sm text-[var(--color-table-head-text)] border-b border-[var(--color-border)]">備註</th>
                   </tr>
                   {serviceItemGroups.some((g) => g.category) && (
                     <tr className="bg-[var(--color-table-head)]">
                       {serviceItemGroups.map((group) => {
                         if (group.category) {
                           return group.items.map((item) => (
-                            <th key={item.id} className="whitespace-nowrap px-3 py-3.5 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
+                            <th key={item.id} className="whitespace-nowrap px-1.5 sm:px-3 py-3.5 text-center font-semibold text-xs sm:text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)]">
                               {item.name}
                             </th>
                           ));
@@ -646,7 +646,7 @@ export default function HomePage() {
                           <td
                             className={
                               "py-4 font-semibold text-center whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
-                              (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")
+                              (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-1.5 sm:pl-3 pr-1.5 sm:pr-3" : " px-1.5 sm:px-3")
                             }
                           >
                             <div className="flex flex-col items-center justify-center gap-0.5 text-center">
@@ -663,7 +663,7 @@ export default function HomePage() {
                               )}
                             </div>
                           </td>
-                          <td colSpan={serviceItems.length + 1} className="px-5 py-4 text-center stripe-locked">
+                          <td colSpan={serviceItems.length + 1} className="px-1.5 sm:px-3 py-4 text-center stripe-locked">
                             <span className="inline-flex items-center gap-2 text-base text-[var(--color-muted)] font-medium">
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -699,7 +699,7 @@ export default function HomePage() {
                         <td
                           className={
                             "py-4 font-semibold text-center whitespace-nowrap border-r border-[var(--color-border)] text-[var(--color-text)] align-middle" +
-                            (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-3 pr-5" : " px-5")
+                            (isCurrent ? " border-l-4 border-l-[var(--color-accent)] pl-1.5 sm:pl-3 pr-1.5 sm:pr-3" : " px-1.5 sm:px-3")
                           }
                         >
                           <div className="flex flex-col items-center justify-center gap-0.5 text-center">
@@ -725,7 +725,7 @@ export default function HomePage() {
                               key={item.id}
                               role="button"
                               tabIndex={0}
-                              className="px-3 py-4 text-center border-r border-[var(--color-border)] last:border-r-0 cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
+                              className="px-1.5 sm:px-3 py-4 text-center border-r border-[var(--color-border)] last:border-r-0 cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors"
                               onClick={() =>
                                 openModal(schedule.scheduleId || 0, item.id, schedule.date, assignment ? {
                                   member_id: assignment.member_id,
@@ -758,7 +758,7 @@ export default function HomePage() {
                         <td
                           role="button"
                           tabIndex={0}
-                          className="px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors min-w-[100px]"
+                          className="px-1.5 sm:px-3 py-4 text-center text-xs cursor-pointer hover:bg-[var(--color-accent-soft)] transition-colors min-w-[100px]"
                           onClick={() => openRemarksModal(schedule)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
