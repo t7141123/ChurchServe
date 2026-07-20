@@ -468,7 +468,7 @@ export default function HomePage() {
               <button onClick={prevMonth} aria-label="上一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
               </button>
-              <span className="min-w-[120px] text-center text-xs font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+              <span className="min-w-[120px] text-center text-sm font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
               <button onClick={nextMonth} aria-label="下一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
               </button>
