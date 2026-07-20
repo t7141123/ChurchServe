@@ -28,6 +28,19 @@ async function getAccessibleGroupIds(admin: JwtPayload, db: D1Database): Promise
   return [];
 }
 
+export async function DELETE(request: Request) {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    const admin = await getAuthAdmin(request, env.JWT_SECRET as string);
+    if (!admin || !requireSuperAdmin(admin)) return jsonError("未授權", 401);
+
+    await (env.DB as D1Database).prepare("DELETE FROM AssignmentAudit").run();
+    return json({ success: true });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : "未知錯誤", 500);
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { env } = await getCloudflareContext({ async: true });
