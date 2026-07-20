@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface SelectOption {
   value: string;
@@ -19,11 +19,13 @@ interface SelectProps {
 
 export function Select({ value, onChange, options, placeholder, ariaLabel, className = "", triggerClassName = "" }: SelectProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -31,11 +33,36 @@ export function Select({ value, onChange, options, placeholder, ariaLabel, class
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const updatePosition = useCallback(() => {
+    if (!open || !buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      left: rect.left,
+      top: rect.bottom + 6,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }, [open]);
+
+  useEffect(() => {
+    updatePosition();
+    if (open) {
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [open, updatePosition]);
+
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen(!open)}
         aria-label={ariaLabel}
@@ -50,36 +77,32 @@ export function Select({ value, onChange, options, placeholder, ariaLabel, class
         </svg>
       </button>
 
-      <div
-        className={`absolute left-0 right-0 top-full mt-1.5 z-50 transition-all duration-200 ease-out ${
-          open
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-1 pointer-events-none"
-        }`}
-      >
-        <div className="bg-white rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden py-1 max-h-60 overflow-y-auto">
-          {options.length === 0 && placeholder && (
-            <div className="px-4 py-3 text-sm text-[var(--color-muted)] text-center">{placeholder}</div>
-          )}
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                option.value === value
-                  ? "text-[var(--color-primary)] bg-[var(--color-primary-soft)] font-medium"
-                  : "text-[var(--color-text)] hover:bg-[var(--color-primary-soft)]"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+      {open && (
+        <div style={dropdownStyle} className="transition-all duration-200 ease-out">
+          <div className="bg-white rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden py-1 max-h-60 overflow-y-auto">
+            {options.length === 0 && placeholder && (
+              <div className="px-4 py-3 text-sm text-[var(--color-muted)] text-center">{placeholder}</div>
+            )}
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                  option.value === value
+                    ? "text-[var(--color-primary)] bg-[var(--color-primary-soft)] font-medium"
+                    : "text-[var(--color-text)] hover:bg-[var(--color-primary-soft)]"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
