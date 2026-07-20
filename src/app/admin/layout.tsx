@@ -110,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0">
         <SidebarLink href="/admin" active={isDashboard} onClick={closeSidebar} icon={<DashboardIcon />}>儀表板</SidebarLink>
         {showSchedule && (
           <SidebarLink href="/admin/schedule" active={isSchedule} onClick={closeSidebar} icon={<CalendarIcon />}>服事排班控制</SidebarLink>
