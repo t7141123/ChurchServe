@@ -608,7 +608,7 @@ export default function HomePage() {
                       if (group.category) {
                         return (
                           <th key={group.category} colSpan={group.items.length} className="px-3 py-3 text-center font-semibold text-sm text-[var(--color-table-head-text)] border-b border-r border-[var(--color-border)] cursor-pointer hover:text-[var(--color-primary)] transition-colors" onClick={() => { if (group.category) { setServiceDescTitle(group.category); setServiceDescOpen(true); } }}>
-                            {group.category}
+                            {group.category?.replace(/[（）]/g, (c) => c === "（" ? "(" : ")")}
                           </th>
                         );
                       }
