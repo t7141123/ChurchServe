@@ -1136,7 +1136,7 @@ export default function HomePage() {
           <div className="relative w-full sm:max-w-lg bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl shadow-[var(--shadow-modal)] animate-slide-up overflow-hidden">
             <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mt-3 sm:hidden" />
             <div className="flex items-center justify-between px-6 pt-4 pb-3">
-              <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">{serviceDescTitle}</h3>
+              <h3 className="text-lg font-bold font-serif text-[var(--color-text)]">{serviceDescTitle.replace(/[（）]/g, (c) => c === "（" ? "(" : ")")}</h3>
               <button onClick={() => setServiceDescOpen(false)} aria-label="關閉" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-border-light)] transition-colors">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                   <path d="M18 6L6 18M6 6l12 12" />
