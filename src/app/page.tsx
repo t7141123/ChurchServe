@@ -445,32 +445,34 @@ export default function HomePage() {
       {/* Brand header — solid earth green */}
       <header className="sticky top-0 z-40 bg-[var(--color-header)] text-[var(--color-header-text)] shadow-[var(--shadow-header)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-4">
-          {/* Mobile: single compact row */}
-          <div className="flex sm:hidden items-center justify-between gap-1 py-1.5">
-            <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
-              <span className="w-6 h-6 rounded-lg bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
-                <SproutIcon className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-              </span>
-              <h1 className="text-sm font-bold font-serif tracking-wide text-[var(--color-text)]">
-                ChurchServe
-              </h1>
+          {/* Mobile: two rows */}
+          <div className="flex sm:hidden flex-col py-1.5 gap-1">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0">
+                <span className="w-6 h-6 rounded-lg bg-[var(--color-primary-soft)] flex items-center justify-center flex-shrink-0">
+                  <SproutIcon className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                </span>
+                <h1 className="text-sm font-bold font-serif tracking-wide text-[var(--color-text)]">
+                  ChurchServe
+                </h1>
+              </div>
+              <Select
+                value={String(selectedGroup)}
+                onChange={(v) => setSelectedGroup(Number(v))}
+                options={groups.length === 0 ? [{ value: "0", label: "尚無小組" }] : groups.map((g) => ({ value: String(g.id), label: g.name }))}
+                ariaLabel="選擇小組"
+                className="max-w-[120px]"
+              />
             </div>
-            <div className="flex items-center gap-0.5 flex-shrink-0">
+            <div className="flex items-center justify-center gap-0.5">
               <button onClick={prevMonth} aria-label="上一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
               </button>
-              <span className="min-w-[90px] text-center text-xs font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
+              <span className="min-w-[120px] text-center text-xs font-semibold tracking-wide text-[var(--color-text)]">{currentLabel}</span>
               <button onClick={nextMonth} aria-label="下一個月" className="w-8 h-8 rounded-lg hover:bg-[var(--color-border-light)] flex items-center justify-center text-[var(--color-text-light)] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
               </button>
             </div>
-            <Select
-              value={String(selectedGroup)}
-              onChange={(v) => setSelectedGroup(Number(v))}
-              options={groups.length === 0 ? [{ value: "0", label: "尚無小組" }] : groups.map((g) => ({ value: String(g.id), label: g.name }))}
-              ariaLabel="選擇小組"
-              className="max-w-[110px]"
-            />
           </div>
 
           {/* Desktop: two-row layout */}
