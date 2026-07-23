@@ -23,7 +23,7 @@ function generateScheduleSvg(
 ): string {
   const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
   const colWidth = 140;
-  const rowHeight = 48;
+  const rowHeight = 60;
   const headerH = 50;
   const titleH = 60;
   const labelW = 80;
@@ -70,10 +70,15 @@ function generateScheduleSvg(
     const dayName = getDayName(row.date);
     const isWeekend = dayName === "六" || dayName === "日";
     const dateColor = row.is_special_event ? "#d97706" : isWeekend ? "#e53e3e" : "#1a202c";
-    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 18}" text-anchor="middle" font-size="13" fill="${dateColor}" font-weight="600">${dateStr}(${dayName})</text>`);
+    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 20}" text-anchor="middle" font-size="13" fill="${dateColor}" font-weight="600">${dateStr}(${dayName})</text>`);
     const subtitle = row.remarks ?? row.event_title ?? null;
     if (subtitle) {
-      lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 34}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(subtitle)}</text>`);
+      const lines2 = subtitle.split("\n");
+      lines2.forEach((line, li) => {
+        if (line.trim()) {
+          lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 36 + li * 13}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(line)}</text>`);
+        }
+      });
     }
 
     sortedItems.forEach((item, ci) => {
