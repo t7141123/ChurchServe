@@ -1198,13 +1198,24 @@ export default function HomePage() {
                   const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
                     const res = await fetch(url);
-                    const blob = await res.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = blobUrl;
-                    a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
-                    a.click();
+                    const svg = await res.text();
+                    const canvas = document.createElement("canvas");
+                    const img = new Image();
+                    const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+                    await new Promise<void>((r, reject) => { img.onload = () => r(); img.onerror = reject; img.src = blobUrl; });
+                    canvas.width = img.naturalWidth * 2;
+                    canvas.height = img.naturalHeight * 2;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(2, 2);
+                    ctx.drawImage(img, 0, 0);
                     URL.revokeObjectURL(blobUrl);
+                    canvas.toBlob((pngBlob) => {
+                      if (!pngBlob) { setErrorMsg("匯出圖片失敗"); return; }
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(pngBlob);
+                      a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
+                      a.click();
+                    });
                   } catch { setErrorMsg("匯出圖片失敗"); }
                 }}
                 className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary-soft)] transition-colors border border-[var(--color-border)] group"
@@ -1230,9 +1241,18 @@ export default function HomePage() {
                   const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
                     const res = await fetch(url);
-                    const blob = await res.blob();
-                    const dataUrl = await new Promise<string>((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob); });
-                    const img = await new Promise<HTMLImageElement>((r, reject) => { const i = new Image(); i.onload = () => r(i); i.onerror = reject; i.src = dataUrl; });
+                    const svg = await res.text();
+                    const canvas = document.createElement("canvas");
+                    const img = new Image();
+                    const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+                    await new Promise<void>((r, reject) => { img.onload = () => r(); img.onerror = reject; img.src = blobUrl; });
+                    canvas.width = img.naturalWidth * 2;
+                    canvas.height = img.naturalHeight * 2;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(2, 2);
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(blobUrl);
+                    const dataUrl = canvas.toDataURL("image/png");
                     const { default: jsPDF } = await import("jspdf");
                     const doc = new jsPDF({ orientation: "landscape", unit: "px" });
                     const pdfW = doc.internal.pageSize.getWidth();
