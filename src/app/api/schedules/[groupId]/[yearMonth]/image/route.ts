@@ -23,13 +23,26 @@ function generateScheduleSvg(
 ): string {
   const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
   const colWidth = 140;
-  const rowHeight = 48;
+  const baseRowHeight = 48;
   const headerH = 50;
   const titleH = 60;
   const labelW = 80;
   const remarksW = 120;
   const tableW = labelW + sortedItems.length * colWidth + remarksW;
-  const tableH = titleH + headerH + schedule.length * rowHeight + 20;
+
+  const rowHeights = schedule.map((row) => {
+    const lc = row.remarks?.split("\n").filter(Boolean).length ?? 0;
+    return Math.max(baseRowHeight, 18 + lc * 14 + 8);
+  });
+  const rowYs: number[] = [];
+  let curY = headerH;
+  for (const rh of rowHeights) {
+    rowYs.push(curY);
+    curY += rh;
+  }
+  const totalTableBodyH = curY - headerH;
+
+  const tableH = titleH + headerH + totalTableBodyH + 20;
   const w = Math.max(tableW + 40, 600);
   const h = Math.max(tableH + 40, 400);
   const ox = (w - tableW) / 2;
@@ -63,17 +76,18 @@ function generateScheduleSvg(
   lines.push(`<text x="${remarksCx}" y="${y0 + headerH / 2 + 1}" text-anchor="middle" font-size="12" font-weight="600" fill="#4a5568" dominant-baseline="middle">備註</text>`);
 
   schedule.forEach((row, ri) => {
-    const ry = y0 + headerH + ri * rowHeight;
+    const ry = y0 + rowYs[ri];
+    const rh = rowHeights[ri];
     const isEven = ri % 2 === 0;
     if (isEven) {
-      lines.push(`<rect x="${x0}" y="${ry}" width="${tableW}" height="${rowHeight}" fill="#fafafa"/>`);
+      lines.push(`<rect x="${x0}" y="${ry}" width="${tableW}" height="${rh}" fill="#fafafa"/>`);
     }
 
     const dateStr = row.date.slice(5);
     const dayName = getDayName(row.date);
     const isWeekend = dayName === "六" || dayName === "日";
     const dateColor = row.is_special_event ? "#d97706" : isWeekend ? "#e53e3e" : "#1a202c";
-    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="13" fill="${dateColor}" dominant-baseline="middle">${dateStr}(${dayName})</text>`);
+    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + rh / 2 + 1}" text-anchor="middle" font-size="13" fill="${dateColor}" dominant-baseline="middle">${dateStr}(${dayName})</text>`);
 
     if (row.event_title) {
       lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 34}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(row.event_title)}</text>`);
@@ -84,7 +98,7 @@ function generateScheduleSvg(
       const key = `${row.id}|${item.id}`;
       const memberName = assoc.get(key);
       if (memberName) {
-        lines.push(`<text x="${cx}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="12" fill="#2d3748" dominant-baseline="middle">${escapeXml(memberName)}</text>`);
+        lines.push(`<text x="${cx}" y="${ry + rh / 2 + 1}" text-anchor="middle" font-size="12" fill="#2d3748" dominant-baseline="middle">${escapeXml(memberName)}</text>`);
       }
     });
 
@@ -94,16 +108,18 @@ function generateScheduleSvg(
     });
   });
 
-  for (let ri = 0; ri <= schedule.length; ri++) {
-    const ly = y0 + headerH + ri * rowHeight;
-    lines.push(`<line x1="${x0}" y1="${ly}" x2="${x0 + tableW}" y2="${ly}" stroke="#e2e8f0" stroke-width="1"/>`);
+  const tableBodyEnd = y0 + headerH + totalTableBodyH;
+  lines.push(`<line x1="${x0}" y1="${y0}" x2="${x0 + tableW}" y2="${y0}" stroke="#e2e8f0" stroke-width="1"/>`);
+  for (const ry of rowYs) {
+    lines.push(`<line x1="${x0}" y1="${y0 + ry}" x2="${x0 + tableW}" y2="${y0 + ry}" stroke="#e2e8f0" stroke-width="1"/>`);
   }
+  lines.push(`<line x1="${x0}" y1="${tableBodyEnd}" x2="${x0 + tableW}" y2="${tableBodyEnd}" stroke="#e2e8f0" stroke-width="1"/>`);
 
   for (let ci = 0; ci <= sortedItems.length + 1; ci++) {
     const lx = ci <= sortedItems.length
       ? x0 + labelW + ci * colWidth
       : x0 + labelW + sortedItems.length * colWidth + remarksW;
-    lines.push(`<line x1="${lx}" y1="${y0}" x2="${lx}" y2="${y0 + headerH + schedule.length * rowHeight}" stroke="#e2e8f0" stroke-width="1"/>`);
+    lines.push(`<line x1="${lx}" y1="${y0}" x2="${lx}" y2="${tableBodyEnd}" stroke="#e2e8f0" stroke-width="1"/>`);
   }
 
   lines.push("</g>");
