@@ -75,6 +75,10 @@ function generateScheduleSvg(
     const dateColor = row.is_special_event ? "#d97706" : isWeekend ? "#e53e3e" : "#1a202c";
     lines.push(`<text x="${x0 + labelW / 2}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="13" fill="${dateColor}" dominant-baseline="middle">${dateStr}(${dayName})</text>`);
 
+    if (row.event_title) {
+      lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 34}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(row.event_title)}</text>`);
+    }
+
     sortedItems.forEach((item, ci) => {
       const cx = x0 + labelW + ci * colWidth + colWidth / 2;
       const key = `${row.id}|${item.id}`;
@@ -83,13 +87,6 @@ function generateScheduleSvg(
         lines.push(`<text x="${cx}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="12" fill="#2d3748" dominant-baseline="middle">${escapeXml(memberName)}</text>`);
       }
     });
-
-    if (row.remarks) {
-      const remarkLines = row.remarks.split("\n").filter(Boolean);
-      remarkLines.forEach((rl, li) => {
-        lines.push(`<text x="${remarksCx}" y="${ry + 18 + li * 14}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(rl)}</text>`);
-      });
-    }
   });
 
   for (let ri = 0; ri <= schedule.length; ri++) {
