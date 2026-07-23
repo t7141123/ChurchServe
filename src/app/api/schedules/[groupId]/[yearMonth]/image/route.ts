@@ -30,9 +30,13 @@ function generateScheduleSvg(
   const remarksW = 120;
   const tableW = labelW + sortedItems.length * colWidth + remarksW;
 
-  const rowHeights = schedule.map((row) => {
-    const lc = row.remarks?.split("\n").filter(Boolean).length ?? 0;
-    return Math.max(baseRowHeight, 18 + lc * 14 + 8);
+  const remarkLinesArr = schedule.map((row) =>
+    (row.remarks ?? "").split(/\r?\n/).filter(Boolean)
+  );
+  const rowHeights = schedule.map((_, ri) => {
+    const lc = remarkLinesArr[ri].length;
+    if (lc === 0) return baseRowHeight;
+    return Math.max(baseRowHeight, 20 + lc * 18 + 14);
   });
   const rowYs: number[] = [];
   let curY = headerH;
@@ -102,9 +106,8 @@ function generateScheduleSvg(
       }
     });
 
-    const remarkLines = row.remarks?.split("\n").filter(Boolean) ?? [];
-    remarkLines.forEach((rl, li) => {
-      lines.push(`<text x="${remarksCx}" y="${ry + 18 + li * 14}" text-anchor="middle" font-size="10" fill="#718096" dominant-baseline="hanging">${escapeXml(rl)}</text>`);
+    remarkLinesArr[ri].forEach((rl, li) => {
+      lines.push(`<text x="${remarksCx}" y="${ry + 20 + li * 18}" text-anchor="middle" font-size="10" fill="#718096" dominant-baseline="hanging">${escapeXml(rl)}</text>`);
     });
   });
 
