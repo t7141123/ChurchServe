@@ -106,9 +106,15 @@ function generateScheduleSvg(
       }
     });
 
-    remarkLinesArr[ri].forEach((rl, li) => {
-      lines.push(`<text x="${remarksCx}" y="${ry + 20 + li * 18}" text-anchor="middle" font-size="10" fill="#718096" dominant-baseline="hanging">${escapeXml(rl)}</text>`);
-    });
+    const rlines = remarkLinesArr[ri];
+    if (rlines.length > 0) {
+      const tspans = rlines.map((rl, li) =>
+        `    <tspan x="${remarksCx}" dy="${li === 0 ? 20 : 18}">${escapeXml(rl)}</tspan>`
+      ).join("\n");
+      lines.push(`<text x="${remarksCx}" y="${ry}" text-anchor="middle" font-size="10" fill="#718096">`);
+      lines.push(tspans);
+      lines.push("</text>");
+    }
   });
 
   const tableBodyEnd = y0 + headerH + totalTableBodyH;
