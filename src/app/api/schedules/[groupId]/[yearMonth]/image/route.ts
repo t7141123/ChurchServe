@@ -36,7 +36,7 @@ function generateScheduleSvg(
   const rowHeights = schedule.map((_, ri) => {
     const lc = remarkLinesArr[ri].length;
     if (lc === 0) return baseRowHeight;
-    return Math.max(baseRowHeight, 16 + lc * 16 + 10);
+    return Math.max(baseRowHeight, 14 + lc * 14 + 8);
   });
   const rowYs: number[] = [];
   let curY = headerH;
@@ -109,7 +109,7 @@ function generateScheduleSvg(
     const rlines = remarkLinesArr[ri];
     if (rlines.length > 0) {
       const tspans = rlines.map((rl, li) =>
-        `    <tspan x="${remarksCx}" dy="16">${escapeXml(rl)}</tspan>`
+        `    <tspan x="${remarksCx}" dy="14">${escapeXml(rl)}</tspan>`
       ).join("\n");
       lines.push(`<text x="${remarksCx}" y="${ry}" text-anchor="middle" font-size="10" fill="#718096">`);
       lines.push(tspans);
