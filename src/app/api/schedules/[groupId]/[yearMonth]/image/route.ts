@@ -71,7 +71,7 @@ function generateScheduleSvg(
     const isWeekend = dayName === "六" || dayName === "日";
     const dateColor = row.is_special_event ? "#d97706" : isWeekend ? "#e53e3e" : "#1a202c";
     lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 18}" text-anchor="middle" font-size="13" fill="${dateColor}" font-weight="600">${dateStr}(${dayName})</text>`);
-    const subtitle = row.event_title ?? row.remarks ?? null;
+    const subtitle = row.remarks ?? row.event_title ?? null;
     if (subtitle) {
       lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 34}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(subtitle)}</text>`);
     }
@@ -170,7 +170,7 @@ export async function GET(
     return new Response(svg, {
       headers: {
         "Content-Type": "image/svg+xml",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "no-cache",
       },
     });
   } catch (e) {
