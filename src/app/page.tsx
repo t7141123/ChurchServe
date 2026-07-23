@@ -152,6 +152,7 @@ export default function HomePage() {
   const [remarksText, setRemarksText] = useState("");
   const [remarksSubmitting, setRemarksSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const groupName = useMemo(() => groups.find((g) => g.id === selectedGroup)?.name ?? "", [groups, selectedGroup]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -1213,7 +1214,7 @@ export default function HomePage() {
                       if (!pngBlob) { setErrorMsg("匯出圖片失敗"); return; }
                       const a = document.createElement("a");
                       a.href = URL.createObjectURL(pngBlob);
-                      a.download = `服事表_${startMonth}-${startMonth + 1}月.png`;
+                      a.download = `${groupName}-${startMonth}-${startMonth + 1}月-服事表.png`;
                       a.click();
                     });
                   } catch { setErrorMsg("匯出圖片失敗"); }
@@ -1258,7 +1259,7 @@ export default function HomePage() {
                     const pdfW = doc.internal.pageSize.getWidth();
                     const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
                     doc.addImage(dataUrl, "PNG", 0, 0, pdfW, pdfH);
-                    doc.save(`服事表_${startMonth}-${startMonth + 1}月.pdf`);
+                    doc.save(`${groupName}-${startMonth}-${startMonth + 1}月-服事表.pdf`);
                   } catch { setErrorMsg("匯出 PDF 失敗"); }
                 }}
                 className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary-soft)] transition-colors border border-[var(--color-border)] group"
