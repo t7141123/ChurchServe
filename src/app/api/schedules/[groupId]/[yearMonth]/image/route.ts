@@ -27,7 +27,7 @@ function generateScheduleSvg(
   const headerH = 50;
   const titleH = 60;
   const labelW = 80;
-  const remarksW = 120;
+  const remarksW = 160;
   const tableW = labelW + sortedItems.length * colWidth + remarksW;
 
   const remarkLinesArr = schedule.map((row) =>
