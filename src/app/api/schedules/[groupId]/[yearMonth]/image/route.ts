@@ -15,7 +15,7 @@ function formatYm(ym: string): string {
 }
 
 function generateScheduleSvg(
-  schedule: Array<{ id: number; date: string; is_special_event: number; event_title: string | null }>,
+  schedule: Array<{ id: number; date: string; is_special_event: number; event_title: string | null; remarks: string | null }>,
   assignments: Array<{ schedule_id: number; service_item_id: number; member_name: string | null; custom_member_name: string | null }>,
   serviceItems: Array<{ id: number; name: string; category: string; display_order: number }>,
   groupName: string,
@@ -23,7 +23,7 @@ function generateScheduleSvg(
 ): string {
   const sortedItems = [...serviceItems].sort((a, b) => a.display_order - b.display_order);
   const colWidth = 140;
-  const rowHeight = 36;
+  const rowHeight = 48;
   const headerH = 50;
   const titleH = 60;
   const labelW = 80;
@@ -70,7 +70,11 @@ function generateScheduleSvg(
     const dayName = getDayName(row.date);
     const isWeekend = dayName === "六" || dayName === "日";
     const dateColor = row.is_special_event ? "#d97706" : isWeekend ? "#e53e3e" : "#1a202c";
-    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="13" fill="${dateColor}" dominant-baseline="middle">${dateStr}(${dayName})</text>`);
+    lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 18}" text-anchor="middle" font-size="13" fill="${dateColor}" font-weight="600">${dateStr}(${dayName})</text>`);
+    const subtitle = row.event_title ?? row.remarks ?? null;
+    if (subtitle) {
+      lines.push(`<text x="${x0 + labelW / 2}" y="${ry + 34}" text-anchor="middle" font-size="10" fill="#a0aec0">${escapeXml(subtitle)}</text>`);
+    }
 
     sortedItems.forEach((item, ci) => {
       const cx = x0 + labelW + ci * colWidth + colWidth / 2;
@@ -118,11 +122,11 @@ export async function GET(
     const scheduleResults = await Promise.all(
       months.map((m) =>
         db.prepare(
-          `SELECT id, date, is_special_event, event_title
+          `SELECT id, date, is_special_event, event_title, remarks
            FROM DutySchedules
            WHERE group_id = ? AND date LIKE ?
            ORDER BY date ASC`
-        ).bind(groupId, `${m}%`).all<{ id: number; date: string; is_special_event: number; event_title: string | null }>()
+        ).bind(groupId, `${m}%`).all<{ id: number; date: string; is_special_event: number; event_title: string | null; remarks: string | null }>()
       )
     );
     const schedule = scheduleResults.flatMap((r) => r.results);
