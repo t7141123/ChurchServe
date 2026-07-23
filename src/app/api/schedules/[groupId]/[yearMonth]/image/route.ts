@@ -42,8 +42,8 @@ function generateScheduleSvg(
 
   const lines: string[] = [];
   lines.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`);
-  lines.push(`<defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}</style></defs>`);
   lines.push(`<rect width="${w}" height="${h}" rx="16" fill="#ffffff"/>`);
+  lines.push(`<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif">`);
 
   const title = months.length > 1
     ? `${escapeXml(groupName)} ${formatYm(months[0])}-${formatYm(months[1])}服事表`
@@ -106,6 +106,7 @@ function generateScheduleSvg(
     lines.push(`<line x1="${lx}" y1="${y0}" x2="${lx}" y2="${y0 + headerH + schedule.length * rowHeight}" stroke="#e2e8f0" stroke-width="1"/>`);
   }
 
+  lines.push("</g>");
   lines.push("</svg>");
   return lines.join("\n");
 }
