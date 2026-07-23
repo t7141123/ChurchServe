@@ -154,48 +154,6 @@ export default function HomePage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const groupName = useMemo(() => groups.find((g) => g.id === selectedGroup)?.name ?? "", [groups, selectedGroup]);
 
-  const drawExportCanvas = useCallback(async (url: string): Promise<HTMLCanvasElement> => {
-    const res = await fetch(url);
-    const svg = await res.text();
-    const canvas = document.createElement("canvas");
-    const img = new Image();
-    const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-    await new Promise<void>((r, reject) => { img.onload = () => r(); img.onerror = reject; img.src = blobUrl; });
-    canvas.width = img.naturalWidth * 2;
-    canvas.height = img.naturalHeight * 2;
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(2, 2);
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(blobUrl);
-
-    const numItems = serviceItems.length;
-    const labelW = 80;
-    const colWidth = 140;
-    const remarksW = 120;
-    const rowHeight = 48;
-    const headerH = 50;
-    const titleH = 60;
-    const imgW = img.naturalWidth;
-    const tableW = labelW + numItems * colWidth + remarksW;
-    const ox = (imgW - tableW) / 2;
-    const remarksX = ox + labelW + numItems * colWidth + remarksW / 2;
-
-    schedules.forEach((schedule, ri) => {
-      const ry = 20 + titleH + headerH + ri * rowHeight;
-      if (schedule.remarks) {
-        const lines = schedule.remarks.split("\n").filter(Boolean);
-        lines.forEach((line, li) => {
-          ctx.font = "10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-          ctx.fillStyle = "#a0aec0";
-          ctx.textAlign = "center";
-          ctx.fillText(line, remarksX, ry + 18 + li * 14);
-        });
-      }
-    });
-
-    return canvas;
-  }, [schedules, serviceItems]);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -1240,7 +1198,18 @@ export default function HomePage() {
                   const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
                   const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
-                    const canvas = await drawExportCanvas(url);
+                    const res = await fetch(url);
+                    const svg = await res.text();
+                    const canvas = document.createElement("canvas");
+                    const img = new Image();
+                    const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+                    await new Promise<void>((r, reject) => { img.onload = () => r(); img.onerror = reject; img.src = blobUrl; });
+                    canvas.width = img.naturalWidth * 2;
+                    canvas.height = img.naturalHeight * 2;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(2, 2);
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(blobUrl);
                     canvas.toBlob((pngBlob) => {
                       if (!pngBlob) { setErrorMsg("匯出圖片失敗"); return; }
                       const a = document.createElement("a");
@@ -1272,12 +1241,23 @@ export default function HomePage() {
                   const ym2 = `${currentYear}-${String(startMonth + 1).padStart(2, "0")}`;
                   const url = `/api/schedules/${selectedGroup}/${ym1}/image?month2=${ym2}`;
                   try {
-                    const canvas = await drawExportCanvas(url);
+                    const res = await fetch(url);
+                    const svg = await res.text();
+                    const canvas = document.createElement("canvas");
+                    const img = new Image();
+                    const blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+                    await new Promise<void>((r, reject) => { img.onload = () => r(); img.onerror = reject; img.src = blobUrl; });
+                    canvas.width = img.naturalWidth * 2;
+                    canvas.height = img.naturalHeight * 2;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.scale(2, 2);
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(blobUrl);
                     const dataUrl = canvas.toDataURL("image/png");
                     const { default: jsPDF } = await import("jspdf");
                     const doc = new jsPDF({ orientation: "landscape", unit: "px" });
                     const pdfW = doc.internal.pageSize.getWidth();
-                    const pdfH = (canvas.height * pdfW) / canvas.width;
+                    const pdfH = (img.naturalHeight * pdfW) / img.naturalWidth;
                     doc.addImage(dataUrl, "PNG", 0, 0, pdfW, pdfH);
                     doc.save(`${groupName}-${startMonth}-${startMonth + 1}月-服事表.pdf`);
                   } catch { setErrorMsg("匯出 PDF 失敗"); }

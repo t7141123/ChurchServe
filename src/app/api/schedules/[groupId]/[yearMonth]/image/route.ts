@@ -87,6 +87,11 @@ function generateScheduleSvg(
         lines.push(`<text x="${cx}" y="${ry + rowHeight / 2 + 1}" text-anchor="middle" font-size="12" fill="#2d3748" dominant-baseline="middle">${escapeXml(memberName)}</text>`);
       }
     });
+
+    const remarkLines = row.remarks?.split("\n").filter(Boolean) ?? [];
+    remarkLines.forEach((rl, li) => {
+      lines.push(`<text x="${remarksCx}" y="${ry + 18 + li * 14}" text-anchor="middle" font-size="10" fill="#718096" dominant-baseline="hanging">${escapeXml(rl)}</text>`);
+    });
   });
 
   for (let ri = 0; ri <= schedule.length; ri++) {
