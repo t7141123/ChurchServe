@@ -836,9 +836,9 @@ export default function HomePage() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                                  className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                                  className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
                                 >
-                                  暫停
+                                  取消按鈕
                                 </button>
                               )}
                             </span>
@@ -891,7 +891,7 @@ export default function HomePage() {
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                                className="mt-1.5 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                                className="mt-1.5 px-2 py-0.5 rounded text-xs font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
                               >
                                 暫停
                               </button>
@@ -1003,9 +1003,9 @@ export default function HomePage() {
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                              className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                              className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
                             >
-                              暫停
+                              取消按鈕
                             </button>
                           )}
                         </span>
@@ -1050,7 +1050,7 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                            className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                            className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
                           >
                             暫停
                           </button>
@@ -1559,7 +1559,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={handleTogglePause}
-                className={"flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all " + (pauseTarget.isLocked ? "bg-amber-500 hover:bg-amber-600" : "bg-red-500 hover:bg-red-600")}
+                className={"flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all " + (pauseTarget.isLocked ? "bg-amber-500 hover:bg-amber-600" : "bg-[#7C2D12] hover:bg-[#5E1F0A]")}
               >
                 {pauseTarget.isLocked ? "確認恢復" : "確認暫停"}
               </button>
