@@ -834,7 +834,7 @@ export default function HomePage() {
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
                                   className="ml-2 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
-                                  style={{ fontSize: 11 }}
+                                  style={{ fontSize: 12 }}
                                 >
                                   取消暫停
                                 </button>
@@ -890,7 +890,7 @@ export default function HomePage() {
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
                                 className="mt-1.5 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
-                                style={{ fontSize: 11 }}
+                                style={{ fontSize: 12 }}
                               >
                                 暫停
                               </button>
@@ -1003,7 +1003,7 @@ export default function HomePage() {
                               type="button"
                               onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
                               className="ml-2 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
-                              style={{ fontSize: 11 }}
+                              style={{ fontSize: 12 }}
                             >
                               取消暫停
                             </button>
@@ -1051,7 +1051,7 @@ export default function HomePage() {
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
                             className="ml-2 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
-                            style={{ fontSize: 11 }}
+                            style={{ fontSize: 12 }}
                           >
                             暫停
                           </button>
