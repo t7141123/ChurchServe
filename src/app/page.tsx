@@ -833,7 +833,8 @@ export default function HomePage() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                                  className="ml-2 px-2 py-0.5 rounded text-[8px] font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                                  className="ml-2 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                                  style={{ fontSize: 8 }}
                                 >
                                   取消暫停
                                 </button>
@@ -888,7 +889,8 @@ export default function HomePage() {
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                                className="mt-1.5 px-2 py-0.5 rounded text-[8px] font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                                className="mt-1.5 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                                style={{ fontSize: 8 }}
                               >
                                 暫停
                               </button>
@@ -947,7 +949,7 @@ export default function HomePage() {
                           }}
                         >
                           {schedule.remarks ? (
-                            <span className="text-[var(--color-muted)] whitespace-pre-line mx-auto text-sm leading-relaxed">{schedule.remarks}</span>
+                            <span className="text-[var(--color-text-light)] whitespace-pre-line mx-auto text-sm leading-relaxed">{schedule.remarks}</span>
                           ) : (
                             <span className="text-[var(--color-accent)] opacity-85 hover:opacity-100 transition-opacity text-sm font-medium">+ 備註</span>
                           )}
@@ -1000,7 +1002,8 @@ export default function HomePage() {
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
-                              className="ml-2 px-2 py-0.5 rounded text-[8px] font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                              className="ml-2 px-2 py-0.5 rounded font-medium text-white bg-[#7C2D12] hover:bg-[#5E1F0A] transition-colors"
+                              style={{ fontSize: 8 }}
                             >
                               取消暫停
                             </button>
@@ -1094,7 +1097,7 @@ export default function HomePage() {
                       >
                         <span className="text-xs font-medium text-[var(--color-text-light)]">備註</span>
                         {schedule.remarks ? (
-                          <span className="text-sm text-[var(--color-muted)] text-right max-w-[60%] whitespace-pre-line leading-relaxed">{schedule.remarks}</span>
+                          <span className="text-sm text-[var(--color-text-light)] text-right max-w-[60%] whitespace-pre-line leading-relaxed">{schedule.remarks}</span>
                         ) : (
                           <span className="text-xs text-[var(--color-accent)] font-medium">+ 新增</span>
                         )}
