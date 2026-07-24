@@ -17,6 +17,7 @@ const ROLE_LABELS: Record<string, string> = {
   zone_leader: "小區長",
   district_leader: "牧區長",
   campus_leader: "分堂長",
+  admin: "管理員",
   super_admin: "超級管理員",
 };
 
@@ -25,6 +26,7 @@ const ROLE_STYLES: Record<string, string> = {
   zone_leader: "bg-teal-100 text-teal-800",
   district_leader: "bg-purple-100 text-purple-800",
   campus_leader: "bg-indigo-100 text-indigo-800",
+  admin: "bg-green-100 text-green-800",
   super_admin: "bg-amber-100 text-amber-800",
 };
 

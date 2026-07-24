@@ -689,10 +689,7 @@ export default function HomePage() {
                 <div className="px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg-soft)]">
                   <div className="text-xs font-medium text-[var(--color-text)]">{adminPayload.username}</div>
                   <div className="text-[10px] text-[var(--color-muted)] mt-0.5">
-                    {adminPayload.role === "super_admin" ? "超級管理員"
-                     : adminPayload.role === "admin" ? "管理員"
-                     : adminPayload.role === "district_leader" ? "區長"
-                     : adminPayload.role === "group_leader" ? "小組長" : adminPayload.role}
+                    {({ super_admin: "超級管理員", admin: "管理員", campus_leader: "分堂長", district_leader: "牧區長", zone_leader: "小區長", group_leader: "小組長" } as Record<string, string>)[adminPayload.role] || adminPayload.role}
                   </div>
                 </div>
                 <Link href="/admin"
