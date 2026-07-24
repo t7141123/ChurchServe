@@ -152,6 +152,9 @@ export default function HomePage() {
   const [remarksText, setRemarksText] = useState("");
   const [remarksSubmitting, setRemarksSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [pauseModalOpen, setPauseModalOpen] = useState(false);
+  const [pauseTarget, setPauseTarget] = useState<ScheduleDate | null>(null);
   const groupName = useMemo(() => groups.find((g) => g.id === selectedGroup)?.name ?? "", [groups, selectedGroup]);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -396,19 +399,27 @@ export default function HomePage() {
     setRemarksModalOpen(true);
   };
 
-  const handleTogglePause = async (schedule: ScheduleDate) => {
+  const openPauseModal = (schedule: ScheduleDate) => {
+    setPauseTarget(schedule);
+    setPauseModalOpen(true);
+  };
+
+  const handleTogglePause = async () => {
+    if (!pauseTarget) return;
     const token = localStorage.getItem("admin_token");
-    if (!token || !schedule.scheduleId) return;
+    if (!token || !pauseTarget.scheduleId) return;
     try {
-      const res = await fetch(`/api/admin/schedules/${schedule.scheduleId}/lock`, {
+      const res = await fetch(`/api/admin/schedules/${pauseTarget.scheduleId}/lock`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          is_locked: schedule.isLocked ? 0 : 1,
-          lock_message: schedule.isLocked ? null : "小組暫停",
+          is_locked: pauseTarget.isLocked ? 0 : 1,
+          lock_message: pauseTarget.isLocked ? null : "小組暫停",
         }),
       });
       if (res.ok) {
+        setPauseModalOpen(false);
+        setPauseTarget(null);
         fetchSchedules();
       } else {
         const data = await res.json();
@@ -824,14 +835,10 @@ export default function HomePage() {
                               {adminPayload && (
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
-                                  className="ml-2 w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-border-light)] transition-colors"
-                                  title="取消暫停"
+                                  onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
+                                  className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                                    <polyline points="1,4 1,10 7,10" />
-                                    <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
-                                  </svg>
+                                  暫停
                                 </button>
                               )}
                             </span>
@@ -883,20 +890,10 @@ export default function HomePage() {
                             {adminPayload && (
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
-                                className="mt-1 w-5 h-5 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
-                                title={schedule.isLocked ? "取消暫停" : "暫停本週小組"}
+                                onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
+                                className="mt-1.5 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
                               >
-                                {schedule.isLocked ? (
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <polygon points="6,3 20,12 6,21" />
-                                  </svg>
-                                ) : (
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <rect x="6" y="4" width="4" height="16" rx="1" />
-                                    <rect x="14" y="4" width="4" height="16" rx="1" />
-                                  </svg>
-                                )}
+                                暫停
                               </button>
                             )}
                           </div>
@@ -1005,14 +1002,10 @@ export default function HomePage() {
                           {adminPayload && (
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
-                              className="ml-2 w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-border-light)] transition-colors"
-                              title="取消暫停"
+                              onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
+                              className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
                             >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                                <polyline points="1,4 1,10 7,10" />
-                                <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
-                              </svg>
+                              暫停
                             </button>
                           )}
                         </span>
@@ -1056,14 +1049,10 @@ export default function HomePage() {
                         {adminPayload && (
                           <button
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
-                            className="ml-1 w-5 h-5 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
-                            title="暫停本週小組"
+                            onClick={(e) => { e.stopPropagation(); openPauseModal(schedule); }}
+                            className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
                           >
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <rect x="6" y="4" width="4" height="16" rx="1" />
-                              <rect x="14" y="4" width="4" height="16" rx="1" />
-                            </svg>
+                            暫停
                           </button>
                         )}
                       </div>
@@ -1533,6 +1522,51 @@ export default function HomePage() {
         </p>
       </footer>
     </div>
+
+      {pauseModalOpen && pauseTarget && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setPauseModalOpen(false); setPauseTarget(null); }} />
+          <div className="relative bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] w-full max-w-sm animate-fadeIn overflow-hidden">
+            <div className="pt-8 pb-6 px-7 text-center">
+              <div className={"inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 " + (pauseTarget.isLocked ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-600")}>
+                {pauseTarget.isLocked ? (
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                ) : (
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
+                )}
+              </div>
+              <h2 className="text-lg font-bold font-serif text-[var(--color-text)] mb-2">
+                {pauseTarget.isLocked ? "取消暫停" : "暫停小組"}
+              </h2>
+              <p className="text-sm text-[var(--color-muted)]">
+                {pauseTarget.isLocked
+                  ? `確定要恢復 ${pauseTarget.date.slice(5)} 的聚會嗎？`
+                  : `確定要暫停 ${pauseTarget.date.slice(5)} 的小組聚會嗎？`}
+              </p>
+            </div>
+            <div className="flex gap-3 px-7 pb-7">
+              <button
+                onClick={() => { setPauseModalOpen(false); setPauseTarget(null); }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-text-light)] bg-[var(--color-bg)] hover:bg-[var(--color-border-light)] transition-all"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleTogglePause}
+                className={"flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all " + (pauseTarget.isLocked ? "bg-amber-500 hover:bg-amber-600" : "bg-red-500 hover:bg-red-600")}
+              >
+                {pauseTarget.isLocked ? "確認恢復" : "確認暫停"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showLogoutModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logout-modal-title">
