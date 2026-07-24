@@ -396,6 +396,31 @@ export default function HomePage() {
     setRemarksModalOpen(true);
   };
 
+  const handleTogglePause = async (schedule: ScheduleDate) => {
+    const token = localStorage.getItem("admin_token");
+    if (!token || !schedule.scheduleId) return;
+    try {
+      const res = await fetch(`/api/admin/schedules/${schedule.scheduleId}/lock`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          is_locked: schedule.isLocked ? 0 : 1,
+          lock_message: schedule.isLocked ? null : "小組暫停",
+        }),
+      });
+      if (res.ok) {
+        fetchSchedules();
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "操作失敗");
+        setTimeout(() => setErrorMsg(""), 3000);
+      }
+    } catch {
+      setErrorMsg("網路錯誤，請稍後再試");
+      setTimeout(() => setErrorMsg(""), 3000);
+    }
+  };
+
   useEffect(() => {
     if (!remarksModalOpen) {
       document.documentElement.style.setProperty("--kb-h", "0px");
@@ -796,6 +821,19 @@ export default function HomePage() {
                                 <path d="M7 11V7a5 5 0 0110 0v4" />
                               </svg>
                               {schedule.lockMessage || "暫停聚會"}
+                              {adminPayload && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
+                                  className="ml-2 w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-border-light)] transition-colors"
+                                  title="取消暫停"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                                    <polyline points="1,4 1,10 7,10" />
+                                    <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+                                  </svg>
+                                </button>
+                              )}
                             </span>
                           </td>
                         </tr>
@@ -841,6 +879,25 @@ export default function HomePage() {
                               <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-accent-dark)]">
                                 本週
                               </span>
+                            )}
+                            {adminPayload && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
+                                className="mt-1 w-5 h-5 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+                                title={schedule.isLocked ? "取消暫停" : "暫停本週小組"}
+                              >
+                                {schedule.isLocked ? (
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <polygon points="6,3 20,12 6,21" />
+                                  </svg>
+                                ) : (
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                                  </svg>
+                                )}
+                              </button>
                             )}
                           </div>
                         </td>
@@ -896,7 +953,7 @@ export default function HomePage() {
                           }}
                         >
                           {schedule.remarks ? (
-                            <span className="text-[var(--color-muted)] whitespace-pre-line mx-auto text-xs leading-relaxed">{schedule.remarks}</span>
+                            <span className="text-[var(--color-muted)] whitespace-pre-line mx-auto text-sm leading-relaxed">{schedule.remarks}</span>
                           ) : (
                             <span className="text-[var(--color-accent)] opacity-85 hover:opacity-100 transition-opacity text-sm font-medium">+ 備註</span>
                           )}
@@ -945,6 +1002,19 @@ export default function HomePage() {
                             <path d="M7 11V7a5 5 0 0110 0v4" />
                           </svg>
                           {schedule.lockMessage || "暫停聚會"}
+                          {adminPayload && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
+                              className="ml-2 w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-border-light)] transition-colors"
+                              title="取消暫停"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                                <polyline points="1,4 1,10 7,10" />
+                                <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+                              </svg>
+                            </button>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -983,6 +1053,19 @@ export default function HomePage() {
                         <span className="text-xs text-[var(--color-muted)]">
                           ({DAY_NAMES[new Date(schedule.date + "T00:00:00").getDay()]})
                         </span>
+                        {adminPayload && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleTogglePause(schedule); }}
+                            className="ml-1 w-5 h-5 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+                            title="暫停本週小組"
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <rect x="6" y="4" width="4" height="16" rx="1" />
+                              <rect x="14" y="4" width="4" height="16" rx="1" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                       {isCurrent && (
                         <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[var(--color-accent)] text-white">
@@ -1025,7 +1108,7 @@ export default function HomePage() {
                       >
                         <span className="text-xs font-medium text-[var(--color-text-light)]">備註</span>
                         {schedule.remarks ? (
-                          <span className="text-xs text-[var(--color-muted)] text-right max-w-[60%] whitespace-pre-line leading-relaxed">{schedule.remarks}</span>
+                          <span className="text-sm text-[var(--color-muted)] text-right max-w-[60%] whitespace-pre-line leading-relaxed">{schedule.remarks}</span>
                         ) : (
                           <span className="text-xs text-[var(--color-accent)] font-medium">+ 新增</span>
                         )}
